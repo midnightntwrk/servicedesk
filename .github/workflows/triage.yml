@@ -1,0 +1,172 @@
+name: Triage auto-label
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const issue_number = context.payload.issue.number;
+            const { owner, repo } = context.repo;
+
+            const getSection = (heading) => {
+              const re = new RegExp(`###\\s+${heading}\\s*\\n+([\\s\\S]*?)(?=\\n###\\s|$)`, 'i');
+              const m = body.match(re);
+              if (!m) return null;
+              const value = m[1].trim();
+              return value && value !== '_No response_' ? value : null;
+            };
+
+            const componentMap = {
+              'Infra — Node':               'comp:node',
+              'Infra — Ledger':             'comp:ledger',
+              'Infra — Indexer':            'comp:indexer',
+              'Infra — Proof Server':       'comp:proof-server',
+              'Infra — ZK Circuits':        'comp:zk',
+              'Contracts — Compact Compiler': 'comp:compiler',
+              'Contracts — ZKIR':           'comp:zkir',
+              'Contracts — Contract Runtime': 'comp:runtime',
+              'App/SDK — Midnight.js SDK':  'comp:sdk-js',
+              'App/SDK — Wallet SDK':       'comp:wallet',
+              'App/SDK — DApp Connector':   'comp:dapp-connector',
+              'App/SDK — Faucet':           'comp:faucet',
+              'Interop — Partner Chains':   'comp:partner-chains',
+              'Interop — Bridge Contracts': 'comp:bridge',
+              'Ops — Deployment':           'comp:charts',
+              'Ops — Metrics & Monitoring': 'comp:metrics',
+              'Ops — Build System':         'comp:build',
+              'Ops — Documentation':        'comp:docs',
+            };
+
+            const networkMap = {
+              'Mainnet': 'network:mainnet',
+              'Preprod': 'network:preprod',
+              'Preview': 'network:preview',
+            };
+
+            const severityMap = {
+              'P1': 'priority:p1',
+              'P2': 'priority:p2',
+              'P3': 'priority:p3',
+              'P4': 'priority:p4',
+            };
+
+            const sourceMap = {
+              'User / community report':  'source:user-report',
+              'Grafana alert':            'source:grafana',
+              'Chain anomaly detector':   'source:anomaly-detector',
+              'Indexer lag':              'source:indexer-alert',
+              'Internal test':            'source:internal-test',
+              'Other':                    'source:other',
+            };
+
+            const labelMeta = {
+              'comp:node':           { color: '0366d6', description: 'Component: midnight-node' },
+              'comp:ledger':         { color: '0366d6', description: 'Component: midnight-ledger' },
+              'comp:indexer':        { color: '0366d6', description: 'Component: midnight-indexer' },
+              'comp:proof-server':   { color: '0366d6', description: 'Component: Proof Server' },
+              'comp:zk':             { color: '0366d6', description: 'Component: ZK Circuits' },
+              'comp:compiler':       { color: '0366d6', description: 'Component: compactc' },
+              'comp:zkir':           { color: '0366d6', description: 'Component: ZKIR' },
+              'comp:runtime':        { color: '0366d6', description: 'Component: Contract Runtime' },
+              'comp:sdk-js':         { color: '0366d6', description: 'Component: Midnight.js SDK' },
+              'comp:wallet':         { color: '0366d6', description: 'Component: Wallet SDK' },
+              'comp:dapp-connector': { color: '0366d6', description: 'Component: DApp Connector' },
+              'comp:faucet':         { color: '0366d6', description: 'Component: Faucet' },
+              'comp:partner-chains': { color: '0366d6', description: 'Component: Partner Chains' },
+              'comp:bridge':         { color: '0366d6', description: 'Component: Bridge Contracts' },
+              'comp:charts':         { color: '0366d6', description: 'Component: midnight-charts' },
+              'comp:metrics':        { color: '0366d6', description: 'Component: Metrics & Monitoring' },
+              'comp:build':          { color: '0366d6', description: 'Component: Build system' },
+              'comp:docs':           { color: '0366d6', description: 'Component: Documentation' },
+              'network:mainnet':     { color: '5319e7', description: 'Network: Mainnet' },
+              'network:preprod':     { color: '5319e7', description: 'Network: Preprod' },
+              'network:preview':     { color: '5319e7', description: 'Network: Preview' },
+              'priority:p1':         { color: 'b60205', description: 'P1 Critical — response target: 30 min' },
+              'priority:p2':         { color: 'd93f0b', description: 'P2 High — response target: 4 business hours' },
+              'priority:p3':         { color: 'fbca04', description: 'P3 Medium — response target: 1 business day' },
+              'priority:p4':         { color: '0e8a16', description: 'P4 Low — response target: 3 business days' },
+              'source:user-report':      { color: 'c5def5', description: 'First seen: user / community report' },
+              'source:grafana':          { color: 'c5def5', description: 'First seen: Grafana alert' },
+              'source:anomaly-detector': { color: 'c5def5', description: 'First seen: chain anomaly detector' },
+              'source:indexer-alert':    { color: 'c5def5', description: 'First seen: indexer lag / data-quality alert' },
+              'source:internal-test':    { color: 'c5def5', description: 'First seen: internal test / QA' },
+              'source:other':            { color: 'c5def5', description: 'First seen: other source' },
+            };
+
+            const matchByPrefix = (value, map) => {
+              if (!value) return null;
+              for (const [prefix, label] of Object.entries(map)) {
+                if (value.startsWith(prefix)) return label;
+              }
+              return null;
+            };
+
+            const component = getSection('Component');
+            const network   = getSection('Network');
+            const severity  = getSection('Severity');
+            const firstSeen = getSection('First seen where\\?');
+
+            const desired = new Set();
+            const compLabel = matchByPrefix(component, componentMap);
+            if (compLabel) desired.add(compLabel);
+
+            const netLabel = matchByPrefix(network, networkMap);
+            if (netLabel) desired.add(netLabel);
+
+            if (severity) {
+              const token = severity.trim().split(/\s+/)[0];
+              if (severityMap[token]) desired.add(severityMap[token]);
+            }
+
+            const srcLabel = matchByPrefix(firstSeen, sourceMap);
+            if (srcLabel) desired.add(srcLabel);
+
+            for (const name of desired) {
+              const meta = labelMeta[name];
+              if (!meta) continue;
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner, repo, name,
+                    color: meta.color,
+                    description: meta.description,
+                  });
+                } else {
+                  throw e;
+                }
+              }
+            }
+
+            const managedPrefixes = ['comp:', 'network:', 'priority:', 'source:'];
+            const current = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number });
+            for (const lbl of current.data) {
+              const isManaged = managedPrefixes.some(p => lbl.name.startsWith(p));
+              if (isManaged && !desired.has(lbl.name)) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name: lbl.name });
+              }
+            }
+
+            if (desired.size > 0) {
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number,
+                labels: [...desired],
+              });
+            }
+
+            core.notice(`Applied labels: ${[...desired].join(', ') || '(none)'}`);
