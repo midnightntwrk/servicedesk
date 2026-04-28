@@ -1,0 +1,260 @@
+name: Bug Report
+description: Report a bug or issue in the Midnight ecosystem
+title: "[Bug]: "
+labels: ["type:bug", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for reporting a bug!
+        ### If you are submitting a bug report based on an AI assessment or ai-assisted assessment of the code, please read our [AI reporting guidelines](https://github.com/shieldedtech/mnf-stl-support/blob/main/ai-reports.md)
+        Please fill out this form to help us understand and reproduce the issue. The more details you provide, the faster we can help resolve it.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the Midnight ecosystem is affected? Pick your best guess — triage will re-route if needed.
+      options:
+        - "Don't Know / Unsure"
+        - "Infra — Node (midnight-node)"
+        - "Infra — Ledger (midnight-ledger)"
+        - "Infra — Indexer (midnight-indexer)"
+        - "Infra — Proof Server"
+        - "Infra — ZK Circuits (midnight-zk)"
+        - "Contracts — Compact Compiler (compactc)"
+        - "Contracts — ZKIR"
+        - "Contracts — Contract Runtime"
+        - "App/SDK — Midnight.js SDK"
+        - "App/SDK — Wallet SDK (midnight-wallet)"
+        - "App/SDK — DApp Connector API"
+        - "App/SDK — Faucet"
+        - "Interop — Partner Chains (Cardano)"
+        - "Interop — Bridge Contracts"
+        - "Ops — Deployment (midnight-charts)"
+        - "Ops — Metrics & Monitoring"
+        - "Ops — Build System (Nix / Cargo / Yarn / Earthly)"
+        - "Ops — Documentation (midnight-docs)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      description: Which network did you encounter this issue on?
+      options:
+        - "Mainnet"
+        - "Preprod"
+        - "Preview"
+        - "Not applicable"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: |
+        Pick based on the response commitment you need. These map to the MSA support SLAs.
+      options:
+        - "P1 Critical — Network down, consensus failure, active security exploit. Response: 30 min."
+        - "P2 High — Major feature broken, significant user impact, security vulnerability. Response: 4 business hours."
+        - "P3 Medium — Feature degraded, workaround available, non-critical bug. Response: 1 business day."
+        - "P4 Low — Minor issue, cosmetic, enhancement request. Response: 3 business days."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: first_seen_where
+    attributes:
+      label: First seen where?
+      description: Helps us spot patterns in where issues originate.
+      options:
+        - "User / community report"
+        - "Grafana alert"
+        - "Chain anomaly detector"
+        - "Indexer lag / data-quality alert"
+        - "Internal test / QA"
+        - "Other"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: "Example: When submitting a transaction with a large state proof, the proof server times out after 30 seconds"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "Example: The proof should be generated successfully within the timeout period"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: "Example: The request times out with error 'Proof generation exceeded timeout of 30s'"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue
+      placeholder: |
+        1. Start proof server with default configuration
+        2. Submit a contract with state size > 1MB
+        3. Call prove endpoint with transaction data
+        4. Observe timeout error after 30 seconds
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Error Messages
+      description: Please paste any relevant logs, error messages, or stack traces
+      placeholder: |
+        Paste logs here. For Rust code, include RUST_BACKTRACE=1 output.
+        For TypeScript, include full stack traces.
+        For Compact compiler, include compiler output and any ZKIR dumps.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots or screen recordings to help explain the problem
+      placeholder: Drag and drop images here or paste image URLs
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running?
+      placeholder: "Example: macOS 14.2, Ubuntu 22.04, Windows 11"
+    validations:
+      required: true
+
+  - type: input
+    id: node_version
+    attributes:
+      label: Node Version (if applicable)
+      description: Output of `midnight-node --version` or similar
+      placeholder: "Example: midnight-node v0.26.0"
+    validations:
+      required: false
+
+  - type: input
+    id: sdk_version
+    attributes:
+      label: SDK Version (if applicable)
+      description: Version of midnight-js, midnight-wallet, or other SDK
+      placeholder: "Example: @midnight-network/midnight-js@0.26.0"
+    validations:
+      required: false
+
+  - type: input
+    id: compiler_version
+    attributes:
+      label: Compiler Version (if applicable)
+      description: Output of `compactc --version`
+      placeholder: "Example: compactc v0.26.0"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: build_environment
+    attributes:
+      label: Build Environment
+      description: How are you building/running the code?
+      options:
+        - "Not applicable (using pre-built binaries)"
+        - "Nix (nix develop / nix build)"
+        - "Docker / Docker Compose"
+        - "Native (cargo build / yarn build directly)"
+        - "Earthly"
+        - "Other (please specify in Additional Context)"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: language_context
+    attributes:
+      label: Language Context
+      description: What language is the affected code written in?
+      multiple: true
+      options:
+        - "Rust"
+        - "TypeScript / JavaScript"
+        - "Scheme (Compact compiler internals)"
+        - "Compact (smart contract language)"
+        - "Not applicable / Don't know"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here. This could include:
+        - Browser version (for frontend issues)
+        - Memory/CPU constraints
+        - Network conditions
+        - Proof generation performance metrics
+        - Circuit constraint counts
+        - Related issues or PRs
+      placeholder: Any additional information that might help us understand and reproduce the issue
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided enough information to reproduce the issue
+          required: true
+        - label: This is not a security vulnerability (if it is, please email security@midnight.foundation instead)
+          required: true
+        - label: I am using a supported version of the software (check documentation for version support)
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ### What happens next?
+
+        1. **Triage**: Our team will review your issue within 1-3 business days
+        2. **Validation**: We'll attempt to reproduce the issue and may ask for more information
+        3. **Routing**: The issue will be transferred to the appropriate component repository
+        4. **Resolution**: The component team will prioritize and work on the fix
+
+        Thank you for contributing to making Midnight better!

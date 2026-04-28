@@ -1,0 +1,11 @@
+* @midnightntwrk/mn-sre @hegaleon
+/.github/ISSUE_TEMPLATE/ @midnightntwrk/mn-sre
+/.github/PULL_REQUEST_TEMPLATE/ @midnightntwrk/mn-sre
+/.github/workflows/triage.yml @midnightntwrk/mn-sre
+/.github/workflows/dependabot.yml @midnightntwrk/mn-security
+/.github/workflows/scan.yaml @midnightntwrk/mn-security
+/CODE_OF_CONDUCT.md @midnightntwrk/mn-sre
+/CODEOWNERS @midnightntwrk/mn-security
+/CONTRIBUTING.md @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/LICENSE @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/SECURITY.md @midnightntwrk/mn-sre @midnightntwrk/mn-security

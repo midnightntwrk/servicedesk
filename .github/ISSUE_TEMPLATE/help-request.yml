@@ -1,0 +1,139 @@
+name: Help Request
+description: Get technical support or ask a question about the Midnight ecosystem
+title: "[Help]: "
+labels: ["type:question", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Need some help? 
+
+        Please describe what you are trying to achieve and where you are getting stuck. Providing context about your environment helps us give you a faster, more accurate answer.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the Midnight ecosystem do you need help with?
+      options:
+        - "Don't Know / General Inquiry"
+        - "Infra — Node (midnight-node)"
+        - "Infra — Ledger (midnight-ledger)"
+        - "Infra — Indexer (midnight-indexer)"
+        - "Infra — Proof Server"
+        - "Infra — ZK Circuits (midnight-zk)"
+        - "Contracts — Compact Compiler (compactc)"
+        - "Contracts — ZKIR"
+        - "Contracts — Contract Runtime"
+        - "App/SDK — Midnight.js SDK"
+        - "App/SDK — Wallet SDK (midnight-wallet)"
+        - "App/SDK — DApp Connector API"
+        - "App/SDK — Faucet"
+        - "Interop — Partner Chains (Cardano)"
+        - "Interop — Bridge Contracts"
+        - "Ops — Deployment (midnight-charts)"
+        - "Ops — Metrics & Monitoring"
+        - "Ops — Build System (Nix / Cargo / Yarn / Earthly)"
+        - "Ops — Documentation (midnight-docs)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      description: Which network are you developing on?
+      options:
+        - "Mainnet"
+        - "Preprod"
+        - "Preview"
+        - "Not applicable"
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to accomplish?
+      description: A clear description of your objective or the problem you're trying to solve.
+      placeholder: "Example: I am trying to deploy a private smart contract that manages a shielded token balance using Midnight.js."
+    validations:
+      required: true
+
+  - type: textarea
+    id: challenge
+    attributes:
+      label: Where are you stuck?
+      description: Describe the specific error or behavior that is preventing you from moving forward.
+      placeholder: "Example: The contract compiles, but I am receiving an 'Invalid Proof' error when calling the join function."
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you tried so far?
+      description: List any troubleshooting steps or documentation you've already consulted.
+      placeholder: |
+        1. Checked the Midnight.js documentation for proof generation
+        2. Verified that my local node is synced
+        3. Tried increasing the proof server timeout
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Code Snippets
+      description: Please paste any relevant logs, console output, or the specific code snippet causing trouble.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you using for development?
+      placeholder: "Example: macOS 14.2, Ubuntu 22.04"
+    validations:
+      required: false
+
+  - type: input
+    id: versions
+    attributes:
+      label: Tool Versions
+      description: Please list relevant versions (midnight-node, compactc, SDK, etc.)
+      placeholder: "Example: compactc v0.26.0, midnight-js v0.26.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have checked the official Midnight Documentation
+          required: true
+        - label: I have searched existing GitHub Issues and Discussions for a solution
+          required: true
+        - label: This is a support request and not a bug report (use the Bug Report template for bugs)
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### What happens next?
+        Our team or community members will review your request. We aim to provide guidance within 1-2 business days.
