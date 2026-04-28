@@ -1,11 +1,11 @@
-* @foundationtech/foundation-sre
-/.github/ISSUE_TEMPLATE/ @foundationtech/foundation-sre 
-/.github/PULL_REQUEST_TEMPLATE/  @foundationtech/foundation-sre
-/.github/workflows/triage.yml @foundationtech/foundation-sre
-/.github/workflows/dependabot.yml @foundationtech/foundation-sre
-/.github/workflows/scan.yaml @foundationtech/foundation-sre
-CODE_OF_CONDUCT.md @foundationtech/foundation-sre
-CODEOWNERS @foundationtech/foundation-sre
-CONTRIBUTING.md @foundationtech/foundation-sre
-LICENSE @foundationtech/foundation-sre
-SECURITY.md @foundationtech/foundation-sre
+* @midnightntwrk/mn-sre @hegaleon
+/.github/ISSUE_TEMPLATE/ @midnightntwrk/mn-sre
+/.github/PULL_REQUEST_TEMPLATE/ @midnightntwrk/mn-sre
+/.github/workflows/triage.yml @midnightntwrk/mn-sre
+/.github/workflows/dependabot.yml @midnightntwrk/mn-security
+/.github/workflows/scan.yaml @midnightntwrk/mn-security
+/CODE_OF_CONDUCT.md @midnightntwrk/mn-sre
+/CODEOWNERS @midnightntwrk/mn-security
+/CONTRIBUTING.md @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/LICENSE @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/SECURITY.md @midnightntwrk/mn-sre @midnightntwrk/mn-security
