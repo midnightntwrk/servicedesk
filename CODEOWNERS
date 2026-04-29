@@ -1,11 +1,31 @@
-* @midnightntwrk/mn-sre @hegaleon
-/.github/ISSUE_TEMPLATE/ @midnightntwrk/mn-sre
-/.github/PULL_REQUEST_TEMPLATE/ @midnightntwrk/mn-sre
-/.github/workflows/triage.yml @midnightntwrk/mn-sre
-/.github/workflows/dependabot.yml @midnightntwrk/mn-security
-/.github/workflows/scan.yaml @midnightntwrk/mn-security
-/CODE_OF_CONDUCT.md @midnightntwrk/mn-sre
-/CODEOWNERS @midnightntwrk/mn-security
-/CONTRIBUTING.md @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/LICENSE @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/SECURITY.md @midnightntwrk/mn-sre @midnightntwrk/mn-security
+*                                        @midnightntwrk/mn-sre @hegaleon
+
+/.github/ISSUE_TEMPLATE/                @midnightntwrk/mn-sre
+/.github/PULL_REQUEST_TEMPLATE/         @midnightntwrk/mn-sre
+/.github/workflows/triage.yml           @midnightntwrk/mn-sre
+
+# Operational escalation workflows — joint SRE + Security sign-off required
+/.github/workflows/p1-pagerduty.yml     @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/.github/workflows/sla-clock.yml        @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/.github/workflows/data-refresh.yml     @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/.github/workflows/template-staleness.yml @midnightntwrk/mn-sre
+
+/.github/dependabot.yml                 @midnightntwrk/mn-security
+/.github/workflows/scan.yaml            @midnightntwrk/mn-security
+
+/CODEOWNERS                             @midnightntwrk/mn-security
+/CONTRIBUTING.md                        @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/SECURITY.md                            @midnightntwrk/mn-sre @midnightntwrk/mn-security
+/CODE_OF_CONDUCT.md                     @midnightntwrk/mn-sre
+
+# Reference documents and templates
+/documents/                             @midnightntwrk/mn-sre
+/templates/                             @midnightntwrk/mn-sre
+/process.md                             @midnightntwrk/mn-sre
+/ai-reports.md                          @midnightntwrk/mn-sre @midnightntwrk/mn-security
+
+# Jekyll / Pages site
+/_config.yml                            @midnightntwrk/mn-sre
+/index.html                             @midnightntwrk/mn-sre
+/_layouts/                              @midnightntwrk/mn-sre
+/_data/                                 @midnightntwrk/mn-sre

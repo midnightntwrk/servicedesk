@@ -1,0 +1,234 @@
+---
+layout: default
+title: "Midnight Network ServiceDesk"
+---
+<main>
+
+<section class="band">
+  <p class="band-label">Raise a ticket</p>
+  <div class="ticket-grid">
+
+    <a class="ticket-card" href="{{ site.new_issue_base }}?template=bug-report.yml">
+      <div class="ticket-icon icon-bug">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="3.5" stroke="#534AB7" stroke-width="1.4"/>
+          <path d="M5 2.5L3 1M11 2.5L13 1M1 7h2M13 7h2M1 11h2M13 11h2" stroke="#534AB7" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="ticket-title">Bug report</p>
+      <p class="ticket-desc">Unexpected behaviour or broken feature across the ecosystem</p>
+      <span class="ticket-cta">Open template →</span>
+    </a>
+
+    <a class="ticket-card" href="{{ site.new_issue_base }}?template=help-request.yml">
+      <div class="ticket-icon icon-help">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6" stroke="#0F6E56" stroke-width="1.4"/>
+          <path d="M8 10.5v1.5M6.5 6.5a1.5 1.5 0 013 0c0 1.5-1.5 1.5-1.5 3" stroke="#0F6E56" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="ticket-title">Help request</p>
+      <p class="ticket-desc">Technical support or questions about SDK, node, or tooling</p>
+      <span class="ticket-cta">Open template →</span>
+    </a>
+
+    <a class="ticket-card" href="{{ site.new_issue_base }}?template=documentation-improvement.yml">
+      <div class="ticket-icon icon-docs">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="2" y="1" width="12" height="14" rx="2" stroke="#185FA5" stroke-width="1.4"/>
+          <path d="M5 6h6M5 9h6M5 12h4" stroke="#185FA5" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="ticket-title">Doc improvement</p>
+      <p class="ticket-desc">Gap or error in developer documentation</p>
+      <span class="ticket-cta">Open template →</span>
+    </a>
+
+    <a class="ticket-card ticket-card--sec" href="{{ site.security_url }}">
+      <div class="ticket-icon icon-sec">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1L2 4v5c0 3 3 5.5 6 6 3-.5 6-3 6-6V4L8 1z" stroke="#A32D2D" stroke-width="1.4"/>
+          <path d="M5.5 8l2 2L10.5 6" stroke="#A32D2D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="ticket-title">Security issue</p>
+      <p class="ticket-desc">Vulnerability — do not use public issues. Private report only.</p>
+      <span class="ticket-cta ticket-cta--sec">Private report →</span>
+    </a>
+
+  </div>
+</section>
+
+<section class="band">
+  <p class="band-label">Templates &amp; reference</p>
+  <div class="two-col">
+
+    <div class="panel">
+      <p class="panel-title">Copy-paste templates</p>
+      <div class="tpl-list">
+        {% assign templates = "release-notes,announcement,post-mortem" | split: "," %}
+        {% for tpl in templates %}
+        <div class="tpl-row">
+          <div class="tpl-info">
+            <span class="tpl-name">{{ tpl | replace: "-", " " | capitalize }}</span>
+            {% assign front = site.data.template_meta[tpl] %}
+            {% if front %}
+              <span class="tpl-meta">Last reviewed: {{ front.last_reviewed }}</span>
+              {% assign review_days = front.days_since_review | plus: 0 %}
+              {% if review_days >= 90 %}<span class="badge-warn">Review overdue</span>{% endif %}
+            {% endif %}
+          </div>
+          <div class="tpl-actions">
+            <button class="tpl-btn" onclick="copyTemplate('{{ tpl }}')">Copy</button>
+            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/{{ tpl }}.md" target="_blank" rel="noopener">Open</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Reference documents</p>
+      <div class="ref-list">
+        <div class="ref-row">
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/hard-fork-runtime-upgrades.md">Runtime upgrade vs hardfork guide</a>
+          <span class="ref-tag">Node operators</span>
+        </div>
+        <div class="ref-row">
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/bootnodes.md">Bootstrap node governance</a>
+          <span class="ref-tag ref-tag--draft">Draft</span>
+        </div>
+        <div class="ref-row">
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Triage &amp; workflow process</a>
+          <span class="ref-tag">Triage team</span>
+        </div>
+        <div class="ref-row">
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/ai-reports.md">AI bug report policy</a>
+          <span class="ref-tag">All reporters</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="band">
+  <p class="band-label">SLA status <span class="refresh-note">updated {{ site.data.sla.generated_at | date: "%H:%M UTC %d %b" }}</span></p>
+  <div class="sla-grid">
+
+    {% assign p1 = site.data.sla.priorities.p1 %}
+    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p1">
+      <div class="sla-header">
+        <span class="sla-label">P1 critical</span>
+        <span class="sla-chip sla-chip--pd">PagerDuty</span>
+      </div>
+      <p class="sla-target">{{ p1.target_display }}</p>
+      <div class="sla-stats">
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p1.open }}</span></div>
+        {% if p1.paged > 0 %}
+        <div class="pd-active"><span class="pd-dot"></span><span class="pd-label">{{ p1.paged }} incident active</span></div>
+        {% endif %}
+      </div>
+    </a>
+
+    {% assign p2 = site.data.sla.priorities.p2 %}
+    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p2">
+      <div class="sla-header">
+        <span class="sla-label">P2 high</span>
+        <span class="sla-chip sla-chip--ok">SLA clock</span>
+      </div>
+      <p class="sla-target">{{ p2.target_display }}</p>
+      <div class="sla-stats">
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p2.open }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p2.at_risk > 0 %}sla-warn{% endif %}">{{ p2.at_risk }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p2.breached > 0 %}sla-danger{% endif %}">{{ p2.breached }}</span></div>
+      </div>
+    </a>
+
+    {% assign p3 = site.data.sla.priorities.p3 %}
+    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p3">
+      <div class="sla-header">
+        <span class="sla-label">P3 medium</span>
+        <span class="sla-chip sla-chip--ok">SLA clock</span>
+      </div>
+      <p class="sla-target">{{ p3.target_display }}</p>
+      <div class="sla-stats">
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p3.open }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p3.at_risk > 0 %}sla-warn{% endif %}">{{ p3.at_risk }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p3.breached > 0 %}sla-danger{% endif %}">{{ p3.breached }}</span></div>
+      </div>
+    </a>
+
+    {% assign p4 = site.data.sla.priorities.p4 %}
+    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p4">
+      <div class="sla-header">
+        <span class="sla-label">P4 low</span>
+        <span class="sla-chip sla-chip--ok">SLA clock</span>
+      </div>
+      <p class="sla-target">{{ p4.target_display }}</p>
+      <div class="sla-stats">
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p4.open }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p4.at_risk > 0 %}sla-warn{% endif %}">{{ p4.at_risk }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p4.breached > 0 %}sla-danger{% endif %}">{{ p4.breached }}</span></div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<section class="band">
+  <p class="band-label">Announcements &amp; activity</p>
+  <div class="two-col">
+
+    <div class="panel">
+      <p class="panel-title">Announcements</p>
+      {% if site.data.announcements.items %}
+        {% for item in site.data.announcements.items limit:4 %}
+        <div class="announce-item">
+          <a class="announce-title" href="{{ item.url }}">{{ item.title }}</a>
+          <p class="announce-date">{{ item.date | date: "%d %b %Y" }}{% if item.pinned %} · pinned{% endif %}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No announcements yet. <a href="{{ site.discussions_url }}">View discussions →</a></p>
+      {% endif %}
+      <div class="panel-footer"><a href="{{ site.discussions_url }}">View all discussions →</a></div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Recent activity</p>
+      {% if site.data.activity.opened %}
+        {% for item in site.data.activity.opened limit:4 %}
+        <div class="activity-item">
+          <span class="act-p act-p{{ item.priority | downcase }}">{{ item.priority }}</span>
+          <div class="act-body">
+            <a class="act-title" href="{{ item.url }}">{{ item.title }}</a>
+            <p class="act-meta">{% if item.component != "" %}comp:{{ item.component }} · {% endif %}opened {{ item.opened_at | date: "%d %b" }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No recent activity.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<script>
+async function copyTemplate(name) {
+  const url = 'https://raw.githubusercontent.com/midnightntwrk/servicedesk/main/templates/' + name + '.md';
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const body = text.replace(/^---[\s\S]*?---\n/, '');
+    await navigator.clipboard.writeText(body);
+    event.target.textContent = 'Copied';
+    setTimeout(() => event.target.textContent = 'Copy', 2000);
+  } catch (e) {
+    window.open(url, '_blank');
+  }
+}
+</script>

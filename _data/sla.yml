@@ -1,0 +1,21 @@
+generated_at: "1970-01-01T00:00:00Z"
+priorities:
+  p1:
+    open: 0
+    paged: 0
+    target_display: "30 min (PagerDuty)"
+  p2:
+    open: 0
+    at_risk: 0
+    breached: 0
+    target_display: "4 business hours"
+  p3:
+    open: 0
+    at_risk: 0
+    breached: 0
+    target_display: "1 business day"
+  p4:
+    open: 0
+    at_risk: 0
+    breached: 0
+    target_display: "3 business days"
