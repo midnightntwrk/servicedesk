@@ -1,0 +1,27 @@
+title: "Midnight Network ServiceDesk"
+description: "Single entry point for bug reports, support, and operational reference"
+baseurl: "/servicedesk"
+url: "https://midnightntwrk.github.io"
+
+# Midnight brand
+primary_color: "#7B2FBE"
+secondary_color: "#1A1A2E"
+
+# Navigation links (repo-relative)
+issues_url: "https://github.com/midnightntwrk/servicedesk/issues"
+board_url: "https://github.com/orgs/midnightntwrk/projects/33"
+discussions_url: "https://github.com/midnightntwrk/servicedesk/discussions"
+new_issue_base: "https://github.com/midnightntwrk/servicedesk/issues/new"
+security_url: "https://github.com/midnightntwrk/servicedesk/security/advisories/new"
+
+# Jekyll settings
+markdown: kramdown
+plugins: []
+exclude:
+  - "*.tar"
+  - "*.tar.gz"
+  - ".git"
+  - ".github"
+  - "node_modules"
+  - "Gemfile"
+  - "Gemfile.lock"

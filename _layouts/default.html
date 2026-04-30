@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | default: site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #7B2FBE;
+      --brand-light: #EEEDFE;
+      --text-primary: #1a1a1a;
+      --text-secondary: #555;
+      --text-tertiary: #888;
+      --border: #e5e5e5;
+      --bg: #f6f5f3;
+      --surface: #fff;
+      --success-bg: #E1F5EE; --success-fg: #0F6E56;
+      --warn-bg: #FAEEDA; --warn-fg: #854F0B;
+      --danger-bg: #FCEBEB; --danger-fg: #A32D2D;
+      --info-bg: #E6F1FB; --info-fg: #185FA5;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; color: var(--text-primary); background: var(--bg); line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Nav */
+    .site-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+    .nav-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link { font-size: 13px; color: var(--text-secondary); padding: 5px 10px; border-radius: 6px; }
+    .nav-link:hover { background: var(--bg); color: var(--text-primary); }
+    .nav-cta { font-size: 12px; color: var(--text-primary); padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; gap: 4px; }
+    .nav-cta:hover { background: var(--bg); }
+
+    /* Layout */
+    .band { padding: 20px 24px; max-width: 960px; margin: 0 auto; }
+    .band-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 12px; }
+    .refresh-note { font-size: 10px; font-weight: 400; color: var(--text-tertiary); letter-spacing: 0; text-transform: none; margin-left: 8px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .panel-title { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .06em; text-transform: uppercase; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .panel-footer { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--brand); }
+
+    /* Ticket cards */
+    .ticket-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .ticket-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 7px; transition: border-color .15s; }
+    .ticket-card:hover { border-color: #bbb; }
+    .ticket-card--sec .ticket-cta--sec { color: var(--danger-fg); }
+    .ticket-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .ticket-icon svg { width: 15px; height: 15px; }
+    .icon-bug { background: var(--brand-light); }
+    .icon-help { background: var(--success-bg); }
+    .icon-docs { background: var(--info-bg); }
+    .icon-sec { background: var(--danger-bg); }
+    .ticket-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ticket-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; flex: 1; }
+    .ticket-cta { font-size: 11px; font-weight: 600; color: var(--brand); }
+    .ticket-cta--sec { color: var(--danger-fg); }
+
+    /* Templates */
+    .tpl-list { display: flex; flex-direction: column; }
+    .tpl-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .tpl-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .tpl-info { display: flex; flex-direction: column; gap: 2px; }
+    .tpl-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .tpl-meta { font-size: 10px; color: var(--text-tertiary); }
+    .tpl-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .tpl-btn { font-size: 11px; padding: 3px 9px; border-radius: 5px; border: 1px solid var(--border); cursor: pointer; color: var(--text-secondary); background: var(--bg); }
+    .tpl-btn:hover { background: #ece9e3; }
+    .badge-warn { font-size: 9px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; padding: 1px 5px; display: inline-block; }
+
+    /* Reference */
+    .ref-list { display: flex; flex-direction: column; }
+    .ref-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .ref-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .ref-name { font-size: 12px; color: var(--brand); }
+    .ref-name:hover { text-decoration: underline; }
+    .ref-tag { font-size: 9px; background: var(--bg); color: var(--text-tertiary); border-radius: 4px; padding: 2px 6px; border: 1px solid var(--border); white-space: nowrap; flex-shrink: 0; }
+    .ref-tag--draft { font-size: 9px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; padding: 2px 6px; flex-shrink: 0; }
+
+    /* SLA tiles */
+    .sla-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .sla-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: block; transition: border-color .15s; }
+    .sla-tile:hover { border-color: #bbb; }
+    .sla-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sla-label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .sla-chip { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .sla-chip--pd { background: var(--brand-light); color: #3C3489; }
+    .sla-chip--ok { background: var(--success-bg); color: var(--success-fg); }
+    .sla-target { font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; }
+    .sla-stats { display: flex; flex-direction: column; gap: 3px; }
+    .sla-stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .sla-stat-l { font-size: 10px; color: var(--text-tertiary); }
+    .sla-stat-v { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .sla-warn { color: var(--warn-fg); }
+    .sla-danger { color: var(--danger-fg); }
+    .pd-active { display: flex; align-items: center; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .pd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger-fg); flex-shrink: 0; }
+    .pd-label { font-size: 10px; color: var(--danger-fg); font-weight: 600; }
+
+    /* Announcements & Activity */
+    .announce-item { padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .announce-item:last-child { border-bottom: none; }
+    .announce-title { font-size: 12px; color: var(--text-primary); display: block; }
+    .announce-title:hover { color: var(--brand); }
+    .announce-date { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+    .activity-item { display: flex; align-items: flex-start; gap: 7px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .act-p { font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
+    .act-pp1 { background: var(--danger-bg); color: var(--danger-fg); }
+    .act-pp2 { background: var(--warn-bg); color: var(--warn-fg); }
+    .act-pp3 { background: var(--brand-light); color: #3C3489; }
+    .act-pp4 { background: var(--success-bg); color: var(--success-fg); }
+    .act-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .act-title { font-size: 11px; color: var(--text-primary); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .act-title:hover { color: var(--brand); }
+    .act-meta { font-size: 10px; color: var(--text-tertiary); }
+    .empty-state { font-size: 12px; color: var(--text-tertiary); padding: 8px 0; }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); margin-top: 12px; }
+    .footer-left { font-size: 11px; color: var(--text-tertiary); }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-links a { font-size: 11px; color: var(--text-secondary); }
+    .footer-links a:hover { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    Midnight Network · ServiceDesk
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="{{ site.board_url }}">Board</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/tree/main/templates">Templates</a>
+    <a class="nav-link" href="https://docs.midnight.network">Docs</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Process</a>
+    <div style="width:1px;height:18px;background:var(--border);margin:0 4px"></div>
+    <a class="nav-cta" href="{{ site.issues_url }}?q=is:issue+author:@me">My tickets ↗</a>
+  </div>
+</nav>
+
+{{ content }}
+
+<footer class="site-footer">
+  <span class="footer-left">midnightntwrk/servicedesk · data refreshed every 15 min</span>
+  <div class="footer-links">
+    <a href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md">SECURITY.md</a>
+    <a href="https://github.com/midnightntwrk/servicedesk/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
+    <a href="mailto:security@midnight.foundation">security@midnight.foundation</a>
+  </div>
+</footer>
+
+</body>
+</html>
