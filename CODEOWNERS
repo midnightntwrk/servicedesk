@@ -1,31 +1,17 @@
-*                                        @midnightntwrk/mn-sre @hegaleon
+# CODEOWNERS — midnightntwrk/servicedesk
+# Global owner: all files default to @hegaleon.
+# Three files carry an additional @midnightntwrk/mn-security requirement
+# because they touch live escalation credentials or the published security policy.
 
-/.github/ISSUE_TEMPLATE/                @midnightntwrk/mn-sre
-/.github/PULL_REQUEST_TEMPLATE/         @midnightntwrk/mn-sre
-/.github/workflows/triage.yml           @midnightntwrk/mn-sre
+*                                           @hegaleon
 
-# Operational escalation workflows — joint SRE + Security sign-off required
-/.github/workflows/p1-pagerduty.yml     @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/.github/workflows/sla-clock.yml        @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/.github/workflows/data-refresh.yml     @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/.github/workflows/template-staleness.yml @midnightntwrk/mn-sre
+# ── Security-gated files (require mn-security sign-off in addition to @hegaleon) ──
 
-/.github/dependabot.yml                 @midnightntwrk/mn-security
-/.github/workflows/scan.yaml            @midnightntwrk/mn-security
+# Live on-call paging — uses PAGERDUTY_ROUTING_KEY secret
+/.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
 
-/CODEOWNERS                             @midnightntwrk/mn-security
-/CONTRIBUTING.md                        @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/SECURITY.md                            @midnightntwrk/mn-sre @midnightntwrk/mn-security
-/CODE_OF_CONDUCT.md                     @midnightntwrk/mn-sre
+# Cross-org IaC routing — uses IAC_APP_ID and IAC_APP_PRIVATE_KEY (GitHub App)
+/.github/workflows/route-iac.yml            @hegaleon @midnightntwrk/mn-security
 
-# Reference documents and templates
-/documents/                             @midnightntwrk/mn-sre
-/templates/                             @midnightntwrk/mn-sre
-/process.md                             @midnightntwrk/mn-sre
-/ai-reports.md                          @midnightntwrk/mn-sre @midnightntwrk/mn-security
-
-# Jekyll / Pages site
-/_config.yml                            @midnightntwrk/mn-sre
-/index.html                             @midnightntwrk/mn-sre
-/_layouts/                              @midnightntwrk/mn-sre
-/_data/                                 @midnightntwrk/mn-sre
+# Published security policy — authoritative channel order and contact details
+/SECURITY.md                                @hegaleon @midnightntwrk/mn-security

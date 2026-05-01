@@ -1,0 +1,97 @@
+name: Documentation improvement
+description: Report a gap, error, or improvement needed in developer documentation
+title: "[Docs]: "
+labels: ["type:docs", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for **developer documentation** only (docs.midnight.network and in-repo guides).
+        For external-facing or marketing content, contact the Foundation team directly.
+
+  - type: input
+    id: doc_url
+    attributes:
+      label: Document URL or path
+      description: Link to the specific page or file that needs improvement
+      placeholder: "https://docs.midnight.network/... or documents/hard-fork-runtime-upgrades.md"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: improvement_type
+    attributes:
+      label: Type of improvement
+      description: What kind of issue are you reporting?
+      options:
+        - "Incorrect content — something is factually wrong"
+        - "Outdated content — correct once, no longer accurate"
+        - "Missing content — a topic or example that should exist"
+        - "Unclear content — accurate but hard to understand"
+        - "Broken link or formatting"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the ecosystem does this documentation cover?
+      options:
+        - "Don't know / General"
+        - "Infra — Node (midnight-node)"
+        - "Infra — Ledger (midnight-ledger)"
+        - "Infra — Indexer (midnight-indexer)"
+        - "Infra — Proof Server"
+        - "Infra — ZK Circuits (midnight-zk)"
+        - "Contracts — Compact Compiler (compactc)"
+        - "Contracts — ZKIR"
+        - "Contracts — Contract Runtime"
+        - "App/SDK — Midnight.js SDK"
+        - "App/SDK — Wallet SDK (midnight-wallet)"
+        - "App/SDK — DApp Connector API"
+        - "App/SDK — Faucet"
+        - "Interop — Partner Chains (Cardano)"
+        - "Interop — Bridge Contracts"
+        - "Ops — Deployment (midnight-charts)"
+        - "Ops — Build System"
+        - "Ops — ServiceDesk / process"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the issue
+      description: What is wrong or missing?
+      placeholder: "The runtime upgrade guide does not mention the migration hook timeout for ledger v6 → v7."
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_fix
+    attributes:
+      label: Suggested fix or addition
+      description: If you have a specific suggestion for how to improve it, add it here. Code snippets, wording, or structural changes are all welcome.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Any other relevant information — related issues, PRs, or external references.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have confirmed this is developer documentation (not external marketing content)
+          required: true
+        - label: I have searched existing issues to avoid duplicates
+          required: true
