@@ -1,0 +1,172 @@
+name: Data refresh
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        id: build-data
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const now = new Date();
+            const ts = now.toISOString();
+
+            const BOT_LOGINS = new Set(['github-actions[bot]', 'dependabot[bot]']);
+
+            const bhElapsed = (start, end) => {
+              let totalMs = 0;
+              const cursor = new Date(start.getTime());
+              while (cursor < end) {
+                const day = cursor.getUTCDay();
+                const hour = cursor.getUTCHours();
+                const inBH = day >= 1 && day <= 5 && hour >= 9 && hour < 18;
+                if (inBH) {
+                  const endOfBH = new Date(cursor.getTime());
+                  endOfBH.setUTCHours(18, 0, 0, 0);
+                  const chunkEnd = end < endOfBH ? end : endOfBH;
+                  totalMs += chunkEnd.getTime() - cursor.getTime();
+                  cursor.setTime(chunkEnd.getTime());
+                } else {
+                  const next = new Date(cursor.getTime());
+                  if (day === 6) next.setUTCDate(next.getUTCDate() + 2);
+                  else if (day === 0) next.setUTCDate(next.getUTCDate() + 1);
+                  else if (hour >= 18) next.setUTCDate(next.getUTCDate() + 1);
+                  next.setUTCHours(9, 0, 0, 0);
+                  cursor.setTime(next.getTime());
+                }
+              }
+              return totalMs / 3600000;
+            };
+
+            const SLA_HOURS = { 'priority:p2': 4, 'priority:p3': 9, 'priority:p4': 27 };
+
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+
+            const sla = {
+              generated_at: ts,
+              priorities: {
+                p1: { open: 0, paged: 0, target_display: '30 min (PagerDuty)' },
+                p2: { open: 0, at_risk: 0, breached: 0, target_display: '4 business hours' },
+                p3: { open: 0, at_risk: 0, breached: 0, target_display: '1 business day' },
+                p4: { open: 0, at_risk: 0, breached: 0, target_display: '3 business days' },
+              },
+            };
+
+            const recentOpened = [];
+            const recentClosed = [];
+
+            for (const issue of openIssues) {
+              if (issue.pull_request) continue;
+              const labels = issue.labels.map(l => l.name);
+
+              if (labels.includes('priority:p1')) {
+                sla.priorities.p1.open += 1;
+                if (labels.includes('pd:paged')) sla.priorities.p1.paged += 1;
+              }
+
+              for (const [prio, hours] of Object.entries(SLA_HOURS)) {
+                if (!labels.includes(prio)) continue;
+                const key = prio.replace('priority:', '');
+                sla.priorities[key].open += 1;
+                const elapsed = bhElapsed(new Date(issue.created_at), now);
+                if (elapsed >= hours) sla.priorities[key].breached += 1;
+                else if (elapsed >= hours * 0.8) sla.priorities[key].at_risk += 1;
+              }
+
+              if (recentOpened.length < 5) {
+                const prio = labels.find(l => l.startsWith('priority:')) || '';
+                const comp = labels.find(l => l.startsWith('comp:')) || '';
+                recentOpened.push({
+                  number: issue.number,
+                  title: issue.title.slice(0, 80),
+                  priority: prio.replace('priority:', '').toUpperCase(),
+                  component: comp.replace('comp:', ''),
+                  opened_at: issue.created_at,
+                  url: issue.html_url,
+                });
+              }
+            }
+
+            const closedIssues = await github.rest.issues.listForRepo({
+              owner, repo, state: 'closed', per_page: 5,
+              sort: 'updated', direction: 'desc',
+            });
+            for (const issue of closedIssues.data) {
+              if (issue.pull_request) continue;
+              const openedMs = new Date(issue.created_at).getTime();
+              const closedMs = new Date(issue.closed_at).getTime();
+              const ttrH = Math.round((closedMs - openedMs) / 3600000);
+              recentClosed.push({
+                number: issue.number,
+                title: issue.title.slice(0, 80),
+                closed_at: issue.closed_at,
+                ttr_hours: ttrH,
+                url: issue.html_url,
+              });
+            }
+
+            const slaYaml = [
+              `generated_at: "${sla.generated_at}"`,
+              `priorities:`,
+              ...Object.entries(sla.priorities).map(([k, v]) => {
+                const lines = [`  ${k}:`, `    open: ${v.open}`, `    target_display: "${v.target_display}"`];
+                if (k === 'p1') lines.push(`    paged: ${v.paged}`);
+                else {
+                  lines.push(`    at_risk: ${v.at_risk}`);
+                  lines.push(`    breached: ${v.breached}`);
+                }
+                return lines.join('\n');
+              }),
+            ].join('\n');
+
+            const actYaml = [
+              `generated_at: "${ts}"`,
+              `opened:`,
+              ...recentOpened.map(i =>
+                `  - number: ${i.number}\n    title: "${i.title.replace(/"/g, '\\"')}"\n    priority: "${i.priority}"\n    component: "${i.component}"\n    opened_at: "${i.opened_at}"\n    url: "${i.url}"`
+              ),
+              `closed:`,
+              ...recentClosed.map(i =>
+                `  - number: ${i.number}\n    title: "${i.title.replace(/"/g, '\\"')}"\n    closed_at: "${i.closed_at}"\n    ttr_hours: ${i.ttr_hours}\n    url: "${i.url}"`
+              ),
+            ].join('\n');
+
+            core.setOutput('sla_yaml', slaYaml);
+            core.setOutput('act_yaml', actYaml);
+
+      - name: Write data files
+        run: |
+          cat > _data/sla.yml << 'YAML'
+          ${{ steps.build-data.outputs.sla_yaml }}
+          YAML
+          cat > _data/activity.yml << 'YAML'
+          ${{ steps.build-data.outputs.act_yaml }}
+          YAML
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _data/sla.yml _data/activity.yml
+          git diff --staged --quiet || git commit -m "chore(data): refresh sla and activity [skip ci]"
+          git push

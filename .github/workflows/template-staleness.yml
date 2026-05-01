@@ -1,0 +1,100 @@
+name: Template staleness check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Monday 09:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: template-staleness
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { owner, repo } = context.repo;
+
+            const STALE_DAYS = 90;
+            const TEMPLATES_DIR = 'templates';
+
+            if (!fs.existsSync(TEMPLATES_DIR)) {
+              core.notice('No templates/ directory found — nothing to check');
+              return;
+            }
+
+            const parseLastReviewed = (content) => {
+              const m = content.match(/^last_reviewed:\s*["']?(\d{4}-\d{2}-\d{2})["']?/m);
+              return m ? new Date(m[1]) : null;
+            };
+
+            const parseOwner = (content) => {
+              const m = content.match(/^owner:\s*["']?([^"'\n]+)["']?/m);
+              return m ? m[1].trim() : null;
+            };
+
+            const files = fs.readdirSync(TEMPLATES_DIR).filter(f => f.endsWith('.md'));
+            const now = new Date();
+            let staleCount = 0;
+
+            for (const file of files) {
+              const content = fs.readFileSync(path.join(TEMPLATES_DIR, file), 'utf8');
+              const lastReviewed = parseLastReviewed(content);
+              const templateOwner = parseOwner(content);
+
+              if (!lastReviewed) {
+                core.warning(`${file}: no last_reviewed date found — skipping`);
+                continue;
+              }
+
+              const ageMs = now.getTime() - lastReviewed.getTime();
+              const ageDays = Math.floor(ageMs / 86400000);
+
+              if (ageDays < STALE_DAYS) continue;
+              staleCount += 1;
+
+              const title = `chore: review overdue — templates/${file} (${ageDays}d since last review)`;
+
+              const existing = await github.paginate(github.rest.issues.listForRepo, {
+                owner, repo, state: 'open', labels: 'type:maintenance', per_page: 100,
+              });
+              if (existing.some(i => i.title === title)) {
+                core.notice(`Skipping ${file} — tracking issue already exists`);
+                continue;
+              }
+
+              const body = [
+                `**Template review overdue**: \`templates/${file}\``,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| Last reviewed | ${lastReviewed.toISOString().slice(0, 10)} |`,
+                `| Days since review | ${ageDays} |`,
+                `| Target | every ${STALE_DAYS} days |`,
+                `| Owner | ${templateOwner ? `@${templateOwner}` : '_not set_'} |`,
+                ``,
+                `Please review the template for accuracy, update the \`last_reviewed\` front-matter field, and close this issue.`,
+              ].join('\n');
+
+              await github.rest.issues.create({
+                owner, repo,
+                title,
+                body,
+                labels: ['type:maintenance', 'status:triage'],
+              });
+
+              core.notice(`Opened staleness issue for ${file} (${ageDays} days old)`);
+            }
+
+            core.notice(`Staleness check complete — ${staleCount} stale template(s) found`);

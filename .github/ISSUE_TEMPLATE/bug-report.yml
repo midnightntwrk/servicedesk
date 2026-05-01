@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         ## Thank you for reporting a bug!
-        ### If you are submitting a bug report based on an AI assessment or ai-assisted assessment of the code, please read our [AI reporting guidelines](https://github.com/shieldedtech/mnf-stl-support/blob/main/ai-reports.md)
+        ### If you are submitting a bug report based on an AI assessment or ai-assisted assessment of the code, please read our [AI reporting guidelines](https://github.com/midnightntwrk/servicedesk/blob/main/ai-reports.md)
         Please fill out this form to help us understand and reproduce the issue. The more details you provide, the faster we can help resolve it.
 
   - type: dropdown

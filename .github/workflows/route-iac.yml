@@ -1,0 +1,98 @@
+name: Route IaC requests to shielded-iac
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: route-iac-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac:routed')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Mint installation token for shielded-iac + this repo
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.IAC_APP_ID }}
+          private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
+          owner: shieldedtech
+          repositories: |
+            shielded-iac
+            mnf-stl-support
+
+      - name: Mirror issue to shielded-iac, comment back, and stamp routed marker
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const ROUTED_LABEL = 'route:iac:routed';
+            const routedLabelMeta = {
+              color: '0e8a16',
+              description: 'Already mirrored to shielded-iac — prevents duplicate routing',
+            };
+
+            const sourceIssue = context.payload.issue;
+            const sourceOwner = context.repo.owner;
+            const sourceRepo  = context.repo.repo;
+            const sourceRef   = `${sourceOwner}/${sourceRepo}#${sourceIssue.number}`;
+            const reporter    = sourceIssue.user?.login ?? 'unknown';
+
+            const destOwner = 'shieldedtech';
+            const destRepo  = 'shielded-iac';
+
+            const ensureLabel = async (owner, repo, name, meta) => {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status !== 404) throw e;
+                await github.rest.issues.createLabel({
+                  owner, repo, name, color: meta.color, description: meta.description,
+                });
+              }
+            };
+
+            const mirrorBody = [
+              `> **Routed from:** ${sourceIssue.html_url} (${sourceRef})`,
+              `> **Originally reported by:** @${reporter}`,
+              `> Comments and updates here are not automatically synced back to the source issue. Please paste status updates back to ${sourceRef} when relevant.`,
+              ``,
+              `---`,
+              ``,
+              sourceIssue.body || '_(no body provided)_',
+            ].join('\n');
+
+            const { data: created } = await github.rest.issues.create({
+              owner: destOwner,
+              repo: destRepo,
+              title: sourceIssue.title,
+              body: mirrorBody,
+              labels: ['task', 'triage'],
+            });
+
+            await github.rest.issues.createComment({
+              owner: sourceOwner,
+              repo: sourceRepo,
+              issue_number: sourceIssue.number,
+              body: [
+                `Routed to **${created.html_url}** — Shielded SRE will work the request there.`,
+                ``,
+                `This issue stays open as your tracking thread. SRE will post status updates back here as the work progresses.`,
+              ].join('\n'),
+            });
+
+            await ensureLabel(sourceOwner, sourceRepo, ROUTED_LABEL, routedLabelMeta);
+            await github.rest.issues.addLabels({
+              owner: sourceOwner,
+              repo: sourceRepo,
+              issue_number: sourceIssue.number,
+              labels: [ROUTED_LABEL],
+            });
+
+            core.notice(`Routed ${sourceRef} -> ${created.html_url}`);
