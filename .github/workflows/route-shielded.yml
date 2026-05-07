@@ -1,0 +1,162 @@
+name: Route to shielded — mnf-stl-support
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: route-shielded-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded:routed')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Mint installation token for mnf-stl-support + this repo
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.IAC_APP_ID }}
+          private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
+          owner: shieldedtech
+          repositories: |
+            mnf-stl-support
+
+      - name: Mirror issue to mnf-stl-support, comment back, and stamp routed marker
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const ROUTED_LABEL = 'route:shielded:routed';
+            const routedLabelMeta = {
+              color: '0e8a16',
+              description: 'Already routed to mnf-stl-support — prevents duplicate routing',
+            };
+
+            const sourceIssue = context.payload.issue;
+            const sourceOwner = context.repo.owner;
+            const sourceRepo  = context.repo.repo;
+            const sourceRef   = `${sourceOwner}/${sourceRepo}#${sourceIssue.number}`;
+            const reporter    = sourceIssue.user?.login ?? 'unknown';
+            const labeler     = context.payload.sender?.login ?? 'unknown';
+
+            const destOwner = 'shieldedtech';
+            const destRepo  = 'mnf-stl-support';
+
+            const ensureLabel = async (owner, repo, name, meta) => {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status !== 404) throw e;
+                await github.rest.issues.createLabel({
+                  owner, repo, name, color: meta.color, description: meta.description,
+                });
+              }
+            };
+
+            // Find the labeler's most-recent comment on the source issue. Used as the
+            // routing reason quoted on both sides. We do not enforce its presence —
+            // that is a process expectation, not a workflow-level guard.
+            let routingReason = '_(no routing reason provided by the labeler — please follow up in the destination issue)_';
+            try {
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner: sourceOwner, repo: sourceRepo, issue_number: sourceIssue.number, per_page: 100 }
+              );
+              const labelerComments = comments.filter(c => c.user && c.user.login === labeler);
+              if (labelerComments.length > 0) {
+                const last = labelerComments[labelerComments.length - 1];
+                if (last.body && last.body.trim().length > 0) {
+                  routingReason = last.body;
+                }
+              }
+            } catch (e) {
+              core.warning(`Could not fetch comments for routing reason: ${e.message}`);
+            }
+
+            // Determine which source labels to copy: drop the trigger and the marker.
+            const sourceLabelNames = (sourceIssue.labels || [])
+              .map(l => typeof l === 'string' ? l : l.name)
+              .filter(name => name !== 'route:shielded' && name !== 'route:shielded:routed');
+
+            // Apply only labels that already exist on the destination. Auto-creation is
+            // intentionally NOT done here — label standardization is handled separately
+            // by the shielded-iac-modules/github/labels module work.
+            const destLabels = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              { owner: destOwner, repo: destRepo, per_page: 100 }
+            );
+            const destLabelSet = new Set(destLabels.map(l => l.name));
+            const labelsToApply = sourceLabelNames.filter(n => destLabelSet.has(n));
+            const labelsSkipped = sourceLabelNames.filter(n => !destLabelSet.has(n));
+
+            // Quoted reason block (one '> ' prefix per line).
+            const reasonBlock = routingReason
+              .split('\n')
+              .map(line => `> ${line}`)
+              .join('\n');
+
+            const skippedBlock = labelsSkipped.length === 0
+              ? ''
+              : [
+                  ``,
+                  `**Labels not yet available on \`${destOwner}/${destRepo}\` (skipped):**`,
+                  ...labelsSkipped.map(n => `- \`${n}\``),
+                  ``,
+                  `_They will be applied automatically once label standardization syncs both repos._`,
+                ].join('\n');
+
+            const mirrorBody = [
+              `> **Routed from:** ${sourceIssue.html_url} (${sourceRef})`,
+              `> **Originally reported by:** @${reporter}`,
+              `> **Routed by:** @${labeler}`,
+              `> **Routing reason:**`,
+              reasonBlock,
+              ``,
+              `---`,
+              skippedBlock,
+              ``,
+              sourceIssue.body || '_(no body provided)_',
+            ].filter(Boolean).join('\n');
+
+            const { data: created } = await github.rest.issues.create({
+              owner: destOwner,
+              repo: destRepo,
+              title: sourceIssue.title,
+              body: mirrorBody,
+              labels: labelsToApply,
+            });
+
+            const skippedSummary = labelsSkipped.length > 0
+              ? `_${labelsSkipped.length} label(s) skipped because they do not exist on \`${destOwner}/${destRepo}\` yet: ${labelsSkipped.map(n => '`' + n + '`').join(', ')}._`
+              : '';
+
+            await github.rest.issues.createComment({
+              owner: sourceOwner,
+              repo: sourceRepo,
+              issue_number: sourceIssue.number,
+              body: [
+                `Routed to **${created.html_url}**.`,
+                ``,
+                `**Reason (from @${labeler}):**`,
+                reasonBlock,
+                ``,
+                skippedSummary,
+                ``,
+                `This issue stays open as the source-of-record. The mnf-stl-support team will post status updates back here as the work progresses.`,
+              ].filter(Boolean).join('\n'),
+            });
+
+            await ensureLabel(sourceOwner, sourceRepo, ROUTED_LABEL, routedLabelMeta);
+            await github.rest.issues.addLabels({
+              owner: sourceOwner,
+              repo: sourceRepo,
+              issue_number: sourceIssue.number,
+              labels: [ROUTED_LABEL],
+            });
+
+            core.notice(`Routed ${sourceRef} -> ${created.html_url}`);
