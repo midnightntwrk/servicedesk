@@ -28,8 +28,13 @@ jobs:
 
       - name: Mirror issue to mnf-stl-support, comment back, and stamp routed marker
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEST_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
+          # No github-token specified -> defaults to GITHUB_TOKEN, which has issues:write
+          # on this repo per the workflow's permissions block. The App-installation token
+          # is shieldedtech-scoped and cannot write to midnightntwrk/servicedesk; we use it
+          # only for cross-org ops on the destination.
           script: |
             const ROUTED_LABEL = 'route:shielded:routed';
             const routedLabelMeta = {
@@ -47,12 +52,17 @@ jobs:
             const destOwner = 'shieldedtech';
             const destRepo  = 'mnf-stl-support';
 
-            const ensureLabel = async (owner, repo, name, meta) => {
+            // Two clients:
+            //   `github`     -> GITHUB_TOKEN (default), used for source ops on servicedesk
+            //   `destClient` -> App-installation token, used for cross-org ops on mnf-stl-support
+            const destClient = require('@actions/github').getOctokit(process.env.DEST_TOKEN);
+
+            const ensureLabel = async (client, owner, repo, name, meta) => {
               try {
-                await github.rest.issues.getLabel({ owner, repo, name });
+                await client.rest.issues.getLabel({ owner, repo, name });
               } catch (e) {
                 if (e.status !== 404) throw e;
-                await github.rest.issues.createLabel({
+                await client.rest.issues.createLabel({
                   owner, repo, name, color: meta.color, description: meta.description,
                 });
               }
@@ -85,9 +95,9 @@ jobs:
 
             // Apply only labels that already exist on the destination. Auto-creation is
             // intentionally NOT done here — label standardization is handled separately
-            // by the shielded-iac-modules/github/labels module work.
-            const destLabels = await github.paginate(
-              github.rest.issues.listLabelsForRepo,
+            // by the shielded-iac-modules/github/labels module work. (Cross-org read.)
+            const destLabels = await destClient.paginate(
+              destClient.rest.issues.listLabelsForRepo,
               { owner: destOwner, repo: destRepo, per_page: 100 }
             );
             const destLabelSet = new Set(destLabels.map(l => l.name));
@@ -123,7 +133,8 @@ jobs:
               sourceIssue.body || '_(no body provided)_',
             ].filter(Boolean).join('\n');
 
-            const { data: created } = await github.rest.issues.create({
+            // Cross-org write: use App-token client.
+            const { data: created } = await destClient.rest.issues.create({
               owner: destOwner,
               repo: destRepo,
               title: sourceIssue.title,
@@ -151,7 +162,8 @@ jobs:
               ].filter(Boolean).join('\n'),
             });
 
-            await ensureLabel(sourceOwner, sourceRepo, ROUTED_LABEL, routedLabelMeta);
+            // Source-side write: use GITHUB_TOKEN.
+            await ensureLabel(github, sourceOwner, sourceRepo, ROUTED_LABEL, routedLabelMeta);
             await github.rest.issues.addLabels({
               owner: sourceOwner,
               repo: sourceRepo,
