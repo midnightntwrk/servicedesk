@@ -1,17 +1,36 @@
 # CODEOWNERS — midnightntwrk/servicedesk
-# Global owner: all files default to @hegaleon.
-# Three files carry an additional @midnightntwrk/mn-security requirement
-# because they touch live escalation credentials or the published security policy.
+#
+# Default owners: @hegaleon and the @midnightntwrk/mn-sre team. The team
+# co-ownership eliminates the previous single-point-of-failure on a single
+# user for routine repo changes.
+#
+# Governance, security-policy and secret-touching files require
+# @midnightntwrk/mn-security sign-off in addition to @hegaleon. mn-sre is
+# intentionally NOT on these lines — separation of duties: SRE handles
+# routine repo work, security handles policy and credentials.
+# File set is standardized on the pattern used in other midnightntwrk
+# repos (see midnightntwrk/midnight-node) and extended with the three
+# workflows in this repo that hold live secrets / App credentials.
 
-*                                           @hegaleon
+*                                           @hegaleon @midnightntwrk/mn-sre
 
-# ── Security-gated files (require mn-security sign-off in addition to @hegaleon) ──
-
-# Live on-call paging — uses PAGERDUTY_ROUTING_KEY secret
-/.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
-
-# Cross-org IaC routing — uses IAC_APP_ID and IAC_APP_PRIVATE_KEY (GitHub App)
-/.github/workflows/route-iac.yml            @hegaleon @midnightntwrk/mn-security
-
-# Published security policy — authoritative channel order and contact details
+# ── Governance + policy ──────────────────────────────────────────────────────
+/CODE_OF_CONDUCT.md                         @hegaleon @midnightntwrk/mn-security
+/CODEOWNERS                                 @hegaleon @midnightntwrk/mn-security
+/CONTRIBUTING.md                            @hegaleon @midnightntwrk/mn-security
+/LICENSE                                    @hegaleon @midnightntwrk/mn-security
 /SECURITY.md                                @hegaleon @midnightntwrk/mn-security
+
+# ── GitHub config + scanning ─────────────────────────────────────────────────
+/.github/dependabot.yml                     @hegaleon @midnightntwrk/mn-security
+/.github/ISSUE_TEMPLATE/                    @hegaleon @midnightntwrk/mn-security
+/.github/PULL_REQUEST_TEMPLATE/             @hegaleon @midnightntwrk/mn-security
+/.github/workflows/scan.yaml                @hegaleon @midnightntwrk/mn-security
+
+# ── Secret-touching workflows (servicedesk-specific) ─────────────────────────
+# p1-pagerduty.yml      — uses PAGERDUTY_ROUTING_KEY
+# route-iac.yml         — uses IAC_APP_ID / IAC_APP_PRIVATE_KEY (GitHub App)
+# route-shielded.yml    — reuses IAC_APP_ID / IAC_APP_PRIVATE_KEY for cross-org issue mirroring
+/.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
+/.github/workflows/route-iac.yml            @hegaleon @midnightntwrk/mn-security
+/.github/workflows/route-shielded.yml       @hegaleon @midnightntwrk/mn-security
