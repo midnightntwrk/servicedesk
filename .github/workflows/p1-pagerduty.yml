@@ -96,7 +96,7 @@ jobs:
             });
 
             const labels = issue.labels.map(l => (typeof l === 'string' ? l : l.name));
-            const hasP1 = labels.includes('priority:p1');
+            const hasP1 = labels.includes('priority:p1-critical');
             const isPaged = labels.includes(PAGED_LABEL);
             const isOpen = issue.state === 'open';
 
@@ -111,7 +111,7 @@ jobs:
             const shouldBePaged = hasP1 && isOpen && !humanAcked;
 
             if (shouldBePaged && !isPaged) {
-              const component = labels.find(l => l.startsWith('comp:')) || 'n/a';
+              const component = labels.find(l => l.startsWith('component:')) || 'n/a';
               const network   = labels.find(l => l.startsWith('network:')) || 'n/a';
               const source    = labels.find(l => l.startsWith('source:')) || 'n/a';
 
@@ -141,7 +141,7 @@ jobs:
 
               await github.rest.issues.createComment({
                 owner, repo, issue_number,
-                body: `**P1 paged via PagerDuty** — cc @shieldedtech/shielded-sre. Incident will auto-resolve when a human comments, the issue is closed, or \`priority:p1\` is removed.`,
+                body: `**P1 paged via PagerDuty** — cc @shieldedtech/shielded-sre. Incident will auto-resolve when a human comments, the issue is closed, or \`priority:p1-critical\` is removed.`,
               });
 
               core.notice(`Triggered PagerDuty for #${issue_number} (dedup=${dedupKey})`);
@@ -150,7 +150,7 @@ jobs:
 
             if (!shouldBePaged && isPaged) {
               const reason =
-                !hasP1 ? 'priority:p1 removed' :
+                !hasP1 ? 'priority:p1-critical removed' :
                 !isOpen ? 'issue closed' :
                 humanAcked ? 'human comment' : 'unknown';
 

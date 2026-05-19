@@ -13,11 +13,7 @@ concurrency:
 
 jobs:
   mirror:
-    # Idempotency check accepts both the canonical `route:iac-routed` marker and the
-    # legacy nested-colon `route:iac:routed` form during migration. After all legacy
-    # markers are renamed to `route:iac-routed` (gh label edit), the legacy clause
-    # can be dropped in a follow-up.
-    if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac-routed') && !contains(toJSON(github.event.issue.labels), 'route:iac:routed')
+    if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac-routed')
     runs-on: ubuntu-24.04
     steps:
       - name: Mint installation token for shielded-iac + this repo
@@ -38,8 +34,8 @@ jobs:
           script: |
             const ROUTED_LABEL = 'route:iac-routed';
             const routedLabelMeta = {
-              color: '0e8a16',
-              description: 'Already mirrored to shielded-iac — prevents duplicate routing',
+              color: 'cfd3d7',
+              description: 'Routed to shieldedtech/shielded-iac',
             };
 
             const sourceIssue = context.payload.issue;
@@ -77,7 +73,7 @@ jobs:
               repo: destRepo,
               title: sourceIssue.title,
               body: mirrorBody,
-              labels: ['task', 'triage'],
+              labels: ['status:untriaged'],
             });
 
             await github.rest.issues.createComment({
