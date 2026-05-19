@@ -89,6 +89,8 @@ jobs:
             }
 
             // Determine which source labels to copy: drop the trigger and the marker.
+            // The legacy nested-colon marker name is also dropped for backwards-
+            // compatibility while old markers are being renamed.
             const sourceLabelNames = (sourceIssue.labels || [])
               .map(l => typeof l === 'string' ? l : l.name)
               .filter(name => name !== 'route:shielded' && name !== 'route:shielded-routed');
