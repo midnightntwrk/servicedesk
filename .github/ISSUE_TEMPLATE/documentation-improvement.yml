@@ -1,6 +1,7 @@
 name: Documentation improvement
 description: Report a gap, error, or improvement needed in developer documentation
 title: "[Docs]: "
+type: Task
 labels: ["status:untriaged", "documentation"]
 assignees: []
 
