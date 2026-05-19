@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   mirror:
-    if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded:routed')
+    if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded-routed')
     runs-on: ubuntu-24.04
     steps:
       - name: Mint installation token for mnf-stl-support + this repo
@@ -36,10 +36,10 @@ jobs:
           # is shieldedtech-scoped and cannot write to midnightntwrk/servicedesk; we use it
           # only for cross-org ops on the destination.
           script: |
-            const ROUTED_LABEL = 'route:shielded:routed';
+            const ROUTED_LABEL = 'route:shielded-routed';
             const routedLabelMeta = {
-              color: '0e8a16',
-              description: 'Already routed to mnf-stl-support — prevents duplicate routing',
+              color: 'cfd3d7',
+              description: 'Routed to shieldedtech/mnf-stl-support',
             };
 
             const sourceIssue = context.payload.issue;
@@ -91,7 +91,7 @@ jobs:
             // Determine which source labels to copy: drop the trigger and the marker.
             const sourceLabelNames = (sourceIssue.labels || [])
               .map(l => typeof l === 'string' ? l : l.name)
-              .filter(name => name !== 'route:shielded' && name !== 'route:shielded:routed');
+              .filter(name => name !== 'route:shielded' && name !== 'route:shielded-routed');
 
             // Apply only labels that already exist on the destination. Auto-creation is
             // intentionally NOT done here — label standardization is handled separately

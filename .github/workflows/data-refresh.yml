@@ -56,7 +56,7 @@ jobs:
               return totalMs / 3600000;
             };
 
-            const SLA_HOURS = { 'priority:p2': 4, 'priority:p3': 9, 'priority:p4': 27 };
+            const SLA_HOURS = { 'priority:p2-high': 4, 'priority:p3-medium': 9, 'priority:p4-low': 27 };
 
             const openIssues = await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: 'open', per_page: 100,
@@ -79,14 +79,15 @@ jobs:
               if (issue.pull_request) continue;
               const labels = issue.labels.map(l => l.name);
 
-              if (labels.includes('priority:p1')) {
+              if (labels.includes('priority:p1-critical')) {
                 sla.priorities.p1.open += 1;
                 if (labels.includes('pd:paged')) sla.priorities.p1.paged += 1;
               }
 
+              // Map canonical priority label -> internal key (p2/p3/p4).
               for (const [prio, hours] of Object.entries(SLA_HOURS)) {
                 if (!labels.includes(prio)) continue;
-                const key = prio.replace('priority:', '');
+                const key = prio.replace('priority:', '').split('-')[0];
                 sla.priorities[key].open += 1;
                 const elapsed = bhElapsed(new Date(issue.created_at), now);
                 if (elapsed >= hours) sla.priorities[key].breached += 1;
@@ -95,12 +96,12 @@ jobs:
 
               if (recentOpened.length < 5) {
                 const prio = labels.find(l => l.startsWith('priority:')) || '';
-                const comp = labels.find(l => l.startsWith('comp:')) || '';
+                const comp = labels.find(l => l.startsWith('component:')) || '';
                 recentOpened.push({
                   number: issue.number,
                   title: issue.title.slice(0, 80),
-                  priority: prio.replace('priority:', '').toUpperCase(),
-                  component: comp.replace('comp:', ''),
+                  priority: prio.replace('priority:', '').split('-')[0].toUpperCase(),
+                  component: comp.replace('component:', ''),
                   opened_at: issue.created_at,
                   url: issue.html_url,
                 });

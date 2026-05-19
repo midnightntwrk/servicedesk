@@ -66,8 +66,12 @@ jobs:
 
               const title = `chore: review overdue — templates/${file} (${ageDays}d since last review)`;
 
+              // Find existing tracking issues by title match. (We used to filter on
+              // a `type:maintenance` label, but `type:*` is non-canonical per
+              // shielded-sre-agent-docs/rules/github-label-conventions.md and the
+              // title alone is unique enough — it includes the template filename.)
               const existing = await github.paginate(github.rest.issues.listForRepo, {
-                owner, repo, state: 'open', labels: 'type:maintenance', per_page: 100,
+                owner, repo, state: 'open', per_page: 100,
               });
               if (existing.some(i => i.title === title)) {
                 core.notice(`Skipping ${file} — tracking issue already exists`);
@@ -91,7 +95,7 @@ jobs:
                 owner, repo,
                 title,
                 body,
-                labels: ['type:maintenance', 'status:triage'],
+                labels: ['status:untriaged'],
               });
 
               core.notice(`Opened staleness issue for ${file} (${ageDays} days old)`);

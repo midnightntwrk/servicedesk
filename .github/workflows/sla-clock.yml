@@ -25,9 +25,9 @@ jobs:
             // Business day = 9 hours (09:00-18:00 GMT, Mon-Fri).
             // P1 is handled out-of-band via PagerDuty, not this workflow.
             const SLA_HOURS = {
-              'priority:p2':  4,  // 4 business hours
-              'priority:p3':  9,  // 1 business day
-              'priority:p4': 27,  // 3 business days
+              'priority:p2-high':   4,  // 4 business hours
+              'priority:p3-medium': 9,  // 1 business day
+              'priority:p4-low':   27,  // 3 business days
             };
 
             const BOT_LOGINS = new Set([
@@ -142,7 +142,8 @@ jobs:
               if (desired === 'sla:response-at-risk') atRisk += 1;
               if (desired === 'sla:response-breached') {
                 breached += 1;
-                const sev = prio.replace('priority:', '').toUpperCase();
+                // Render just the tier letter (e.g. "priority:p2-high" -> "P2") for the comment.
+                const sev = prio.replace('priority:', '').split('-')[0].toUpperCase();
                 await github.rest.issues.createComment({
                   owner, repo, issue_number: issue.number,
                   body: `**SLA response target breached** — ${sev} issue has been open for ${elapsed.toFixed(1)} business hours without a response (target: ${threshold}h). cc @shieldedtech/shielded-sre`,
