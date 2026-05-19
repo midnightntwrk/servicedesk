@@ -13,7 +13,11 @@ concurrency:
 
 jobs:
   mirror:
-    if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded:routed')
+    # Idempotency check accepts both the canonical `route:shielded-routed` marker and
+    # the legacy nested-colon `route:shielded:routed` form during migration. After all
+    # legacy markers are renamed to `route:shielded-routed` (gh label edit), the
+    # legacy clause can be dropped in a follow-up.
+    if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded-routed') && !contains(toJSON(github.event.issue.labels), 'route:shielded:routed')
     runs-on: ubuntu-24.04
     steps:
       - name: Mint installation token for mnf-stl-support + this repo
@@ -36,7 +40,7 @@ jobs:
           # is shieldedtech-scoped and cannot write to midnightntwrk/servicedesk; we use it
           # only for cross-org ops on the destination.
           script: |
-            const ROUTED_LABEL = 'route:shielded:routed';
+            const ROUTED_LABEL = 'route:shielded-routed';
             const routedLabelMeta = {
               color: '0e8a16',
               description: 'Already routed to mnf-stl-support — prevents duplicate routing',
@@ -89,9 +93,11 @@ jobs:
             }
 
             // Determine which source labels to copy: drop the trigger and the marker.
+            // The legacy nested-colon marker name is also dropped for backwards-
+            // compatibility while old markers are being renamed.
             const sourceLabelNames = (sourceIssue.labels || [])
               .map(l => typeof l === 'string' ? l : l.name)
-              .filter(name => name !== 'route:shielded' && name !== 'route:shielded:routed');
+              .filter(name => name !== 'route:shielded' && name !== 'route:shielded-routed' && name !== 'route:shielded:routed');
 
             // Apply only labels that already exist on the destination. Auto-creation is
             // intentionally NOT done here — label standardization is handled separately
