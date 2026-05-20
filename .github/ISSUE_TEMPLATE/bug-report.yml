@@ -1,6 +1,7 @@
 name: Bug Report
 description: Report a bug or issue in the Midnight ecosystem
 title: "[Bug]: "
+type: Bug
 labels: ["status:untriaged"]
 assignees: []
 
