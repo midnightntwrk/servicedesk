@@ -1,6 +1,6 @@
 # Midnight Release Template | Dapp Developer Stack
 
-# Midnight Network — Dapp Release Template
+# Midnight Network — Dapp Release Template.
 
 > **Ledger era:** Midnight Ledger X.0
 **Target networks:** n/a 

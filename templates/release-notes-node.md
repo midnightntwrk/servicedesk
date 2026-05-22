@@ -1,6 +1,6 @@
 # Midnight Release Template | Infrastructure
 
-# Midnight Network — Infrastructure Release Template
+# Midnight Network — Infrastructure Release Template.
 
 > **Ledger era:** Midnight Ledger X.0
 **Target networks:** Preview  

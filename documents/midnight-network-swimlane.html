@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Midnight Network Ops — Swimlane v0.2</title>
+<style>
+:root{
+  --rtn:#1a3a6b;--rtn-light:#eaf2fb;--rtn-mid:#2471a3;
+  --ftn:#0e6655;--ftn-light:#e8f8f5;--ftn-mid:#148f77;
+  --done:#1e8449;--done-bg:#d5f5e3;--done-border:#a9dfbf;
+  --planned:#9a7d0a;--planned-bg:#fef9e7;--planned-border:#f9e79f;
+  --upcoming:#5d6d7e;--upcoming-bg:#eaecee;--upcoming-border:#d5d8dc;
+  --active:#1a5276;--active-bg:#e8f4fd;--active-border:#aed6f1;
+  --text:#1a252f;--border:#dde3e8;--bg:#f4f6f7;--card:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hdr{background:#0d1b2a;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1565c0}
+.hdr-l h1{font-size:1.15rem;font-weight:700;letter-spacing:-.3px}
+.hdr-l p{font-size:.72rem;color:#8fa8c8;margin-top:3px}
+.vbadge{background:#1565c0;color:#fff;font-size:.66rem;padding:4px 11px;border-radius:20px;font-weight:700;letter-spacing:.4px}
+
+/* READINESS PILLS */
+.rpills{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.rpills strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;color:#1565c0;margin-right:4px}
+.pill{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.p-done{background:var(--done-bg);color:var(--done);border:1px solid var(--done-border)}
+.p-plan{background:var(--planned-bg);color:var(--planned);border:1px solid var(--planned-border)}
+.p-up{background:var(--upcoming-bg);color:var(--upcoming);border:1px solid var(--upcoming-border)}
+
+/* TOOLBAR */
+.toolbar{background:#fafbfc;border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-btn{font-size:.68rem;font-weight:600;padding:4px 11px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;transition:background .15s,border-color .15s;color:var(--text)}
+.filter-btn:hover,.filter-btn.active{background:#1565c0;color:#fff;border-color:#1565c0}
+.sep{color:#ccc;font-size:.8rem}
+.show-done-wrap{display:flex;align-items:center;gap:6px;font-size:.68rem;color:#666;margin-left:auto}
+.show-done-wrap input{cursor:pointer}
+.breadcrumb{font-size:.65rem;color:#888;display:flex;align-items:center;gap:4px}
+.breadcrumb span{color:#aaa}
+
+/* CANVAS */
+.canvas{padding:20px 24px 40px;overflow-x:auto}
+.canvas-inner{min-width:860px}
+
+/* LANE */
+.lane{margin-bottom:18px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.lane-hdr{display:flex;align-items:center;gap:10px;padding:11px 18px;color:#fff;font-size:.9rem;font-weight:700}
+.rtn-hdr{background:var(--rtn)}
+.ftn-hdr{background:var(--ftn)}
+.ltag{font-size:.62rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:8px;font-weight:700}
+.ldesc{font-size:.7rem;font-weight:400;opacity:.82;margin-left:auto}
+.lane-count{font-size:.62rem;background:rgba(255,255,255,.15);padding:2px 7px;border-radius:8px}
+
+/* SUBLANE ROW */
+.sublane-row{display:flex;background:#fff;flex-wrap:nowrap}
+
+/* SUBLANE */
+.sublane{flex:1;min-width:0;border-right:1px solid var(--border)}
+.sublane:last-child{border-right:none}
+.sl-hdr{display:flex;align-items:center;gap:6px;padding:9px 12px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.rtn-sl{background:var(--rtn-light);color:var(--rtn-mid)}
+.ftn-sl{background:var(--ftn-light);color:var(--ftn-mid)}
+.sl-count{margin-left:auto;background:rgba(0,0,0,.08);padding:1px 6px;border-radius:8px;font-size:.6rem}
+
+/* CARDS */
+.cards{padding:9px;display:flex;flex-direction:column;gap:7px;background:#f8f9fa;min-height:60px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 11px 9px 13px;cursor:pointer;transition:box-shadow .15s,transform .15s;position:relative;border-left-width:3px}
+.card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1);transform:translateY(-1px)}
+.card[data-status="active"]{border-left-color:var(--rtn-mid)}
+.card[data-status="done"]{border-left-color:var(--done)}
+.card[data-status="planned"]{border-left-color:var(--planned)}
+.card[data-status="upcoming"]{border-left-color:var(--upcoming)}
+.lane[data-lane="FTN"] .card[data-status="active"]{border-left-color:var(--ftn-mid)}
+
+.ct{font-size:.77rem;font-weight:600;margin:4px 0 3px;line-height:1.3}
+.cb{font-size:.68rem;color:#5d6d7e;line-height:1.45}
+.cdet{display:none;margin-top:7px;padding-top:7px;border-top:1px dashed var(--border);font-size:.67rem;color:#5d6d7e;line-height:1.5}
+.cdet ul{padding-left:13px}
+.cdet li{margin-bottom:2px}
+.card.open .cdet{display:block}
+
+/* BADGE */
+.sbadge{display:inline-flex;align-items:center;gap:3px;font-size:.59rem;font-weight:700;padding:2px 7px;border-radius:9px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.b-active{background:var(--active-bg);color:var(--active)}
+.b-done{background:var(--done-bg);color:var(--done)}
+.b-planned{background:var(--planned-bg);color:var(--planned)}
+.b-upcoming{background:var(--upcoming-bg);color:var(--upcoming)}
+
+/* GITHUB LINK */
+.gh-link{font-size:.6rem;color:#1565c0;text-decoration:none;margin-left:6px;opacity:.7}
+.gh-link:hover{opacity:1;text-decoration:underline}
+
+/* EMPTY SUBLANE */
+.empty-lane{font-size:.68rem;color:#aaa;text-align:center;padding:18px 10px;font-style:italic}
+
+/* FOOTER */
+.footer{background:#0d1b2a;color:#8fa8c8;text-align:center;padding:14px;font-size:.68rem}
+
+/* PRINT */
+@media print{
+  .toolbar,.hdr{page-break-inside:avoid}
+  .card{box-shadow:none!important;transform:none!important}
+  .cdet{display:block!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <h1>🌙 Midnight Network Operations</h1>
+    <p>Swimlane Canvas · <code>midnightntwrk/servicedesk</code> · RTN + FTN</p>
+  </div>
+  <span class="vbadge">v0.3 · 2026-05-19</span>
+</div>
+
+<div class="rpills">
+  <strong>Readiness:</strong>
+  <span class="pill p-done">✅ Node 0.22.3</span>
+  <span class="pill p-done">✅ Governance v0.85</span>
+  <span class="pill p-done">✅ FNOs ×3</span>
+  <span class="pill p-done">✅ Servicedesk v0.5</span>
+  <span class="pill p-done">✅ Preview Env</span>
+  <span class="pill p-done">✅ PreProd Wireguard</span>
+  <span class="pill p-plan">📋 PreProd Cardano</span>
+  <span class="pill p-up">🔜 Mainnet Hard Fork</span>
+</div>
+
+<div class="toolbar">
+  <div class="breadcrumb">
+    <span>ClickUp</span> → <span>GitHub / servicedesk</span> → <span>SWIMLANE_DATA</span> → <strong>Canvas</strong>
+  </div>
+  <div class="sep">|</div>
+  <span style="font-size:.67rem;color:#888">Filter:</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="active">🔄 Active</button>
+  <button class="filter-btn" data-filter="planned">📋 Planned</button>
+  <button class="filter-btn" data-filter="upcoming">🔜 Upcoming</button>
+  <div class="show-done-wrap">
+    <input type="checkbox" id="showDone" checked>
+    <label for="showDone">Show ✅ Done</label>
+  </div>
+</div>
+
+<div class="canvas">
+  <div class="canvas-inner" id="swimlane-root"></div>
+</div>
+
+<div class="footer">
+  Midnight Foundation — Network Operations &nbsp;·&nbsp; v0.2 &nbsp;·&nbsp;
+  Data-driven canvas: edit <code>SWIMLANE_DATA</code> below to add / remove / close cards &nbsp;·&nbsp; Internal Use
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  SWIMLANE_DATA — Edit this array to add, remove, or update cards.
+//
+//  Each entry:
+//  {
+//    lane:         "RTN" | "FTN"
+//    sublane:      "release-mgmt" | "security-ir" | "iac" | "governance" | "fno"
+//    sublaneLabel: display label (shown in sublane header)
+//    sublaneIcon:  emoji icon for sublane header
+//    title:        card title
+//    status:       "active" | "planned" | "upcoming" | "done"
+//    body:         short one-liner shown on the card face
+//    detail:       array of strings shown when the card is expanded
+//    githubIssue:  "#NN" — links to midnightntwrk/servicedesk
+//    archived:     true — hides card from canvas (keeps in data for audit)
+//  }
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SWIMLANE_DATA = [
+
+  // ── RTN / RELEASE MANAGEMENT ────────────────────────────────────────────
+  {
+    lane: "RTN",
+    sublane: "release-mgmt",
+    sublaneLabel: "Release Management",
+    sublaneIcon: "📦",
+    title: "Cardano Chain Releases",
+    status: "active",
+    body: "Coordinate Cardano node upgrades with IOG/CF compatibility windows.",
+    detail: [
+      "Track IOG/CF release schedule and hard fork windows",
+      "Maintain Cardano ↔ Midnight node compatibility matrix",
+      "Gate upgrades through env promotion pipeline",
+      "Owner: Network Ops Lead"
+    ],
+    githubIssue: "#1"
+  },
+  {
+    lane: "RTN",
+    sublane: "release-mgmt",
+    sublaneLabel: "Release Management",
+    sublaneIcon: "📦",
+    title: "Midnight Chain Releases",
+    status: "upcoming",
+    body: "Node 0.22.3 ✅ · Governance v0.85 ✅ · MN Mainnet hard fork 🔜",
+    detail: [
+      "Release lifecycle: Dev → Preview → PreProd → Mainnet",
+      "Checklist: security sign-off, env promotion, FNO comms",
+      "Next gate: Mainnet hard fork post PreProd Cardano",
+      "Owner: Protocol Engineering + Network Ops"
+    ],
+    githubIssue: "#2"
+  },
+  {
+    lane: "RTN",
+    sublane: "release-mgmt",
+    sublaneLabel: "Release Management",
+    sublaneIcon: "📦",
+    title: "Env Promotion: Preview → PreProd Wireguard",
+    status: "done",
+    body: "Preview ✅ and PreProd Wireguard ✅ environment upgrades complete.",
+    detail: [
+      "Preview environment: upgrades confirmed ✅",
+      "PreProd Wireguard: upgrades confirmed ✅",
+      "Sign-off: Network Ops",
+      "Closed: 2026-05-12"
+    ],
+    githubIssue: "#3"
+  },
+  {
+    lane: "RTN",
+    sublane: "release-mgmt",
+    sublaneLabel: "Release Management",
+    sublaneIcon: "📦",
+    title: "Env Promotion: PreProd Cardano",
+    status: "planned",
+    body: "Environment upgrades on PreProd — Cardano node. Next gate before Mainnet.",
+    detail: [
+      "Blocked on: Cardano node compatibility confirmation",
+      "Test plan: sync validation, block production check, peer connectivity",
+      "Gate criteria: 48hr stable run, security sign-off",
+      "Owner: Network Ops"
+    ],
+    githubIssue: "#4"
+  },
+  {
+    lane: "RTN",
+    sublane: "release-mgmt",
+    sublaneLabel: "Release Management",
+    sublaneIcon: "📦",
+    title: "MN Mainnet Hard Fork Initiation",
+    status: "upcoming",
+    body: "Mainnet hard fork initiation. Blocked on PreProd Cardano sign-off.",
+    detail: [
+      "Prerequisite: PreProd Cardano env upgrade (#4) complete",
+      "Prerequisite: Security sign-off from Security Lead",
+      "FNO comms: 14 days notice minimum before fork",
+      "Owner: Protocol Engineering + Governance"
+    ],
+    githubIssue: "#5"
+  },
+
+  // ── RTN / SECURITY & INCIDENT RESPONSE ──────────────────────────────────
+  {
+    lane: "RTN",
+    sublane: "security-ir",
+    sublaneLabel: "Security & Incident Response",
+    sublaneIcon: "🔒",
+    title: "Incident Classification & Runbooks",
+    status: "active",
+    body: "P1/P2/P3 severity tiers with response SLAs and linked runbooks.",
+    detail: [
+      "P1: Network halt / consensus failure — 15 min response",
+      "P2: Node degradation / partial outage — 1 hr response",
+      "P3: Non-critical / cosmetic — 24 hr response",
+      "Runbooks: in progress — target v0.2 delivery",
+      "Owner: Network Ops On-call"
+    ],
+    githubIssue: "#6"
+  },
+  {
+    lane: "RTN",
+    sublane: "security-ir",
+    sublaneLabel: "Security & Incident Response",
+    sublaneIcon: "🔒",
+    title: "Security Response & Vulnerability Handling",
+    status: "active",
+    body: "Responsible disclosure policy, patch SLAs by severity, key management.",
+    detail: [
+      "Critical ≤ 24h · High ≤ 72h · Medium ≤ 2 weeks",
+      "90-day responsible disclosure window",
+      "Key management: signing ceremony + rotation schedule",
+      "Owner: Security Lead + Network Ops"
+    ],
+    githubIssue: "#7"
+  },
+  {
+    lane: "RTN",
+    sublane: "security-ir",
+    sublaneLabel: "Security & Incident Response",
+    sublaneIcon: "🔒",
+    title: "On-call Rotation & Post-Mortems",
+    status: "active",
+    body: "Defined escalation path: On-call → Network Lead → CTO.",
+    detail: [
+      "Rotation: Primary → Secondary → Network Lead → CTO",
+      "Tooling: PagerDuty / OpsGenie (TBC)",
+      "Post-mortem required for all P1/P2 within 5 business days",
+      "Template: Timeline · Root cause · Action items · Owner"
+    ],
+    githubIssue: "#8"
+  },
+
+  // ── FTN / INFRA AS CODE ─────────────────────────────────────────────────
+  {
+    lane: "FTN",
+    sublane: "iac",
+    sublaneLabel: "Infra as Code (IAC)",
+    sublaneIcon: "⚙️",
+    title: "IaC Adoption",
+    status: "active",
+    body: "Terraform / Ansible coverage for all environments via CI/CD pipeline.",
+    detail: [
+      "Target: 100% IaC coverage for Preview + PreProd by Q3 2026",
+      "Pipeline: change → review → apply → verify",
+      "No manual infrastructure changes outside IaC pipeline",
+      "Owner: Infrastructure / DevOps"
+    ],
+    githubIssue: "#9"
+  },
+  {
+    lane: "FTN",
+    sublane: "iac",
+    sublaneLabel: "Infra as Code (IAC)",
+    sublaneIcon: "⚙️",
+    title: "Environment Config Management",
+    status: "active",
+    body: "Version-controlled configs. Secrets via Vault. Drift detection alerts.",
+    detail: [
+      "Secrets management: Vault or equivalent — no plaintext in repos",
+      "Config promotion linked to env promotion pipeline (RTN)",
+      "Drift detection: alerts on untracked infrastructure changes",
+      "Owner: Infrastructure / DevOps"
+    ],
+    githubIssue: "#10"
+  },
+
+  // ── FTN / GOVERNANCE ────────────────────────────────────────────────────
+  {
+    lane: "FTN",
+    sublane: "governance",
+    sublaneLabel: "Governance: Chain of Custody",
+    sublaneIcon: "🏛️",
+    title: "Governance Upgrades v0.85",
+    status: "done",
+    body: "On-chain governance parameter upgrades to v0.85 complete and confirmed.",
+    detail: [
+      "Upgrade delivered and validated on-chain ✅",
+      "Post-upgrade: governance proposals verified working",
+      "Closed: 2026-05-01",
+      "Next: on-chain parameter management tooling"
+    ],
+    githubIssue: "#11"
+  },
+  {
+    lane: "FTN",
+    sublane: "governance",
+    sublaneLabel: "Governance: Chain of Custody",
+    sublaneIcon: "🏛️",
+    title: "Chain of Custody Framework",
+    status: "active",
+    body: "Audit trail for all key network decisions. Change approval process.",
+    detail: [
+      "Process: Proposal → Review → Sign-off → Execution → Evidence",
+      "Scope: upgrades, parameter changes, key rotations, FNO changes",
+      "Integration: Servicedesk v0.5 for governance change ticketing",
+      "Owner: Governance Lead"
+    ],
+    githubIssue: "#12"
+  },
+
+  // ── FTN / FNO ───────────────────────────────────────────────────────────
+  {
+    lane: "FTN",
+    sublane: "fno",
+    sublaneLabel: "Federated Node Operators (FNO)",
+    sublaneIcon: "🌐",
+    title: "FNO Onboarding — ×3 Additional FNOs",
+    status: "done",
+    body: "3 additional Federated Node Operators onboarded. Servicedesk v0.5 live.",
+    detail: [
+      "3 FNOs operational and producing blocks ✅",
+      "Servicedesk v0.5 deployed for FNO support ticketing ✅",
+      "Onboarding checklist documented",
+      "Closed: 2026-04-28"
+    ],
+    githubIssue: "#13"
+  },
+  {
+    lane: "FTN",
+    sublane: "fno",
+    sublaneLabel: "Federated Node Operators (FNO)",
+    sublaneIcon: "🌐",
+    title: "FNO Config Storage",
+    status: "planned",
+    body: "Centralised, version-controlled config repository per FNO. Scoped access.",
+    detail: [
+      "Per-FNO config: peer lists, ports, public keys, monitoring endpoints",
+      "Access: FNO read/write own config; Network Ops full access",
+      "Schema validation CI check on each commit",
+      "Owner: Infrastructure + FNO Ops"
+    ],
+    githubIssue: "#14"
+  },
+  {
+    lane: "FTN",
+    sublane: "fno",
+    sublaneLabel: "Federated Node Operators (FNO)",
+    sublaneIcon: "🌐",
+    title: "FNO Tooling Upticks",
+    status: "planned",
+    body: "Standardised Grafana dashboards, alert runbooks per FNO role.",
+    detail: [
+      "Grafana dashboard templates: node health, sync status, peer count",
+      "Alert runbooks: what to do when specific alert fires",
+      "Automated health-check against FNO config schema",
+      "Owner: Infrastructure + FNO Ops"
+    ],
+    githubIssue: "#15"
+  }
+
+]; // ← END OF SWIMLANE_DATA
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  LANE / SUBLANE STRUCTURE — defines order and display metadata
+// ─────────────────────────────────────────────────────────────────────────────
+const LANE_STRUCTURE = [
+  {
+    id: "RTN",
+    label: "RUN-THE-NETWORK",
+    emoji: "🔵",
+    desc: "Sustaining live network health · releases · security · incident response",
+    headerClass: "rtn-hdr",
+    sublaneClass: "rtn-sl",
+    sublanes: [
+      { id: "release-mgmt",  label: "Release Management",            icon: "📦" },
+      { id: "security-ir",   label: "Security & Incident Response",  icon: "🔒" }
+    ]
+  },
+  {
+    id: "FTN",
+    label: "FIX-THE-NETWORK",
+    emoji: "🟢",
+    desc: "Improving network capability · infrastructure · governance · FNO tooling",
+    headerClass: "ftn-hdr",
+    sublaneClass: "ftn-sl",
+    sublanes: [
+      { id: "iac",        label: "Infra as Code (IAC)",             icon: "⚙️" },
+      { id: "governance", label: "Governance: Chain of Custody",    icon: "🏛️" },
+      { id: "fno",        label: "Federated Node Operators (FNO)",  icon: "🌐" }
+    ]
+  }
+];
+
+const GH_BASE = "https://github.com/midnightntwrk/servicedesk/issues/";
+const BADGE = {
+  active:   { cls: "b-active",   text: "🔄 Active"   },
+  done:     { cls: "b-done",     text: "✅ Done"      },
+  planned:  { cls: "b-planned",  text: "📋 Planned"   },
+  upcoming: { cls: "b-upcoming", text: "🔜 Upcoming"  }
+};
+
+let currentFilter = "all";
+let showDone = true;
+
+function buildSwimlane() {
+  const root = document.getElementById("swimlane-root");
+  root.innerHTML = "";
+
+  LANE_STRUCTURE.forEach(lane => {
+    // Count visible cards in this lane
+    const laneCards = SWIMLANE_DATA.filter(c =>
+      c.lane === lane.id && !c.archived &&
+      (currentFilter === "all" || c.status === currentFilter) &&
+      (showDone || c.status !== "done")
+    );
+
+    const laneEl = document.createElement("div");
+    laneEl.className = "lane";
+    laneEl.dataset.lane = lane.id;
+
+    // Lane header
+    laneEl.innerHTML = `
+      <div class="lane-hdr ${lane.headerClass}">
+        ${lane.emoji} <span>${lane.label}</span>
+        <span class="ltag">${lane.id}</span>
+        <span class="ldesc">${lane.desc}</span>
+        <span class="lane-count">${laneCards.length} card${laneCards.length !== 1 ? "s" : ""}</span>
+      </div>
+      <div class="sublane-row" id="sublanes-${lane.id}"></div>
+    `;
+    root.appendChild(laneEl);
+
+    const sublaneRow = laneEl.querySelector(`#sublanes-${lane.id}`);
+
+    lane.sublanes.forEach(sl => {
+      const slCards = SWIMLANE_DATA.filter(c =>
+        c.lane === lane.id &&
+        c.sublane === sl.id &&
+        !c.archived &&
+        (currentFilter === "all" || c.status === currentFilter) &&
+        (showDone || c.status !== "done")
+      );
+
+      const slEl = document.createElement("div");
+      slEl.className = "sublane";
+      slEl.innerHTML = `
+        <div class="sl-hdr ${lane.sublaneClass}">
+          <span>${sl.icon}</span> ${sl.label}
+          <span class="sl-count">${slCards.length}</span>
+        </div>
+        <div class="cards" id="cards-${lane.id}-${sl.id}"></div>
+      `;
+      sublaneRow.appendChild(slEl);
+
+      const cardsEl = slEl.querySelector(`#cards-${lane.id}-${sl.id}`);
+
+      if (slCards.length === 0) {
+        cardsEl.innerHTML = `<div class="empty-lane">No items match current filter</div>`;
+      } else {
+        slCards.forEach((card, idx) => {
+          const b = BADGE[card.status] || BADGE.active;
+          const ghNum = card.githubIssue ? card.githubIssue.replace("#","") : null;
+          const ghLink = ghNum
+            ? `<a class="gh-link" href="${GH_BASE}${ghNum}" target="_blank" title="View on GitHub">${card.githubIssue}</a>`
+            : "";
+          const detailItems = (card.detail || []).map(d => `<li>${d}</li>`).join("");
+
+          const cardEl = document.createElement("div");
+          cardEl.className = "card";
+          cardEl.dataset.status = card.status;
+          cardEl.innerHTML = `
+            <span class="sbadge ${b.cls}">${b.text}</span>${ghLink}
+            <div class="ct">${card.title}</div>
+            <div class="cb">${card.body}</div>
+            <div class="cdet"><ul>${detailItems}</ul></div>
+          `;
+          cardEl.addEventListener("click", () => cardEl.classList.toggle("open"));
+          cardsEl.appendChild(cardEl);
+        });
+      }
+    });
+  });
+}
+
+// Filter buttons
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    buildSwimlane();
+  });
+});
+
+// Show done toggle
+document.getElementById("showDone").addEventListener("change", e => {
+  showDone = e.target.checked;
+  buildSwimlane();
+});
+
+// Initial render
+buildSwimlane();
+</script>
+</body>
+</html>
