@@ -52,18 +52,41 @@ jobs:
             const destOwner = 'shieldedtech';
             const destRepo  = 'mnf-stl-support';
 
-            // Two clients:
-            //   `github`     -> GITHUB_TOKEN (default), used for source ops on servicedesk
-            //   `destClient` -> App-installation token, used for cross-org ops on mnf-stl-support
-            const destClient = require('@actions/github').getOctokit(process.env.DEST_TOKEN);
+            // Two auth contexts:
+            //   `github`  -> GITHUB_TOKEN (default), used for source ops on servicedesk
+            //   `destApi` -> App-installation token (DEST_TOKEN), used for cross-org ops on mnf-stl-support
+            //
+            // We call the GitHub REST API directly via `fetch` for the destination side
+            // rather than instantiating a second Octokit. `actions/github-script@v9`
+            // no longer makes `@actions/github` resolvable via `require()` inside the
+            // script context (`Cannot find module '@actions/github'`), so the previous
+            // `getOctokit(DEST_TOKEN)` pattern aborted before doing any work. See
+            // midnightntwrk/servicedesk#32.
+            const destApi = async (method, path, body) => {
+              const res = await fetch(`https://api.github.com${path}`, {
+                method,
+                headers: {
+                  authorization: `token ${process.env.DEST_TOKEN}`,
+                  accept: 'application/vnd.github+json',
+                  'x-github-api-version': '2022-11-28',
+                  'user-agent': 'route-shielded-workflow',
+                },
+                ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+              });
+              if (!res.ok) {
+                throw new Error(`${method} ${path} -> ${res.status} ${await res.text()}`);
+              }
+              return res.json();
+            };
 
-            const ensureLabel = async (client, owner, repo, name, meta) => {
+            const ensureSourceLabel = async (name, meta) => {
               try {
-                await client.rest.issues.getLabel({ owner, repo, name });
+                await github.rest.issues.getLabel({ owner: sourceOwner, repo: sourceRepo, name });
               } catch (e) {
                 if (e.status !== 404) throw e;
-                await client.rest.issues.createLabel({
-                  owner, repo, name, color: meta.color, description: meta.description,
+                await github.rest.issues.createLabel({
+                  owner: sourceOwner, repo: sourceRepo, name,
+                  color: meta.color, description: meta.description,
                 });
               }
             };
@@ -98,11 +121,15 @@ jobs:
             // Apply only labels that already exist on the destination. Auto-creation is
             // intentionally NOT done here — label standardization is handled separately
             // by the shielded-iac-modules/github/labels module work. (Cross-org read.)
-            const destLabels = await destClient.paginate(
-              destClient.rest.issues.listLabelsForRepo,
-              { owner: destOwner, repo: destRepo, per_page: 100 }
-            );
-            const destLabelSet = new Set(destLabels.map(l => l.name));
+            const destLabelSet = new Set();
+            for (let page = 1; page < 50; page++) {
+              const batch = await destApi(
+                'GET',
+                `/repos/${destOwner}/${destRepo}/labels?per_page=100&page=${page}`,
+              );
+              for (const l of batch) destLabelSet.add(l.name);
+              if (batch.length < 100) break;
+            }
             const labelsToApply = sourceLabelNames.filter(n => destLabelSet.has(n));
             const labelsSkipped = sourceLabelNames.filter(n => !destLabelSet.has(n));
 
@@ -135,10 +162,8 @@ jobs:
               sourceIssue.body || '_(no body provided)_',
             ].filter(Boolean).join('\n');
 
-            // Cross-org write: use App-token client.
-            const { data: created } = await destClient.rest.issues.create({
-              owner: destOwner,
-              repo: destRepo,
+            // Cross-org write: use App-token via fetch (see destApi comment above).
+            const created = await destApi('POST', `/repos/${destOwner}/${destRepo}/issues`, {
               title: sourceIssue.title,
               body: mirrorBody,
               labels: labelsToApply,
@@ -165,7 +190,7 @@ jobs:
             });
 
             // Source-side write: use GITHUB_TOKEN.
-            await ensureLabel(github, sourceOwner, sourceRepo, ROUTED_LABEL, routedLabelMeta);
+            await ensureSourceLabel(ROUTED_LABEL, routedLabelMeta);
             await github.rest.issues.addLabels({
               owner: sourceOwner,
               repo: sourceRepo,
