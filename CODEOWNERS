@@ -19,8 +19,11 @@
 /CODEOWNERS                                 @hegaleon @midnightntwrk/mn-security
 /CONTRIBUTING.md                            @hegaleon @midnightntwrk/mn-security
 /LICENSE                                    @hegaleon @midnightntwrk/mn-security
-/SECURITY.md                                @hegaleon @midnightntwrk/mn-security
 
+/.github/ISSUE_TEMPLATE/config.yml    @hegaleon @midnightntwrk/mn-security
+
+# Live on-call paging — uses PAGERDUTY_ROUTING_KEY secret
+/.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
 # ── GitHub config + scanning ─────────────────────────────────────────────────
 /.github/dependabot.yml                     @hegaleon @midnightntwrk/mn-security
 /.github/ISSUE_TEMPLATE/                    @hegaleon @midnightntwrk/mn-security
@@ -31,6 +34,9 @@
 # p1-pagerduty.yml      — uses PAGERDUTY_ROUTING_KEY
 # route-iac.yml         — uses IAC_APP_ID / IAC_APP_PRIVATE_KEY (GitHub App)
 # route-shielded.yml    — reuses IAC_APP_ID / IAC_APP_PRIVATE_KEY for cross-org issue mirroring
-/.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
 /.github/workflows/route-iac.yml            @hegaleon @midnightntwrk/mn-security
+
+# Published security policy — authoritative channel order and contact details
+/SECURITY.md                                @hegaleon @midnightntwrk/mn-security
+
 /.github/workflows/route-shielded.yml       @hegaleon @midnightntwrk/mn-security

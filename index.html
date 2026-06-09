@@ -1,18 +1,217 @@
----
-layout: default
-title: "Midnight Network ServiceDesk"
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Midnight Network ServiceDesk</title>
+  <meta name="description" content="Single entry point for bug reports, support, and operational reference">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:       #8756ff;
+      --brand-dim:   #1a1438;
+      --brand-mid:   #a07aff;
+      --text-primary: #eef0f8;
+      --text-secondary: #8896b8;
+      --text-tertiary: #5a6688;
+      --border:      #1d2540;
+      --border2:     #26304f;
+      --bg:          #0b0e1a;
+      --bg2:         #0e1222;
+      --surface:     #121829;
+      --surface2:    #171e30;
+      --success-bg:  #0a2a1f; --success-fg: #10b981;
+      --warn-bg:     #2a1f0a; --warn-fg: #f59e0b;
+      --danger-bg:   #2a0f0f; --danger-fg: #ef4444;
+      --info-bg:     #0a1a2a; --info-fg: #60a5fa;
+      --sec-bg:      #1a0a2a; --sec-fg: #c084fc;
+      --font: 'Outfit', system-ui, -apple-system, sans-serif;
+    }
+    body { font-family: var(--font); font-size: 14px; color: var(--text-primary); background: var(--bg); line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Nav */
+    .site-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: var(--text-primary); letter-spacing: -.1px; }
+    .nav-mark { width: 22px; height: 22px; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link { font-size: 13px; color: var(--text-secondary); padding: 5px 10px; border-radius: 6px; transition: color .15s, background .15s; }
+    .nav-link:hover { background: var(--bg2); color: var(--text-primary); }
+    .nav-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+    .nav-cta { font-size: 12px; color: var(--text-secondary); padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; gap: 4px; transition: color .15s, background .15s, border-color .15s; }
+    .nav-cta:hover { background: var(--bg2); border-color: var(--border2); color: var(--text-primary); }
+
+    /* Layout */
+    .band { padding: 20px 24px; max-width: 960px; margin: 0 auto; }
+    .band-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 12px; }
+    .refresh-note { font-size: 10px; font-weight: 400; color: var(--text-tertiary); letter-spacing: 0; text-transform: none; margin-left: 8px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .panel-title { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .06em; text-transform: uppercase; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .panel-footer { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--brand); }
+    .panel-footer a:hover { color: var(--brand-mid); }
+
+    /* Ticket cards */
+    .ticket-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .ticket-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 7px; transition: border-color .15s, background .15s; }
+    .ticket-card:hover { border-color: var(--border2); background: var(--surface2); }
+    .ticket-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .ticket-icon svg { width: 15px; height: 15px; }
+    .icon-bug  { background: var(--brand-dim); }
+    .icon-help { background: var(--success-bg); }
+    .icon-docs { background: var(--info-bg); }
+    .icon-sec  { background: var(--danger-bg); }
+    .ticket-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ticket-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; flex: 1; }
+    .ticket-cta { font-size: 11px; font-weight: 600; color: var(--brand); }
+    .ticket-cta--sec { color: var(--danger-fg); }
+
+    /* Templates */
+    .tpl-list { display: flex; flex-direction: column; }
+    .tpl-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .tpl-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .tpl-info { display: flex; flex-direction: column; gap: 2px; }
+    .tpl-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .tpl-meta { font-size: 10px; color: var(--text-tertiary); }
+    .tpl-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .tpl-btn { font-size: 11px; padding: 3px 9px; border-radius: 5px; border: 1px solid var(--border); cursor: pointer; color: var(--text-secondary); background: var(--bg2); font-family: var(--font); transition: background .15s, border-color .15s, color .15s; }
+    .tpl-btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--text-primary); }
+    .tpl-btn--err { border-color: var(--danger-fg); color: var(--danger-fg); }
+    .badge-warn { font-size: 9px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; padding: 1px 5px; display: inline-block; }
+
+    /* Reference */
+    .ref-list { display: flex; flex-direction: column; }
+    .ref-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .ref-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .ref-name { font-size: 12px; color: var(--brand); transition: color .15s; }
+    .ref-name:hover { color: var(--brand-mid); text-decoration: underline; }
+    .ref-tag { font-size: 9px; background: var(--bg2); color: var(--text-tertiary); border-radius: 4px; padding: 2px 6px; border: 1px solid var(--border); white-space: nowrap; flex-shrink: 0; }
+    .ref-tag--draft { font-size: 9px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; padding: 2px 6px; flex-shrink: 0; }
+
+    /* SLA tiles */
+    .sla-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .sla-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: block; transition: border-color .15s, background .15s; }
+    .sla-tile:hover { border-color: var(--border2); background: var(--surface2); }
+    .sla-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sla-label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .sla-chip { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .sla-chip--pd { background: var(--brand-dim); color: var(--brand-mid); }
+    .sla-chip--ok { background: var(--success-bg); color: var(--success-fg); }
+    .sla-target { font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; }
+    .sla-stats { display: flex; flex-direction: column; gap: 3px; }
+    .sla-stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .sla-stat-l { font-size: 10px; color: var(--text-tertiary); }
+    .sla-stat-v { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .sla-warn   { color: var(--warn-fg); }
+    .sla-danger { color: var(--danger-fg); }
+    .sla-loading { font-size: 10px; color: var(--text-tertiary); font-style: italic; }
+    .pd-active { display: flex; align-items: center; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .pd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger-fg); flex-shrink: 0; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .pd-label { font-size: 10px; color: var(--danger-fg); font-weight: 600; }
+
+    /* Issues board */
+    .issues-board { display: flex; flex-direction: column; gap: 6px; }
+    .issue-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; transition: border-color .15s; }
+    .issue-row:hover { border-color: var(--border2); }
+    .issue-num { font-size: 10px; color: var(--text-tertiary); flex-shrink: 0; margin-top: 1px; min-width: 32px; }
+    .issue-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+    .issue-title { font-size: 12px; color: var(--text-primary); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .issue-title:hover { color: var(--brand); }
+    .issue-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .issue-label { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); color: var(--text-tertiary); white-space: nowrap; }
+    .issue-label--p1 { background: var(--danger-bg); color: var(--danger-fg); border-color: transparent; }
+    .issue-label--p2 { background: var(--warn-bg); color: var(--warn-fg); border-color: transparent; }
+    .issue-label--p3 { background: var(--brand-dim); color: var(--brand-mid); border-color: transparent; }
+    .issue-label--p4 { background: var(--success-bg); color: var(--success-fg); border-color: transparent; }
+    .issue-date { font-size: 9px; color: var(--text-tertiary); }
+    .board-loading { font-size: 12px; color: var(--text-tertiary); padding: 16px 0; text-align: center; font-style: italic; }
+    .board-error  { font-size: 12px; color: var(--warn-fg);  padding: 16px 0; text-align: center; }
+    .board-viewall { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--brand); }
+
+    /* Announcements & Activity */
+    .announce-item { padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .announce-item:last-child { border-bottom: none; }
+    .announce-title { font-size: 12px; color: var(--text-primary); display: block; transition: color .15s; }
+    .announce-title:hover { color: var(--brand); }
+    .announce-date { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+    .activity-item { display: flex; align-items: flex-start; gap: 7px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .act-p { font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
+    .act-pp1 { background: var(--danger-bg); color: var(--danger-fg); }
+    .act-pp2 { background: var(--warn-bg);   color: var(--warn-fg); }
+    .act-pp3 { background: var(--brand-dim); color: var(--brand-mid); }
+    .act-pp4 { background: var(--success-bg); color: var(--success-fg); }
+    .act-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .act-title { font-size: 11px; color: var(--text-primary); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .15s; }
+    .act-title:hover { color: var(--brand); }
+    .act-meta { font-size: 10px; color: var(--text-tertiary); }
+    .empty-state { font-size: 12px; color: var(--text-tertiary); padding: 8px 0; }
+
+    /* Security section */
+    .sec-panel { background: var(--surface); border: 1px solid #3b1f1f; border-radius: 10px; padding: 16px; }
+    .sec-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sec-icon { width: 32px; height: 32px; background: var(--danger-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sec-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .sec-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .sec-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+    .sec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sec-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--danger-fg); color: var(--danger-fg); background: var(--danger-bg); cursor: pointer; font-family: var(--font); transition: background .15s; display: inline-block; }
+    .sec-btn:hover { background: #3a1515; }
+    .sec-btn--ghost { background: transparent; border-color: var(--border2); color: var(--text-secondary); }
+    .sec-btn--ghost:hover { background: var(--bg2); color: var(--text-primary); }
+    .sec-team { margin-top: 12px; padding-top: 10px; border-top: 1px solid #2a1515; }
+    .sec-team-label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+    .sec-members { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sec-member { font-size: 11px; color: var(--sec-fg); background: var(--sec-bg); border: 1px solid #3b1f5a; border-radius: 5px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
+    .sec-member::before { content: '@'; opacity: .6; font-size: 10px; }
+    .sec-add { font-size: 11px; color: var(--text-tertiary); background: var(--bg2); border: 1px dashed var(--border2); border-radius: 5px; padding: 2px 8px; }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); margin-top: 12px; }
+    .footer-left { font-size: 11px; color: var(--text-tertiary); }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-links a { font-size: 11px; color: var(--text-secondary); transition: color .15s; }
+    .footer-links a:hover { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-brand">
+    <svg class="nav-mark" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <polygon points="11,1 20,6 20,16 11,21 2,16 2,6" fill="#8756ff" opacity=".18"/>
+      <polygon points="11,1 20,6 20,16 11,21 2,16 2,6" stroke="#8756ff" stroke-width="1.4" fill="none"/>
+      <text x="11" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="10" fill="#8756ff">M</text>
+    </svg>
+    Midnight Network · ServiceDesk
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="https://github.com/orgs/midnightntwrk/projects/33">Board</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/tree/main/templates">Templates</a>
+    <a class="nav-link" href="https://docs.midnight.network">Docs</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Process</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+sort:updated-desc">Issues</a>
+    <div class="nav-sep"></div>
+    <a class="nav-cta" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+author:@me">My tickets ↗</a>
+  </div>
+</nav>
+
 <main>
 
 <section class="band">
   <p class="band-label">Raise a ticket</p>
   <div class="ticket-grid">
 
-    <a class="ticket-card" href="{{ site.new_issue_base }}?template=bug-report.yml">
+    <a class="ticket-card" href="https://github.com/midnightntwrk/servicedesk/issues/new?template=bug-report.yml">
       <div class="ticket-icon icon-bug">
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="8" cy="8" r="3.5" stroke="#534AB7" stroke-width="1.4"/>
-          <path d="M5 2.5L3 1M11 2.5L13 1M1 7h2M13 7h2M1 11h2M13 11h2" stroke="#534AB7" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="3.5" stroke="#8756ff" stroke-width="1.4"/>
+          <path d="M5 2.5L3 1M11 2.5L13 1M1 7h2M13 7h2M1 11h2M13 11h2" stroke="#8756ff" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </div>
       <p class="ticket-title">Bug report</p>
@@ -20,11 +219,11 @@ title: "Midnight Network ServiceDesk"
       <span class="ticket-cta">Open template →</span>
     </a>
 
-    <a class="ticket-card" href="{{ site.new_issue_base }}?template=help-request.yml">
+    <a class="ticket-card" href="https://github.com/midnightntwrk/servicedesk/issues/new?template=help-request.yml">
       <div class="ticket-icon icon-help">
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="8" cy="8" r="6" stroke="#0F6E56" stroke-width="1.4"/>
-          <path d="M8 10.5v1.5M6.5 6.5a1.5 1.5 0 013 0c0 1.5-1.5 1.5-1.5 3" stroke="#0F6E56" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="6" stroke="#10b981" stroke-width="1.4"/>
+          <path d="M8 10.5v1.5M6.5 6.5a1.5 1.5 0 013 0c0 1.5-1.5 1.5-1.5 3" stroke="#10b981" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </div>
       <p class="ticket-title">Help request</p>
@@ -32,11 +231,11 @@ title: "Midnight Network ServiceDesk"
       <span class="ticket-cta">Open template →</span>
     </a>
 
-    <a class="ticket-card" href="{{ site.new_issue_base }}?template=documentation-improvement.yml">
+    <a class="ticket-card" href="https://github.com/midnightntwrk/servicedesk/issues/new?template=documentation-improvement.yml">
       <div class="ticket-icon icon-docs">
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <rect x="2" y="1" width="12" height="14" rx="2" stroke="#185FA5" stroke-width="1.4"/>
-          <path d="M5 6h6M5 9h6M5 12h4" stroke="#185FA5" stroke-width="1.4" stroke-linecap="round"/>
+          <rect x="2" y="1" width="12" height="14" rx="2" stroke="#60a5fa" stroke-width="1.4"/>
+          <path d="M5 6h6M5 9h6M5 12h4" stroke="#60a5fa" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </div>
       <p class="ticket-title">Doc improvement</p>
@@ -44,11 +243,11 @@ title: "Midnight Network ServiceDesk"
       <span class="ticket-cta">Open template →</span>
     </a>
 
-    <a class="ticket-card ticket-card--sec" href="{{ site.security_url }}">
+    <a class="ticket-card ticket-card--sec" href="https://github.com/midnightntwrk/servicedesk/security/advisories/new">
       <div class="ticket-icon icon-sec">
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M8 1L2 4v5c0 3 3 5.5 6 6 3-.5 6-3 6-6V4L8 1z" stroke="#A32D2D" stroke-width="1.4"/>
-          <path d="M5.5 8l2 2L10.5 6" stroke="#A32D2D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 1L2 4v5c0 3 3 5.5 6 6 3-.5 6-3 6-6V4L8 1z" stroke="#ef4444" stroke-width="1.4"/>
+          <path d="M5.5 8l2 2L10.5 6" stroke="#ef4444" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <p class="ticket-title">Security issue</p>
@@ -66,24 +265,39 @@ title: "Midnight Network ServiceDesk"
     <div class="panel">
       <p class="panel-title">Copy-paste templates</p>
       <div class="tpl-list">
-        {% assign templates = "release-notes-node,release-notes-infra,announcement,post-mortem" | split: "," %}
-        {% for tpl in templates %}
+
         <div class="tpl-row">
-          <div class="tpl-info">
-            <span class="tpl-name">{{ tpl | replace: "-", " " | capitalize }}</span>
-            {% assign front = site.data.template_meta[tpl] %}
-            {% if front %}
-              <span class="tpl-meta">Last reviewed: {{ front.last_reviewed }}</span>
-              {% assign review_days = front.days_since_review | plus: 0 %}
-              {% if review_days >= 90 %}<span class="badge-warn">Review overdue</span>{% endif %}
-            {% endif %}
-          </div>
+          <div class="tpl-info"><span class="tpl-name">Release notes — node</span></div>
           <div class="tpl-actions">
-            <button class="tpl-btn" onclick="copyTemplate('{{ tpl }}')">Copy</button>
-            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/{{ tpl }}.md" target="_blank" rel="noopener">Open</a>
+            <button class="tpl-btn" onclick="copyTemplate('release-notes-node',this)">Copy</button>
+            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/release-notes-node.md" target="_blank" rel="noopener">Open</a>
           </div>
         </div>
-        {% endfor %}
+
+        <div class="tpl-row">
+          <div class="tpl-info"><span class="tpl-name">Release notes — infra</span></div>
+          <div class="tpl-actions">
+            <button class="tpl-btn" onclick="copyTemplate('release-notes-infra',this)">Copy</button>
+            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/release-notes-infra.md" target="_blank" rel="noopener">Open</a>
+          </div>
+        </div>
+
+        <div class="tpl-row">
+          <div class="tpl-info"><span class="tpl-name">Announcement</span></div>
+          <div class="tpl-actions">
+            <button class="tpl-btn" onclick="copyTemplate('announcement',this)">Copy</button>
+            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/announcement.md" target="_blank" rel="noopener">Open</a>
+          </div>
+        </div>
+
+        <div class="tpl-row">
+          <div class="tpl-info"><span class="tpl-name">Post-mortem</span></div>
+          <div class="tpl-actions">
+            <button class="tpl-btn" onclick="copyTemplate('post-mortem',this)">Copy</button>
+            <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/post-mortem.md" target="_blank" rel="noopener">Open</a>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -91,19 +305,19 @@ title: "Midnight Network ServiceDesk"
       <p class="panel-title">Reference documents</p>
       <div class="ref-list">
         <div class="ref-row">
-          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/hard-fork-runtime-upgrades.md">Runtime upgrade vs hardfork guide</a>
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/hard-fork-runtime-upgrades.md" target="_blank" rel="noopener">Runtime upgrade vs hardfork guide</a>
           <span class="ref-tag">Node operators</span>
         </div>
         <div class="ref-row">
-          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/bootnodes.md">Bootstrap node governance</a>
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/documents/bootnodes.md" target="_blank" rel="noopener">Bootstrap node governance</a>
           <span class="ref-tag ref-tag--draft">Draft</span>
         </div>
         <div class="ref-row">
-          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Triage &amp; workflow process</a>
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md" target="_blank" rel="noopener">Triage &amp; workflow process</a>
           <span class="ref-tag">Triage team</span>
         </div>
         <div class="ref-row">
-          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/ai-reports.md">AI bug report policy</a>
+          <a class="ref-name" href="https://github.com/midnightntwrk/servicedesk/blob/main/ai-reports.md" target="_blank" rel="noopener">AI bug report policy</a>
           <span class="ref-tag">All reporters</span>
         </div>
       </div>
@@ -113,66 +327,109 @@ title: "Midnight Network ServiceDesk"
 </section>
 
 <section class="band">
-  <p class="band-label">SLA status <span class="refresh-note">updated {{ site.data.sla.generated_at | date: "%H:%M UTC %d %b" }}</span></p>
+  <p class="band-label">SLA status <span class="refresh-note" id="sla-ts">loading…</span></p>
   <div class="sla-grid">
 
-    {% assign p1 = site.data.sla.priorities.p1 %}
-    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p1">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p1">
       <div class="sla-header">
         <span class="sla-label">P1 critical</span>
         <span class="sla-chip sla-chip--pd">PagerDuty</span>
       </div>
-      <p class="sla-target">{{ p1.target_display }}</p>
+      <p class="sla-target">30 min — any time</p>
       <div class="sla-stats">
-        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p1.open }}</span></div>
-        {% if p1.paged > 0 %}
-        <div class="pd-active"><span class="pd-dot"></span><span class="pd-label">{{ p1.paged }} incident active</span></div>
-        {% endif %}
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v sla-loading" id="p1-open">…</span></div>
+        <div class="pd-active" id="p1-pd" style="display:none"><div class="pd-dot"></div><span class="pd-label" id="p1-pd-label"></span></div>
       </div>
     </a>
 
-    {% assign p2 = site.data.sla.priorities.p2 %}
-    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p2">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p2">
       <div class="sla-header">
         <span class="sla-label">P2 high</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
       </div>
-      <p class="sla-target">{{ p2.target_display }}</p>
+      <p class="sla-target">4 business hours</p>
       <div class="sla-stats">
-        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p2.open }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p2.at_risk > 0 %}sla-warn{% endif %}">{{ p2.at_risk }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p2.breached > 0 %}sla-danger{% endif %}">{{ p2.breached }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v sla-loading" id="p2-open">…</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v" id="p2-risk">—</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v" id="p2-breach">—</span></div>
       </div>
     </a>
 
-    {% assign p3 = site.data.sla.priorities.p3 %}
-    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p3">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p3">
       <div class="sla-header">
         <span class="sla-label">P3 medium</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
       </div>
-      <p class="sla-target">{{ p3.target_display }}</p>
+      <p class="sla-target">1 business day</p>
       <div class="sla-stats">
-        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p3.open }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p3.at_risk > 0 %}sla-warn{% endif %}">{{ p3.at_risk }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p3.breached > 0 %}sla-danger{% endif %}">{{ p3.breached }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v sla-loading" id="p3-open">…</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v" id="p3-risk">—</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v" id="p3-breach">—</span></div>
       </div>
     </a>
 
-    {% assign p4 = site.data.sla.priorities.p4 %}
-    <a class="sla-tile" href="{{ site.issues_url }}?q=is:issue+is:open+label:priority:p4">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p4">
       <div class="sla-header">
         <span class="sla-label">P4 low</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
       </div>
-      <p class="sla-target">{{ p4.target_display }}</p>
+      <p class="sla-target">3 business days</p>
       <div class="sla-stats">
-        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v">{{ p4.open }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v {% if p4.at_risk > 0 %}sla-warn{% endif %}">{{ p4.at_risk }}</span></div>
-        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v {% if p4.breached > 0 %}sla-danger{% endif %}">{{ p4.breached }}</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Open</span><span class="sla-stat-v sla-loading" id="p4-open">…</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">At risk</span><span class="sla-stat-v" id="p4-risk">—</span></div>
+        <div class="sla-stat-row"><span class="sla-stat-l">Breached</span><span class="sla-stat-v" id="p4-breach">—</span></div>
       </div>
     </a>
 
+  </div>
+</section>
+
+<section class="band">
+  <p class="band-label">Open issues</p>
+  <div class="panel">
+    <div id="issues-board" class="issues-board">
+      <p class="board-loading">Loading issues…</p>
+    </div>
+    <div class="board-viewall">
+      <a href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+sort:updated-desc">View all open issues on GitHub →</a>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <p class="band-label">Security</p>
+  <div class="sec-panel">
+    <div class="sec-header">
+      <div class="sec-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1L2 4v5c0 3 3 5.5 6 6 3-.5 6-3 6-6V4L8 1z" stroke="#ef4444" stroke-width="1.4"/>
+          <path d="M5.5 8l2 2L10.5 6" stroke="#ef4444" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <p class="sec-title">Security vulnerability reporting</p>
+        <p class="sec-subtitle">Do not use public issues — all reports are private</p>
+      </div>
+    </div>
+    <p class="sec-body">
+      If you have discovered a security vulnerability, use GitHub's private reporting channel below.
+      Do not file a public issue. If the advisory channel is unavailable or goes unanswered within
+      3 business days, email <a href="mailto:security@midnight.foundation" style="color:var(--danger-fg)">security@midnight.foundation</a>.
+    </p>
+    <div class="sec-actions">
+      <a class="sec-btn" href="https://github.com/midnightntwrk/servicedesk/security/advisories/new">Open private advisory →</a>
+      <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/security/advisories">View advisories in progress</a>
+      <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
+    </div>
+    <div class="sec-team">
+      <p class="sec-team-label">mn_security_issue group — reviewers</p>
+      <div class="sec-members">
+        <span class="sec-member">midnightntwrk/mn-security</span>
+        <span class="sec-member">hegaleon</span>
+        <!-- Add members: copy a sec-member span and set the GitHub username -->
+        <span class="sec-add">+ add member</span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -182,34 +439,13 @@ title: "Midnight Network ServiceDesk"
 
     <div class="panel">
       <p class="panel-title">Announcements</p>
-      {% if site.data.announcements.items %}
-        {% for item in site.data.announcements.items limit:4 %}
-        <div class="announce-item">
-          <a class="announce-title" href="{{ item.url }}">{{ item.title }}</a>
-          <p class="announce-date">{{ item.date | date: "%d %b %Y" }}{% if item.pinned %} · pinned{% endif %}</p>
-        </div>
-        {% endfor %}
-      {% else %}
-        <p class="empty-state">No announcements yet. <a href="{{ site.discussions_url }}">View discussions →</a></p>
-      {% endif %}
-      <div class="panel-footer"><a href="{{ site.discussions_url }}">View all discussions →</a></div>
+      <p class="empty-state">No announcements yet.</p>
+      <div class="panel-footer"><a href="https://github.com/midnightntwrk/servicedesk/discussions">View all discussions →</a></div>
     </div>
 
     <div class="panel">
       <p class="panel-title">Recent activity</p>
-      {% if site.data.activity.opened %}
-        {% for item in site.data.activity.opened limit:4 %}
-        <div class="activity-item">
-          <span class="act-p act-p{{ item.priority | downcase }}">{{ item.priority }}</span>
-          <div class="act-body">
-            <a class="act-title" href="{{ item.url }}">{{ item.title }}</a>
-            <p class="act-meta">{% if item.component != "" %}comp:{{ item.component }} · {% endif %}opened {{ item.opened_at | date: "%d %b" }}</p>
-          </div>
-        </div>
-        {% endfor %}
-      {% else %}
-        <p class="empty-state">No recent activity.</p>
-      {% endif %}
+      <div id="activity-feed"><p class="empty-state">Loading…</p></div>
     </div>
 
   </div>
@@ -218,17 +454,147 @@ title: "Midnight Network ServiceDesk"
 </main>
 
 <script>
-async function copyTemplate(name) {
+const REPO = 'midnightntwrk/servicedesk';
+const API  = 'https://api.github.com/repos/' + REPO;
+
+async function ghFetch(url) {
+  const r = await fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function countLabel(label) {
+  const d = await ghFetch(
+    `https://api.github.com/search/issues?q=repo:${REPO}+is:issue+is:open+label:${encodeURIComponent(label)}&per_page=1`
+  );
+  return d.total_count;
+}
+
+async function loadSLA() {
+  try {
+    const [p1, p2, p3, p4, atRisk, breached, paged] = await Promise.all([
+      countLabel('priority:p1'),
+      countLabel('priority:p2'),
+      countLabel('priority:p3'),
+      countLabel('priority:p4'),
+      countLabel('sla:response-at-risk'),
+      countLabel('sla:response-breached'),
+      countLabel('pd:paged'),
+    ]);
+    setText('p1-open', p1, false);
+    setText('p2-open', p2, false);
+    setText('p3-open', p3, false);
+    setText('p4-open', p4, false);
+    setText('p2-risk',   atRisk,   true);
+    setText('p3-risk',   '—',      false);
+    setText('p4-risk',   '—',      false);
+    setText('p2-breach', breached, true);
+    setText('p3-breach', '—',      false);
+    setText('p4-breach', '—',      false);
+    if (paged > 0) {
+      document.getElementById('p1-pd').style.display = 'flex';
+      document.getElementById('p1-pd-label').textContent = paged + ' incident active';
+    }
+    document.getElementById('sla-ts').textContent =
+      'updated ' + new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' UTC';
+  } catch(e) {
+    document.getElementById('sla-ts').textContent = 'could not load — GitHub API';
+    ['p1-open','p2-open','p3-open','p4-open'].forEach(id => setText(id, '?', false));
+  }
+}
+
+function setText(id, val, warn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  el.classList.remove('sla-loading','sla-warn','sla-danger');
+  if (warn && val > 0) el.classList.add('sla-warn');
+}
+
+async function loadIssues() {
+  const board = document.getElementById('issues-board');
+  try {
+    const issues = await ghFetch(
+      `${API}/issues?state=open&sort=updated&direction=desc&per_page=10`
+    );
+    if (!issues.length) {
+      board.innerHTML = '<p class="empty-state">No open issues.</p>';
+      return;
+    }
+    board.innerHTML = issues.map(i => {
+      const labels = i.labels || [];
+      const pLabel = labels.find(l => l.name.startsWith('priority:'));
+      const pKey   = pLabel ? pLabel.name.replace('priority:','p') : '';
+      const compL  = labels.find(l => l.name.startsWith('comp:'));
+      const typeL  = labels.find(l => l.name.startsWith('type:'));
+      const date   = new Date(i.updated_at).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+      const chips  = [
+        pLabel ? `<span class="issue-label issue-label--${pKey}">${pLabel.name}</span>` : '',
+        compL  ? `<span class="issue-label">${compL.name}</span>` : '',
+        typeL  ? `<span class="issue-label">${typeL.name}</span>` : '',
+      ].filter(Boolean).join('');
+      return `
+        <div class="issue-row">
+          <span class="issue-num">#${i.number}</span>
+          <div class="issue-body">
+            <a class="issue-title" href="${i.html_url}" target="_blank" rel="noopener">${escHtml(i.title)}</a>
+            <div class="issue-meta">${chips}<span class="issue-date">updated ${date}</span></div>
+          </div>
+        </div>`;
+    }).join('');
+    const feed = document.getElementById('activity-feed');
+    feed.innerHTML = issues.slice(0,4).map(i => {
+      const pLabel = (i.labels||[]).find(l => l.name.startsWith('priority:'));
+      const pKey   = pLabel ? pLabel.name.replace('priority:p','') : '4';
+      const date   = new Date(i.updated_at).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+      const compL  = (i.labels||[]).find(l => l.name.startsWith('comp:'));
+      return `
+        <div class="activity-item">
+          <span class="act-p act-pp${pKey}">P${pKey}</span>
+          <div class="act-body">
+            <a class="act-title" href="${i.html_url}" target="_blank" rel="noopener">${escHtml(i.title)}</a>
+            <p class="act-meta">${compL ? compL.name+' · ' : ''}updated ${date}</p>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    board.innerHTML = '<p class="board-error">Could not load issues — GitHub API rate limit or network error.</p>';
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function copyTemplate(name, btn) {
   const url = 'https://raw.githubusercontent.com/midnightntwrk/servicedesk/main/templates/' + name + '.md';
   try {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
     const text = await res.text();
     const body = text.replace(/^---[\s\S]*?---\n/, '');
     await navigator.clipboard.writeText(body);
-    event.target.textContent = 'Copied';
-    setTimeout(() => event.target.textContent = 'Copy', 2000);
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
   } catch (e) {
+    btn.textContent = 'Open ↗';
+    btn.classList.add('tpl-btn--err');
     window.open(url, '_blank');
   }
 }
+
+loadSLA();
+loadIssues();
 </script>
+
+<footer class="site-footer">
+  <span class="footer-left">midnightntwrk/servicedesk · issue counts via GitHub API</span>
+  <div class="footer-links">
+    <a href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md">SECURITY.md</a>
+    <a href="https://github.com/midnightntwrk/servicedesk/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
+    <a href="mailto:security@midnight.foundation">security@midnight.foundation</a>
+  </div>
+</footer>
+
+</body>
+</html>

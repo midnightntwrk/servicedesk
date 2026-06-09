@@ -46,3 +46,40 @@ Apply it to an existing clone of `midnightntwrk/servicedesk` using the commands 
 
 `PAGERDUTY_ROUTING_KEY` is likely already present if P1 paging is operational.
 `IAC_APP_ID` and `IAC_APP_PRIVATE_KEY` must be added as repository secrets before `route-iac.yml` is triggered.
+
+# Applying the v1.7.3 uplift (snag-list: resolve-page-issues)
+
+Apply to an existing clone of `midnightntwrk/servicedesk` on branch
+`chore/resolve-page-issues`. Full steps in §10 of `SPEC-v1.7.3.md`.
+
+## New files
+- `.github/workflows/pages.yml` — GitHub Actions Pages deployment
+- `SPEC-v1.7.3.md` — this specification
+
+## Replaced files (overwrite entirely — do not merge)
+- `index.html` — complete replacement; 633 lines; MD5 b9e2227e843ae8e0c55bef3c1daf0b00
+- `CHANGELOG.md` — complete replacement
+
+## Modified files (surgical change)
+- `_layouts/default.html` — one Issues nav link inserted after Process link
+
+## Appended files
+- `APPLY.md` — this section
+
+## Files verified unchanged
+- `templates/*.md` — all links confirmed active (snag f)
+- `documents/*.md` — all links confirmed active (snag f)
+- `_config.yml`, `CODEOWNERS`, `README.md` — no changes needed
+- `SECURITY.md` — security-gated; not touched on this branch
+
+## Post-merge manual step (required)
+Settings → Pages → Source → GitHub Actions
+
+## Secrets required
+No new secrets. Pre-existing secrets needed:
+
+| Secret | Used by |
+|--------|---------|
+| `PAGERDUTY_ROUTING_KEY` | `p1-pagerduty.yml` |
+| `IAC_APP_ID` | `route-iac.yml` |
+| `IAC_APP_PRIVATE_KEY` | `route-iac.yml` |
