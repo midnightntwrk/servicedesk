@@ -1,1 +1,9 @@
 blank_issues_enabled: false
+
+contact_links:
+  - name: 🔒 Security vulnerability
+    url: https://github.com/midnightntwrk/servicedesk/security/advisories/new
+    about: >
+      Please report security vulnerabilities via private advisory — not
+      as a public issue. Use this link to open a draft advisory that is
+      only visible to the security team.
