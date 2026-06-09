@@ -7,6 +7,8 @@
 
 # ── Security-gated files (require mn-security sign-off in addition to @hegaleon) ──
 
+/.github/ISSUE_TEMPLATE/config.yml    @hegaleon @midnightntwrk/mn-security
+
 # Live on-call paging — uses PAGERDUTY_ROUTING_KEY secret
 /.github/workflows/p1-pagerduty.yml         @hegaleon @midnightntwrk/mn-security
 
@@ -15,3 +17,4 @@
 
 # Published security policy — authoritative channel order and contact details
 /SECURITY.md                                @hegaleon @midnightntwrk/mn-security
+
