@@ -1,7 +1,8 @@
 name: Help Request
 description: Get technical support or ask a question about the Midnight ecosystem
 title: "[Help]: "
-labels: ["type:question", "status:triage"]
+type: Task
+labels: ["status:untriaged", "question"]
 assignees: []
 
 body:

@@ -30,25 +30,31 @@ jobs:
               return value && value !== '_No response_' ? value : null;
             };
 
+            // Maps issue-form values to canonical labels. Canonical names follow
+            // shielded-sre-agent-docs/rules/github-label-conventions.md:
+            //   - component:<v> values restricted to canonical-components.md
+            //   - area:<v> for cross-cutting functional areas
+            //   - priority:p[0-4]-<word> with full suffix
+            //   - network:* and source:* are Layer 3 servicedesk-specific
             const componentMap = {
-              'Infra — Node':               'comp:node',
-              'Infra — Ledger':             'comp:ledger',
-              'Infra — Indexer':            'comp:indexer',
-              'Infra — Proof Server':       'comp:proof-server',
-              'Infra — ZK Circuits':        'comp:zk',
-              'Contracts — Compact Compiler': 'comp:compiler',
-              'Contracts — ZKIR':           'comp:zkir',
-              'Contracts — Contract Runtime': 'comp:runtime',
-              'App/SDK — Midnight.js SDK':  'comp:sdk-js',
-              'App/SDK — Wallet SDK':       'comp:wallet',
-              'App/SDK — DApp Connector':   'comp:dapp-connector',
-              'App/SDK — Faucet':           'comp:faucet',
-              'Interop — Partner Chains':   'comp:partner-chains',
-              'Interop — Bridge Contracts': 'comp:bridge',
-              'Ops — Deployment':           'comp:charts',
-              'Ops — Metrics & Monitoring': 'comp:metrics',
-              'Ops — Build System':         'comp:build',
-              'Ops — Documentation':        'comp:docs',
+              'Infra — Node':                 'component:midnight-node',
+              'Infra — Ledger':               'component:ledger',
+              'Infra — Indexer':              'component:indexer',
+              'Infra — Proof Server':         'component:proof-server',
+              'Infra — ZK Circuits':          'component:zk',
+              'Contracts — Compact Compiler': 'component:compact-compiler',
+              'Contracts — ZKIR':             'component:zkir',
+              'Contracts — Contract Runtime': 'component:compact-runtime',
+              'App/SDK — Midnight.js SDK':    'component:midnight-js',
+              'App/SDK — Wallet SDK':         'component:wallet-sdk',
+              'App/SDK — DApp Connector':     'component:dapp-connector',
+              'App/SDK — Faucet':             'component:faucet',
+              'Interop — Partner Chains':     'component:partner-chains',
+              'Interop — Bridge Contracts':   'component:bridge',
+              'Ops — Deployment':             'area:deployment',
+              'Ops — Metrics & Monitoring':   'area:metrics',
+              'Ops — Build System':           'area:build',
+              'Ops — Documentation':          'documentation',
             };
 
             const networkMap = {
@@ -58,10 +64,10 @@ jobs:
             };
 
             const severityMap = {
-              'P1': 'priority:p1',
-              'P2': 'priority:p2',
-              'P3': 'priority:p3',
-              'P4': 'priority:p4',
+              'P1': 'priority:p1-critical',
+              'P2': 'priority:p2-high',
+              'P3': 'priority:p3-medium',
+              'P4': 'priority:p4-low',
             };
 
             const sourceMap = {
@@ -73,38 +79,42 @@ jobs:
               'Other':                    'source:other',
             };
 
+            // Canonical colors per shielded-iac-modules/github/labels/locals.tf:
+            //   component:* = d4c5f9 (purple), area:* = bfdadc (teal)
+            //   priority:* per the canonical priority colour scale
+            //   Layer-3 namespaces (network:, source:) use repo-local colours
             const labelMeta = {
-              'comp:node':           { color: '0366d6', description: 'Component: midnight-node' },
-              'comp:ledger':         { color: '0366d6', description: 'Component: midnight-ledger' },
-              'comp:indexer':        { color: '0366d6', description: 'Component: midnight-indexer' },
-              'comp:proof-server':   { color: '0366d6', description: 'Component: Proof Server' },
-              'comp:zk':             { color: '0366d6', description: 'Component: ZK Circuits' },
-              'comp:compiler':       { color: '0366d6', description: 'Component: compactc' },
-              'comp:zkir':           { color: '0366d6', description: 'Component: ZKIR' },
-              'comp:runtime':        { color: '0366d6', description: 'Component: Contract Runtime' },
-              'comp:sdk-js':         { color: '0366d6', description: 'Component: Midnight.js SDK' },
-              'comp:wallet':         { color: '0366d6', description: 'Component: Wallet SDK' },
-              'comp:dapp-connector': { color: '0366d6', description: 'Component: DApp Connector' },
-              'comp:faucet':         { color: '0366d6', description: 'Component: Faucet' },
-              'comp:partner-chains': { color: '0366d6', description: 'Component: Partner Chains' },
-              'comp:bridge':         { color: '0366d6', description: 'Component: Bridge Contracts' },
-              'comp:charts':         { color: '0366d6', description: 'Component: midnight-charts' },
-              'comp:metrics':        { color: '0366d6', description: 'Component: Metrics & Monitoring' },
-              'comp:build':          { color: '0366d6', description: 'Component: Build system' },
-              'comp:docs':           { color: '0366d6', description: 'Component: Documentation' },
-              'network:mainnet':     { color: '5319e7', description: 'Network: Mainnet' },
-              'network:preprod':     { color: '5319e7', description: 'Network: Preprod' },
-              'network:preview':     { color: '5319e7', description: 'Network: Preview' },
-              'priority:p1':         { color: 'b60205', description: 'P1 Critical — response target: 30 min' },
-              'priority:p2':         { color: 'd93f0b', description: 'P2 High — response target: 4 business hours' },
-              'priority:p3':         { color: 'fbca04', description: 'P3 Medium — response target: 1 business day' },
-              'priority:p4':         { color: '0e8a16', description: 'P4 Low — response target: 3 business days' },
-              'source:user-report':      { color: 'c5def5', description: 'First seen: user / community report' },
-              'source:grafana':          { color: 'c5def5', description: 'First seen: Grafana alert' },
-              'source:anomaly-detector': { color: 'c5def5', description: 'First seen: chain anomaly detector' },
-              'source:indexer-alert':    { color: 'c5def5', description: 'First seen: indexer lag / data-quality alert' },
-              'source:internal-test':    { color: 'c5def5', description: 'First seen: internal test / QA' },
-              'source:other':            { color: 'c5def5', description: 'First seen: other source' },
+              'component:midnight-node':     { color: 'd4c5f9', description: 'Midnight node binary (substrate-based)' },
+              'component:ledger':            { color: 'd4c5f9', description: 'Ledger crate / library implementation of the on-chain state model' },
+              'component:indexer':           { color: 'd4c5f9', description: 'Indexer service that exposes chain data to clients' },
+              'component:proof-server':      { color: 'd4c5f9', description: 'Standalone proof-generation service' },
+              'component:zk':                { color: 'd4c5f9', description: 'Zero-knowledge subsystem at large' },
+              'component:compact-compiler':  { color: 'd4c5f9', description: 'The Compact language compiler' },
+              'component:zkir':              { color: 'd4c5f9', description: 'Zero-knowledge intermediate representation' },
+              'component:compact-runtime':   { color: 'd4c5f9', description: 'Runtime that executes compiled Compact contracts' },
+              'component:midnight-js':       { color: 'd4c5f9', description: 'Browser/Node JavaScript SDK and provider implementations' },
+              'component:wallet-sdk':        { color: 'd4c5f9', description: 'Wallet-SDK packages specifically' },
+              'component:dapp-connector':    { color: 'd4c5f9', description: 'DApp Connector API and reference integrations' },
+              'component:faucet':            { color: 'd4c5f9', description: 'Faucet service for development environments' },
+              'component:partner-chains':    { color: 'd4c5f9', description: 'Partner-chains framework / integration code' },
+              'component:bridge':            { color: 'd4c5f9', description: 'Cardano <-> Midnight bridge' },
+              'area:deployment':             { color: 'bfdadc', description: 'Deployment and release operations (helm, argo, terraform, scripts)' },
+              'area:metrics':                { color: 'bfdadc', description: 'Metrics, monitoring, and observability' },
+              'area:build':                  { color: 'bfdadc', description: 'Build system and toolchain' },
+              'documentation':               { color: '0075ca', description: 'Improvements or additions to documentation' },
+              'network:mainnet':             { color: '5319e7', description: 'Network: Mainnet' },
+              'network:preprod':             { color: '5319e7', description: 'Network: Preprod' },
+              'network:preview':             { color: '5319e7', description: 'Network: Preview' },
+              'priority:p1-critical':        { color: 'd93f0b', description: 'Critical priority — schedule immediately' },
+              'priority:p2-high':            { color: 'e99695', description: 'High priority — schedule this sprint' },
+              'priority:p3-medium':          { color: 'fbca04', description: 'Medium priority — schedule next sprint' },
+              'priority:p4-low':             { color: '0e8a16', description: 'Low priority — schedule when capacity allows' },
+              'source:user-report':          { color: 'c5def5', description: 'First seen: user / community report' },
+              'source:grafana':              { color: 'c5def5', description: 'First seen: Grafana alert' },
+              'source:anomaly-detector':     { color: 'c5def5', description: 'First seen: chain anomaly detector' },
+              'source:indexer-alert':        { color: 'c5def5', description: 'First seen: indexer lag / data-quality alert' },
+              'source:internal-test':        { color: 'c5def5', description: 'First seen: internal test / QA' },
+              'source:other':                { color: 'c5def5', description: 'First seen: other source' },
             };
 
             const matchByPrefix = (value, map) => {
@@ -153,7 +163,7 @@ jobs:
               }
             }
 
-            const managedPrefixes = ['comp:', 'network:', 'priority:', 'source:'];
+            const managedPrefixes = ['component:', 'area:', 'network:', 'priority:', 'source:'];
             const current = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number });
             for (const lbl of current.data) {
               const isManaged = managedPrefixes.some(p => lbl.name.startsWith(p));

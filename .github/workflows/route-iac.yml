@@ -13,12 +13,12 @@ concurrency:
 
 jobs:
   mirror:
-    if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac:routed')
+    if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac-routed')
     runs-on: ubuntu-24.04
     steps:
       - name: Mint installation token for shielded-iac + this repo
         id: app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.IAC_APP_ID }}
           private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
@@ -32,10 +32,10 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            const ROUTED_LABEL = 'route:iac:routed';
+            const ROUTED_LABEL = 'route:iac-routed';
             const routedLabelMeta = {
-              color: '0e8a16',
-              description: 'Already mirrored to shielded-iac — prevents duplicate routing',
+              color: 'cfd3d7',
+              description: 'Routed to shieldedtech/shielded-iac',
             };
 
             const sourceIssue = context.payload.issue;
@@ -73,7 +73,7 @@ jobs:
               repo: destRepo,
               title: sourceIssue.title,
               body: mirrorBody,
-              labels: ['task', 'triage'],
+              labels: ['status:untriaged'],
             });
 
             await github.rest.issues.createComment({
