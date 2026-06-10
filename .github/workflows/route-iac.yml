@@ -1,4 +1,4 @@
-name: Route IaC requests to shielded-iac
+name: Route IaC requests to midnight-iac
 
 on:
   issues:
@@ -16,18 +16,18 @@ jobs:
     if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac-routed')
     runs-on: ubuntu-24.04
     steps:
-      - name: Mint installation token for shielded-iac + this repo
+      - name: Mint installation token for midnight-iac + this repo
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.IAC_APP_ID }}
           private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
-          owner: shieldedtech
+          owner: midnightntwrk
           repositories: |
-            shielded-iac
-            mnf-stl-support
+            midnight-iac
+            servicedesk
 
-      - name: Mirror issue to shielded-iac, comment back, and stamp routed marker
+      - name: Mirror issue to midnight-iac, comment back, and stamp routed marker
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.app-token.outputs.token }}
@@ -35,7 +35,7 @@ jobs:
             const ROUTED_LABEL = 'route:iac-routed';
             const routedLabelMeta = {
               color: 'cfd3d7',
-              description: 'Routed to shieldedtech/shielded-iac',
+              description: 'Routed to midnightntwrk/midnight-iac',
             };
 
             const sourceIssue = context.payload.issue;
@@ -44,8 +44,8 @@ jobs:
             const sourceRef   = `${sourceOwner}/${sourceRepo}#${sourceIssue.number}`;
             const reporter    = sourceIssue.user?.login ?? 'unknown';
 
-            const destOwner = 'shieldedtech';
-            const destRepo  = 'shielded-iac';
+            const destOwner = 'midnightntwrk';
+            const destRepo  = 'midnight-iac';
 
             const ensureLabel = async (owner, repo, name, meta) => {
               try {
@@ -73,7 +73,7 @@ jobs:
               repo: destRepo,
               title: sourceIssue.title,
               body: mirrorBody,
-              labels: ['status:untriaged'],
+              labels: [],
             });
 
             await github.rest.issues.createComment({
@@ -81,7 +81,7 @@ jobs:
               repo: sourceRepo,
               issue_number: sourceIssue.number,
               body: [
-                `Routed to **${created.html_url}** — Shielded SRE will work the request there.`,
+                `Routed to **${created.html_url}** — MNF SRE will work the request there.`,
                 ``,
                 `This issue stays open as your tracking thread. SRE will post status updates back here as the work progresses.`,
               ].join('\n'),
