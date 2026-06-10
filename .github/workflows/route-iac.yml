@@ -16,21 +16,10 @@ jobs:
     if: github.event.label.name == 'route:iac' && !contains(toJSON(github.event.issue.labels), 'route:iac-routed')
     runs-on: ubuntu-24.04
     steps:
-      - name: Mint installation token for midnight-iac + this repo
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.IAC_APP_ID }}
-          private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
-          owner: midnightntwrk
-          repositories: |
-            midnight-iac
-            servicedesk
-
       - name: Mirror issue to midnight-iac, comment back, and stamp routed marker
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ secrets.MIDNIGHTCI_REPO }}
           script: |
             const ROUTED_LABEL = 'route:iac-routed';
             const routedLabelMeta = {
