@@ -183,10 +183,16 @@
 
 <nav class="site-nav">
   <div class="nav-brand">
-    <svg class="nav-mark" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-      <polygon points="11,1 20,6 20,16 11,21 2,16 2,6" fill="#8756ff" opacity=".18"/>
-      <polygon points="11,1 20,6 20,16 11,21 2,16 2,6" stroke="#8756ff" stroke-width="1.4" fill="none"/>
-      <text x="11" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="10" fill="#8756ff">M</text>
+    <svg class="nav-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <!-- Midnight brand mark: clock face pointing to midnight, three-dot motif -->
+      <circle cx="14" cy="14" r="13" fill="#101010" stroke="#ffffff" stroke-width="1.2"/>
+      <!-- Clock hands pointing to midnight (12 o'clock) -->
+      <line x1="14" y1="14" x2="14" y2="5"  stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="14" y1="14" x2="14" y2="7"  stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- Three-dot motif: three freedoms of association, commerce, expression -->
+      <circle cx="14" cy="22" r="1.2" fill="#4fc3f7"/>
+      <circle cx="10.5" cy="21"  r="1.2" fill="#4fc3f7"/>
+      <circle cx="17.5" cy="21"  r="1.2" fill="#4fc3f7"/>
     </svg>
     Midnight Network · ServiceDesk
   </div>
@@ -195,6 +201,7 @@
     <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/tree/main/templates">Templates</a>
     <a class="nav-link" href="https://docs.midnight.network">Docs</a>
     <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Process</a>
+    <!-- (b) New Issues List nav link -->
     <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+sort:updated-desc">Issues</a>
     <div class="nav-sep"></div>
     <a class="nav-cta" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+author:@me">My tickets ↗</a>
@@ -203,6 +210,7 @@
 
 <main>
 
+<!-- ── Raise a ticket ────────────────────────────────────────────────── -->
 <section class="band">
   <p class="band-label">Raise a ticket</p>
   <div class="ticket-grid">
@@ -258,6 +266,7 @@
   </div>
 </section>
 
+<!-- ── Templates & reference ─────────────────────────────────────────── -->
 <section class="band">
   <p class="band-label">Templates &amp; reference</p>
   <div class="two-col">
@@ -267,7 +276,9 @@
       <div class="tpl-list">
 
         <div class="tpl-row">
-          <div class="tpl-info"><span class="tpl-name">Release notes — node</span></div>
+          <div class="tpl-info">
+            <span class="tpl-name">Release notes — node</span>
+          </div>
           <div class="tpl-actions">
             <button class="tpl-btn" onclick="copyTemplate('release-notes-node',this)">Copy</button>
             <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/release-notes-node.md" target="_blank" rel="noopener">Open</a>
@@ -275,7 +286,9 @@
         </div>
 
         <div class="tpl-row">
-          <div class="tpl-info"><span class="tpl-name">Release notes — infra</span></div>
+          <div class="tpl-info">
+            <span class="tpl-name">Release notes — infra</span>
+          </div>
           <div class="tpl-actions">
             <button class="tpl-btn" onclick="copyTemplate('release-notes-infra',this)">Copy</button>
             <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/release-notes-infra.md" target="_blank" rel="noopener">Open</a>
@@ -283,7 +296,9 @@
         </div>
 
         <div class="tpl-row">
-          <div class="tpl-info"><span class="tpl-name">Announcement</span></div>
+          <div class="tpl-info">
+            <span class="tpl-name">Announcement</span>
+          </div>
           <div class="tpl-actions">
             <button class="tpl-btn" onclick="copyTemplate('announcement',this)">Copy</button>
             <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/announcement.md" target="_blank" rel="noopener">Open</a>
@@ -291,7 +306,9 @@
         </div>
 
         <div class="tpl-row">
-          <div class="tpl-info"><span class="tpl-name">Post-mortem</span></div>
+          <div class="tpl-info">
+            <span class="tpl-name">Post-mortem</span>
+          </div>
           <div class="tpl-actions">
             <button class="tpl-btn" onclick="copyTemplate('post-mortem',this)">Copy</button>
             <a class="tpl-btn" href="https://github.com/midnightntwrk/servicedesk/blob/main/templates/post-mortem.md" target="_blank" rel="noopener">Open</a>
@@ -326,11 +343,12 @@
   </div>
 </section>
 
+<!-- ── SLA status (d: live counts via GitHub API) ────────────────────── -->
 <section class="band">
   <p class="band-label">SLA status <span class="refresh-note" id="sla-ts">loading…</span></p>
   <div class="sla-grid">
 
-    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p1">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is%3Aissue+is%3Aopen+label%3Apriority%3Ap1">
       <div class="sla-header">
         <span class="sla-label">P1 critical</span>
         <span class="sla-chip sla-chip--pd">PagerDuty</span>
@@ -342,7 +360,7 @@
       </div>
     </a>
 
-    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p2">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is%3Aissue+is%3Aopen+label%3Apriority%3Ap2">
       <div class="sla-header">
         <span class="sla-label">P2 high</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
@@ -355,7 +373,7 @@
       </div>
     </a>
 
-    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p3">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is%3Aissue+is%3Aopen+label%3Apriority%3Ap3">
       <div class="sla-header">
         <span class="sla-label">P3 medium</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
@@ -368,7 +386,7 @@
       </div>
     </a>
 
-    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+label:priority:p4">
+    <a class="sla-tile" href="https://github.com/midnightntwrk/servicedesk/issues?q=is%3Aissue+is%3Aopen+label%3Apriority%3Ap4">
       <div class="sla-header">
         <span class="sla-label">P4 low</span>
         <span class="sla-chip sla-chip--ok">SLA clock</span>
@@ -384,6 +402,7 @@
   </div>
 </section>
 
+<!-- ── (c) Issues board — live public view ───────────────────────────── -->
 <section class="band">
   <p class="band-label">Open issues</p>
   <div class="panel">
@@ -396,6 +415,7 @@
   </div>
 </section>
 
+<!-- ── (e) Security — reporting & team ──────────────────────────────── -->
 <section class="band">
   <p class="band-label">Security</p>
   <div class="sec-panel">
@@ -421,6 +441,7 @@
       <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/security/advisories">View advisories in progress</a>
       <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
     </div>
+    <!-- mn_security_issue group — add/remove members here -->
     <div class="sec-team">
       <p class="sec-team-label">mn_security_issue group — reviewers</p>
       <div class="sec-members">
@@ -433,6 +454,7 @@
   </div>
 </section>
 
+<!-- ── Announcements & activity ──────────────────────────────────────── -->
 <section class="band">
   <p class="band-label">Announcements &amp; activity</p>
   <div class="two-col">
@@ -454,6 +476,7 @@
 </main>
 
 <script>
+// ── (d) Live issue counts via GitHub public API (no auth required for public repos) ──
 const REPO = 'midnightntwrk/servicedesk';
 const API  = 'https://api.github.com/repos/' + REPO;
 
@@ -463,6 +486,7 @@ async function ghFetch(url) {
   return r.json();
 }
 
+// Count open issues with a given label using the search API
 async function countLabel(label) {
   const d = await ghFetch(
     `https://api.github.com/search/issues?q=repo:${REPO}+is:issue+is:open+label:${encodeURIComponent(label)}&per_page=1`
@@ -472,29 +496,40 @@ async function countLabel(label) {
 
 async function loadSLA() {
   try {
-    const [p1, p2, p3, p4, atRisk, breached, paged] = await Promise.all([
+    const [p1, p2, p3, p4, p2r, p3r, p4r, p2b, p3b, p4b, paged] = await Promise.all([
       countLabel('priority:p1'),
       countLabel('priority:p2'),
       countLabel('priority:p3'),
       countLabel('priority:p4'),
+      countLabel('sla:response-at-risk'),   // rough proxy split later
       countLabel('sla:response-at-risk'),
+      countLabel('sla:response-at-risk'),
+      countLabel('sla:response-breached'),
+      countLabel('sla:response-breached'),
       countLabel('sla:response-breached'),
       countLabel('pd:paged'),
     ]);
+    // Open counts
     setText('p1-open', p1, false);
     setText('p2-open', p2, false);
     setText('p3-open', p3, false);
     setText('p4-open', p4, false);
+    // At-risk / breached — fetched as aggregate; sla-clock.yml will break these
+    // down per-priority when workflows are active; for now show aggregate
+    const atRisk   = p2r;
+    const breached = p2b;
     setText('p2-risk',   atRisk,   true);
     setText('p3-risk',   '—',      false);
     setText('p4-risk',   '—',      false);
     setText('p2-breach', breached, true);
     setText('p3-breach', '—',      false);
     setText('p4-breach', '—',      false);
+    // P1 PD active
     if (paged > 0) {
       document.getElementById('p1-pd').style.display = 'flex';
       document.getElementById('p1-pd-label').textContent = paged + ' incident active';
     }
+    // Timestamp
     document.getElementById('sla-ts').textContent =
       'updated ' + new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' UTC';
   } catch(e) {
@@ -511,6 +546,7 @@ function setText(id, val, warn) {
   if (warn && val > 0) el.classList.add('sla-warn');
 }
 
+// ── (c) Issues board — live public view via GitHub API ───────────────
 async function loadIssues() {
   const board = document.getElementById('issues-board');
   try {
@@ -542,6 +578,7 @@ async function loadIssues() {
           </div>
         </div>`;
     }).join('');
+    // Also populate activity feed
     const feed = document.getElementById('activity-feed');
     feed.innerHTML = issues.slice(0,4).map(i => {
       const pLabel = (i.labels||[]).find(l => l.name.startsWith('priority:'));
@@ -566,6 +603,7 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Template copy ────────────────────────────────────────────────────
 async function copyTemplate(name, btn) {
   const url = 'https://raw.githubusercontent.com/midnightntwrk/servicedesk/main/templates/' + name + '.md';
   try {
@@ -583,6 +621,7 @@ async function copyTemplate(name, btn) {
   }
 }
 
+// Boot
 loadSLA();
 loadIssues();
 </script>
