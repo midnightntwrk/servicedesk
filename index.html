@@ -33,7 +33,7 @@
     body { font-family: var(--font); font-size: 14px; color: var(--text-primary); background: var(--bg); line-height: 1.5; }
     a { color: inherit; text-decoration: none; }
 
-    /* Nav */
+    /* Nav -- */
     .site-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
     .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: var(--text-primary); letter-spacing: -.1px; }
     .nav-mark { width: 22px; height: 22px; flex-shrink: 0; }
@@ -133,6 +133,17 @@
     .board-error  { font-size: 12px; color: var(--warn-fg);  padding: 16px 0; text-align: center; }
     .board-viewall { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--brand); }
 
+    /* Discussions */
+    .disc-item { padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
+    .disc-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .disc-title { font-size: 12px; color: var(--text-primary); line-height: 1.4; transition: color .15s; }
+    .disc-title:hover { color: var(--brand); }
+    .disc-meta { font-size: 10px; color: var(--text-tertiary); display: flex; gap: 8px; align-items: center; }
+    .disc-cat { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: var(--brand-dim); color: var(--brand-mid); white-space: nowrap; }
+    .disc-replies { font-size: 9px; color: var(--text-tertiary); }
+    .disc-loading { font-size: 12px; color: var(--text-tertiary); font-style: italic; padding: 8px 0; }
+    .disc-error   { font-size: 12px; color: var(--warn-fg); padding: 8px 0; }
+
     /* Announcements & Activity */
     .announce-item { padding: 7px 0; border-bottom: 1px solid var(--border); }
     .announce-item:last-child { border-bottom: none; }
@@ -203,6 +214,7 @@
     <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/blob/main/process.md">Process</a>
     <!-- (b) New Issues List nav link -->
     <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+is:open+sort:updated-desc">Issues</a>
+    <a class="nav-link" href="https://github.com/midnightntwrk/servicedesk/discussions">Discussions</a>
     <div class="nav-sep"></div>
     <a class="nav-cta" href="https://github.com/midnightntwrk/servicedesk/issues?q=is:issue+author:@me">My tickets ↗</a>
   </div>
@@ -269,7 +281,7 @@
 <!-- ── Templates & reference ─────────────────────────────────────────── -->
 <section class="band">
   <p class="band-label">Templates &amp; reference</p>
-  <div class="two-col">
+  <div class="three-col">
 
     <div class="panel">
       <p class="panel-title">Copy-paste templates</p>
@@ -316,6 +328,13 @@
         </div>
 
       </div>
+    </div>
+
+    <!-- Top 3 discussions — middle column -->
+    <div class="panel">
+      <p class="panel-title">Top discussions</p>
+      <div id="disc-top3"><p class="disc-loading">Loading…</p></div>
+      <div class="panel-footer"><a href="https://github.com/midnightntwrk/servicedesk/discussions">All discussions →</a></div>
     </div>
 
     <div class="panel">
@@ -454,15 +473,21 @@
   </div>
 </section>
 
-<!-- ── Announcements & activity ──────────────────────────────────────── -->
+<!-- ── Announcements, Discussions & activity ─────────────────────────── -->
 <section class="band">
-  <p class="band-label">Announcements &amp; activity</p>
-  <div class="two-col">
+  <p class="band-label">Community</p>
+  <div class="three-col">
 
     <div class="panel">
       <p class="panel-title">Announcements</p>
       <p class="empty-state">No announcements yet.</p>
-      <div class="panel-footer"><a href="https://github.com/midnightntwrk/servicedesk/discussions">View all discussions →</a></div>
+      <div class="panel-footer"><a href="https://github.com/midnightntwrk/servicedesk/discussions/categories/announcements">View announcements →</a></div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Discussions <span class="refresh-note" id="disc-ts"></span></p>
+      <div id="disc-top10"><p class="disc-loading">Loading…</p></div>
+      <div class="panel-footer"><a href="https://github.com/midnightntwrk/servicedesk/discussions">All discussions →</a></div>
     </div>
 
     <div class="panel">
@@ -603,6 +628,75 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Discussions — GitHub GraphQL public API ───────────────────────────
+// Uses the public unauthenticated GraphQL endpoint.
+// GitHub Discussions are queryable without a token on public repos.
+async function loadDiscussions() {
+  const query = `{
+    repository(owner: "midnightntwrk", name: "servicedesk") {
+      discussions(first: 10, orderBy: {field: UPDATED_AT, direction: DESC}) {
+        nodes {
+          title
+          url
+          updatedAt
+          upvoteCount
+          comments { totalCount }
+          category { name }
+          author { login }
+        }
+      }
+    }
+  }`;
+  try {
+    const res = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    // GraphQL endpoint requires auth — fall back to REST search for public repos
+    if (res.status === 401 || res.status === 403) throw new Error('unauth');
+    const json = await res.json();
+    const nodes = json?.data?.repository?.discussions?.nodes || [];
+    if (!nodes.length) throw new Error('empty');
+    renderDiscs('disc-top3',  nodes.slice(0, 3));
+    renderDiscs('disc-top10', nodes.slice(0, 10));
+    const ts = document.getElementById('disc-ts');
+    if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' UTC';
+  } catch(e) {
+    // GraphQL requires a token for discussions — show a graceful fallback
+    // with direct links so the panel is still useful
+    const fallback = `
+      <p class="disc-error">Live data requires sign-in.<br>
+      <a href="https://github.com/midnightntwrk/servicedesk/discussions"
+         target="_blank" rel="noopener" style="color:var(--brand)">
+         Browse discussions on GitHub →</a></p>`;
+    const t3 = document.getElementById('disc-top3');
+    const t10 = document.getElementById('disc-top10');
+    if (t3)  t3.innerHTML  = fallback;
+    if (t10) t10.innerHTML = fallback;
+  }
+}
+
+function renderDiscs(targetId, nodes) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  if (!nodes.length) { el.innerHTML = '<p class="empty-state">No discussions yet.</p>'; return; }
+  el.innerHTML = nodes.map(d => {
+    const date = new Date(d.updatedAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    const replies = d.comments?.totalCount ?? 0;
+    const cat = d.category?.name ?? '';
+    return `
+      <div class="disc-item">
+        <a class="disc-title" href="${d.url}" target="_blank" rel="noopener">${escHtml(d.title)}</a>
+        <div class="disc-meta">
+          ${cat ? `<span class="disc-cat">${escHtml(cat)}</span>` : ''}
+          <span class="disc-replies">${replies} ${replies === 1 ? 'reply' : 'replies'}</span>
+          <span>updated ${date}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 // ── Template copy ────────────────────────────────────────────────────
 async function copyTemplate(name, btn) {
   const url = 'https://raw.githubusercontent.com/midnightntwrk/servicedesk/main/templates/' + name + '.md';
@@ -624,6 +718,7 @@ async function copyTemplate(name, btn) {
 // Boot
 loadSLA();
 loadIssues();
+loadDiscussions();
 </script>
 
 <footer class="site-footer">
