@@ -1,0 +1,96 @@
+name: Route STL closed → In review
+
+# Servicedesk side of the L3 close-back loop. When shieldedtech/mnf-stl-support
+# closes a routed-in L3 issue, its workflow adds `route:stl-closed` here. This
+# reacts: applies `status:in-review` (default token) and moves the issue to
+# "In review" on the ServiceDesk Progresss Board (org project #102).
+#
+# The board move needs a midnightntwrk Projects-write credential in the repo
+# secret PROJECTS_TOKEN (a PAT or App token with `project` write). Until that
+# secret exists the label is still applied and the board move is skipped with a
+# warning — nothing fails. See the setup issue for provisioning that credential.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: stl-closed-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  to-review:
+    name: Label + move board to In review
+    if: github.event.label.name == 'route:stl-closed'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Apply status:in-review label
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+            try {
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: ['status:in-review'] });
+              core.info(`Applied status:in-review to #${issue_number}.`);
+            } catch (e) {
+              core.warning(`Could not apply status:in-review (${e.status}): ${e.message}`);
+            }
+
+      - name: Move to "In review" on board #102
+        env:
+          PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        with:
+          script: |
+            const token = process.env.PROJECTS_TOKEN;
+            if (!token) {
+              core.warning('PROJECTS_TOKEN not set — board move skipped. Foundation must add a midnightntwrk Projects-write credential (PAT/App). Label was applied; move the card manually until then.');
+              return;
+            }
+            const ORG = 'midnightntwrk';
+            const PROJECT_NUMBER = 102;
+            const STATUS_OPTION = 'In review';
+            const issueId = process.env.ISSUE_NODE_ID;
+
+            const gql = async (query, variables) => {
+              const r = await fetch('https://api.github.com/graphql', {
+                method: 'POST',
+                headers: { authorization: `bearer ${token}`, 'content-type': 'application/json' },
+                body: JSON.stringify({ query, variables }),
+              });
+              const j = await r.json();
+              if (j.errors) throw new Error(JSON.stringify(j.errors));
+              return j.data;
+            };
+
+            // Project + Status field + target option.
+            const p = await gql(
+              `query($org:String!,$n:Int!){organization(login:$org){projectV2(number:$n){id field(name:"Status"){... on ProjectV2SingleSelectField{id options{id name}}}}}}`,
+              { org: ORG, n: PROJECT_NUMBER });
+            const project = p.organization.projectV2;
+            const field = project.field;
+            const opt = field.options.find(o => o.name === STATUS_OPTION);
+            if (!opt) { core.warning(`No "${STATUS_OPTION}" option on board Status; skipping.`); return; }
+
+            // Item for this issue on the board (query the issue's own project items).
+            const it = await gql(
+              `query($id:ID!){node(id:$id){... on Issue{projectItems(first:50){nodes{id project{number}}}}}}`,
+              { id: issueId });
+            let itemId = (it.node.projectItems.nodes.find(n => n.project && n.project.number === PROJECT_NUMBER) || {}).id;
+            if (!itemId) {
+              const added = await gql(
+                `mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}`,
+                { p: project.id, c: issueId });
+              itemId = added.addProjectV2ItemById.item.id;
+            }
+
+            await gql(
+              `mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}`,
+              { p: project.id, i: itemId, f: field.id, o: opt.id });
+            core.notice(`Moved #${context.payload.issue.number} to "${STATUS_OPTION}" on board #${PROJECT_NUMBER}.`);
