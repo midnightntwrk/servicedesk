@@ -1,25 +1,38 @@
-name: Data refresh
+name: Deploy site (Jekyll + data refresh)
+
+# Builds and deploys the ServiceDesk GitHub Pages site. The SLA/activity data
+# (_data/sla.yml, _data/activity.yml) is regenerated at build time from live
+# issues and consumed by Jekyll -- it is NOT committed to main (main is
+# protected: signed commits + PR required, so the old data-refresh.yml push
+# failed every run). Runs on push, on a 15-min schedule for fresh dashboard
+# data, and on demand.
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
   issues: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: data-refresh
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  refresh:
+  build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
 
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         id: build-data
@@ -164,10 +177,22 @@ jobs:
           ${{ steps.build-data.outputs.act_yaml }}
           YAML
 
-      - name: Commit and push if changed
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _data/sla.yml _data/activity.yml
-          git diff --staged --quiet || git commit -m "chore(data): refresh sla and activity [skip ci]"
-          git push
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697  # v1.0.13
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
