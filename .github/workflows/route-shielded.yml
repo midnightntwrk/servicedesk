@@ -169,6 +169,25 @@ jobs:
               labels: labelsToApply,
             });
 
+            // Mirror the source's native Issue Type (labeled-event payloads may omit
+            // `type`, so re-fetch). Non-fatal: dest org may lack a matching type.
+            let sourceType = sourceIssue.type?.name ?? null;
+            if (!sourceType) {
+              try {
+                const fresh = await github.rest.issues.get({ owner: sourceOwner, repo: sourceRepo, issue_number: sourceIssue.number });
+                sourceType = fresh.data.type?.name ?? null;
+              } catch (e) {
+                core.warning(`Could not re-fetch source issue for type: ${e.message}`);
+              }
+            }
+            if (sourceType) {
+              try {
+                await destApi('PATCH', `/repos/${destOwner}/${destRepo}/issues/${created.number}`, { type: sourceType });
+              } catch (e) {
+                core.warning(`Could not set issue type '${sourceType}' on ${destOwner}/${destRepo}#${created.number}: ${e.message}`);
+              }
+            }
+
             const skippedSummary = labelsSkipped.length > 0
               ? `_${labelsSkipped.length} label(s) skipped because they do not exist on \`${destOwner}/${destRepo}\` yet: ${labelsSkipped.map(n => '`' + n + '`').join(', ')}._`
               : '';
