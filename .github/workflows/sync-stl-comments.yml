@@ -56,13 +56,18 @@ jobs:
           EVENT: ${{ github.event_name }}
           DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
           SYNC_LIVE: ${{ vars.STL_COMMENT_SYNC_LIVE }}
+          # ISO-8601 cutoff — only comments created at/after this time are synced.
+          # Set it to go-live time to avoid backfilling historical comments.
+          SYNC_SINCE: ${{ vars.STL_SYNC_SINCE }}
         with:
           script: |
             const live = process.env.EVENT === 'workflow_dispatch'
               ? process.env.DISPATCH_DRY_RUN === 'false'
               : process.env.SYNC_LIVE === 'true';
             const DRY = !live;
+            const SINCE = process.env.SYNC_SINCE ? new Date(process.env.SYNC_SINCE) : null;
             core.info(`Mode: ${DRY ? 'DRY-RUN (no writes)' : 'LIVE'}`);
+            core.info(SINCE ? `Cutoff: comments at/after ${SINCE.toISOString()}` : 'Cutoff: none (all comments eligible — will backfill history)');
 
             const SD  = { owner: 'midnightntwrk', repo: 'servicedesk' };
             const STL = { owner: 'shieldedtech',  repo: 'mnf-stl-support' };
@@ -111,6 +116,7 @@ jobs:
               for (const c of stlComments) {
                 const b = c.body || '';
                 if (isSynced(b)) continue;
+                if (SINCE && new Date(c.created_at) < SINCE) continue;
                 if (!b.trimStart().startsWith(PUBLIC_PREFIX)) continue;
                 const mk = MARK('stl', c.id);
                 if (sdBodies.some(x => x.includes(mk))) continue;
@@ -124,6 +130,7 @@ jobs:
               for (const c of sdComments) {
                 const b = c.body || '';
                 if (isSynced(b)) continue;
+                if (SINCE && new Date(c.created_at) < SINCE) continue;
                 const mk = MARK('sd', c.id);
                 if (stlBodies.some(x => x.includes(mk))) continue;
                 const out = `${mk}\n**${c.user?.login || 'user'}** commented on servicedesk#${p.sd}:\n\n${b}`;
