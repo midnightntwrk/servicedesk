@@ -1,0 +1,134 @@
+name: Sync STL <-> servicedesk comments
+
+# Hourly bidirectional comment sync between a servicedesk issue and its
+# shieldedtech/mnf-stl-support mirror (the mirror is created by route-shielded.yml,
+# which stamps "Routed from: <servicedesk url>" into the mirror body).
+#
+#   servicedesk -> STL : every public comment is mirrored into the STL ticket.
+#   STL -> servicedesk : ONLY comments a support engineer opts into by starting
+#                        the comment with `/public`. mnf-stl-support is PRIVATE,
+#                        so internal notes must never leak to the public board.
+#
+# Loop-safe: every synced comment carries a hidden marker; a comment that already
+# carries a marker is never re-synced (so a mirrored comment can't bounce back).
+#
+# SAFETY: defaults to DRY-RUN — it logs what it *would* post and writes nothing.
+# To go live, set the repo variable `STL_COMMENT_SYNC_LIVE` = `true`. Manual runs
+# honour the workflow_dispatch `dry_run` input.
+
+on:
+  schedule:
+    - cron: "0 * * * *" # top of every hour
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log only, do not post comments"
+        type: boolean
+        default: true
+
+permissions:
+  issues: write # GITHUB_TOKEN: read/write comments on this repo (servicedesk)
+
+concurrency:
+  group: sync-stl-comments
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Mint installation token for mnf-stl-support
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.IAC_APP_ID }}
+          private-key: ${{ secrets.IAC_APP_PRIVATE_KEY }}
+          owner: shieldedtech
+          repositories: |
+            mnf-stl-support
+
+      - name: Sync comments both ways
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # App-installation token: shieldedtech-scoped, used for mnf-stl-support only.
+          # servicedesk (this repo) is written with the default GITHUB_TOKEN via `github`.
+          DEST_TOKEN: ${{ steps.app-token.outputs.token }}
+          EVENT: ${{ github.event_name }}
+          DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
+          SYNC_LIVE: ${{ vars.STL_COMMENT_SYNC_LIVE }}
+        with:
+          script: |
+            const live = process.env.EVENT === 'workflow_dispatch'
+              ? process.env.DISPATCH_DRY_RUN === 'false'
+              : process.env.SYNC_LIVE === 'true';
+            const DRY = !live;
+            core.info(`Mode: ${DRY ? 'DRY-RUN (no writes)' : 'LIVE'}`);
+
+            const SD  = { owner: 'midnightntwrk', repo: 'servicedesk' };
+            const STL = { owner: 'shieldedtech',  repo: 'mnf-stl-support' };
+            const PUBLIC_PREFIX = '/public';
+            const MARK = (side, id) => `<!-- stl-sync:${side}:${id} -->`;
+            const isSynced = (b) => /<!-- stl-sync:/.test(b || '');
+
+            // Cross-org REST for mnf-stl-support via the App token (see route-shielded.yml
+            // for why we fetch directly rather than a second Octokit).
+            const stlApi = async (method, path, body) => {
+              const res = await fetch(`https://api.github.com${path}`, {
+                method,
+                headers: {
+                  authorization: `token ${process.env.DEST_TOKEN}`,
+                  accept: 'application/vnd.github+json',
+                  'x-github-api-version': '2022-11-28',
+                  'user-agent': 'sync-stl-comments',
+                },
+                ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+              });
+              if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${await res.text()}`);
+              return res.json();
+            };
+
+            // 1) Discover pairs: open STL mirrors carry "Routed from: <servicedesk url>".
+            const stlIssues = await stlApi('GET', `/repos/${STL.owner}/${STL.repo}/issues?state=open&per_page=100`);
+            const pairs = [];
+            for (const it of stlIssues) {
+              if (it.pull_request) continue;
+              const m = (it.body || '').match(/servicedesk\/issues\/(\d+)|servicedesk#(\d+)/i);
+              const sd = m ? Number(m[1] || m[2]) : null;
+              if (sd) pairs.push({ stl: it.number, sd });
+            }
+            core.info(`Found ${pairs.length} linked pair(s).`);
+
+            let posted = 0;
+            for (const p of pairs) {
+              const sdComments = await github.paginate(github.rest.issues.listComments, {
+                owner: SD.owner, repo: SD.repo, issue_number: p.sd, per_page: 100,
+              });
+              const stlComments = await stlApi('GET', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments?per_page=100`);
+              const sdBodies  = sdComments.map(c => c.body || '');
+              const stlBodies = stlComments.map(c => c.body || '');
+
+              // STL -> servicedesk (opt-in `/public` only; skip already-synced)
+              for (const c of stlComments) {
+                const b = c.body || '';
+                if (isSynced(b)) continue;
+                if (!b.trimStart().startsWith(PUBLIC_PREFIX)) continue;
+                const mk = MARK('stl', c.id);
+                if (sdBodies.some(x => x.includes(mk))) continue;
+                const text = b.trimStart().slice(PUBLIC_PREFIX.length).trim();
+                const out = `${mk}\n**${c.user?.login || 'support'}** replied via STL support:\n\n${text}`;
+                core.info(`STL#${p.stl} c${c.id} -> servicedesk#${p.sd}${DRY ? ' [dry]' : ''}`);
+                if (!DRY) { await github.rest.issues.createComment({ owner: SD.owner, repo: SD.repo, issue_number: p.sd, body: out }); posted++; }
+              }
+
+              // servicedesk -> STL (all public comments; skip already-synced)
+              for (const c of sdComments) {
+                const b = c.body || '';
+                if (isSynced(b)) continue;
+                const mk = MARK('sd', c.id);
+                if (stlBodies.some(x => x.includes(mk))) continue;
+                const out = `${mk}\n**${c.user?.login || 'user'}** commented on servicedesk#${p.sd}:\n\n${b}`;
+                core.info(`servicedesk#${p.sd} c${c.id} -> STL#${p.stl}${DRY ? ' [dry]' : ''}`);
+                if (!DRY) { await stlApi('POST', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments`, { body: out }); posted++; }
+              }
+            }
+            core.info(`${DRY ? 'Would post' : 'Posted'} ${posted} comment(s) across ${pairs.length} pair(s).`);
