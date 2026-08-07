@@ -7,14 +7,18 @@ on:
 permissions:
   issues: write
 
-concurrency:
-  group: route-shielded-${{ github.event.issue.number }}
-  cancel-in-progress: false
-
 jobs:
   mirror:
     if: github.event.label.name == 'route:shielded' && !contains(toJSON(github.event.issue.labels), 'route:shielded-routed')
     runs-on: ubuntu-24.04
+    # Job-level (not workflow-level) on purpose: every `labeled` event enters a
+    # workflow-level group, and a newly queued run cancels the pending one - so
+    # adding route:shielded together with another label cancelled the real
+    # mirror run before any step executed (#131). A job skipped by `if` never
+    # claims a job-level group.
+    concurrency:
+      group: route-shielded-${{ github.event.issue.number }}
+      cancel-in-progress: false
     steps:
       - name: Mint installation token for mnf-stl-support + this repo
         id: app-token
