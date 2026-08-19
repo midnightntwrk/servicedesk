@@ -27,7 +27,6 @@
       --warn-bg:     #2a1f0a; --warn-fg: #f59e0b;
       --danger-bg:   #2a0f0f; --danger-fg: #ef4444;
       --info-bg:     #0a1a2a; --info-fg: #60a5fa;
-      --sec-bg:      #1a0a2a; --sec-fg: #c084fc;
       --font: 'Outfit', system-ui, -apple-system, sans-serif;
     }
     body { font-family: var(--font); font-size: 14px; color: var(--text-primary); background: var(--bg); line-height: 1.5; }
@@ -56,7 +55,7 @@
     .panel-footer a:hover { color: var(--brand-mid); }
 
     /* Ticket cards */
-    .ticket-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .ticket-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .ticket-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column; gap: 7px; transition: border-color .15s, background .15s; }
     .ticket-card:hover { border-color: var(--border2); background: var(--surface2); }
     .ticket-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
@@ -64,11 +63,9 @@
     .icon-bug  { background: var(--brand-dim); }
     .icon-help { background: var(--success-bg); }
     .icon-docs { background: var(--info-bg); }
-    .icon-sec  { background: var(--danger-bg); }
     .ticket-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
     .ticket-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; flex: 1; }
     .ticket-cta { font-size: 11px; font-weight: 600; color: var(--brand); }
-    .ticket-cta--sec { color: var(--danger-fg); }
 
     /* Templates */
     .tpl-list { display: flex; flex-direction: column; }
@@ -159,18 +156,18 @@
     .sec-icon { width: 32px; height: 32px; background: var(--danger-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .sec-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
     .sec-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
-    .sec-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
-    .sec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sec-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+    .sec-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .sec-group-label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+    .sec-repo-list { display: flex; flex-direction: column; gap: 4px; }
+    .sec-repo { font-size: 12px; color: var(--danger-fg); display: flex; align-items: baseline; gap: 6px; transition: color .15s; }
+    .sec-repo:hover { color: #ff6b6b; text-decoration: underline; }
+    .sec-repo .sec-repo-slug { font-size: 10px; color: var(--text-tertiary); }
+    .sec-foot { margin-top: 14px; padding-top: 10px; border-top: 1px solid #2a1515; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .sec-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--danger-fg); color: var(--danger-fg); background: var(--danger-bg); cursor: pointer; font-family: var(--font); transition: background .15s; display: inline-block; }
     .sec-btn:hover { background: #3a1515; }
     .sec-btn--ghost { background: transparent; border-color: var(--border2); color: var(--text-secondary); }
     .sec-btn--ghost:hover { background: var(--bg2); color: var(--text-primary); }
-    .sec-team { margin-top: 12px; padding-top: 10px; border-top: 1px solid #2a1515; }
-    .sec-team-label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
-    .sec-members { display: flex; flex-wrap: wrap; gap: 6px; }
-    .sec-member { font-size: 11px; color: var(--sec-fg); background: var(--sec-bg); border: 1px solid #3b1f5a; border-radius: 5px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
-    .sec-member::before { content: '@'; opacity: .6; font-size: 10px; }
-    .sec-add { font-size: 11px; color: var(--text-tertiary); background: var(--bg2); border: 1px dashed var(--border2); border-radius: 5px; padding: 2px 8px; }
 
     /* Footer */
     .site-footer { border-top: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); margin-top: 12px; }
@@ -246,18 +243,6 @@
       <p class="ticket-title">Doc improvement</p>
       <p class="ticket-desc">Gap or error in developer documentation</p>
       <span class="ticket-cta">Open template →</span>
-    </a>
-
-    <a class="ticket-card ticket-card--sec" href="https://github.com/midnightntwrk/servicedesk/security/advisories/new">
-      <div class="ticket-icon icon-sec">
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M8 1L2 4v5c0 3 3 5.5 6 6 3-.5 6-3 6-6V4L8 1z" stroke="#ef4444" stroke-width="1.4"/>
-          <path d="M5.5 8l2 2L10.5 6" stroke="#ef4444" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <p class="ticket-title">Security issue</p>
-      <p class="ticket-desc">Vulnerability — do not use public issues. Private report only.</p>
-      <span class="ticket-cta ticket-cta--sec">Private report →</span>
     </a>
 
   </div>
@@ -425,28 +410,49 @@
       </div>
       <div>
         <p class="sec-title">Security vulnerability reporting</p>
-        <p class="sec-subtitle">Do not use public issues — all reports are private</p>
+        <p class="sec-subtitle">Report privately in the affected repository — never as a public issue</p>
       </div>
     </div>
     <p class="sec-body">
-      If you have discovered a security vulnerability, use GitHub's private reporting channel below.
-      Do not file a public issue. If the advisory channel is unavailable or goes unanswered within
-      3 business days, email <a href="mailto:security@midnight.foundation" style="color:var(--danger-fg)">security@midnight.foundation</a>.
+      Found a security vulnerability? Report it privately in the affected component's own
+      repository — open the repo's <strong>Security</strong> tab and choose
+      <strong>Report a vulnerability</strong>. Never file a public issue. If a repository has
+      private reporting disabled, you are unsure which component is affected (for example the
+      proof server, which has no public repository), or you do not get a response within
+      3 business days, email
+      <a href="mailto:security@midnight.foundation" style="color:var(--danger-fg)">security@midnight.foundation</a>.
     </p>
-    <div class="sec-actions">
-      <a class="sec-btn" href="https://github.com/midnightntwrk/servicedesk/security/advisories/new">Open private advisory →</a>
-      <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/security/advisories">View advisories in progress</a>
-      <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
-    </div>
-    <!-- mn_security_issue group — add/remove members here -->
-    <div class="sec-team">
-      <p class="sec-team-label">mn_security_issue group — reviewers</p>
-      <div class="sec-members">
-        <span class="sec-member">midnightntwrk/mn-security</span>
-        <span class="sec-member">hegaleon</span>
-        <!-- Add members: copy a sec-member span and set the GitHub username -->
-        <span class="sec-add">+ add member</span>
+    <div class="sec-groups">
+
+      <div class="sec-group">
+        <p class="sec-group-label">Network &amp; ledger</p>
+        <div class="sec-repo-list">
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-node/security/advisories/new">Node <span class="sec-repo-slug">midnight-node</span></a>
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-ledger/security/advisories/new">Ledger <span class="sec-repo-slug">midnight-ledger</span></a>
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-indexer/security/advisories/new">Indexer <span class="sec-repo-slug">midnight-indexer</span></a>
+        </div>
       </div>
+
+      <div class="sec-group">
+        <p class="sec-group-label">Compact</p>
+        <div class="sec-repo-list">
+          <a class="sec-repo" href="https://github.com/LFDT-Minokawa/compact/security/advisories/new">Compact compiler <span class="sec-repo-slug">LFDT-Minokawa/compact</span></a>
+        </div>
+      </div>
+
+      <div class="sec-group">
+        <p class="sec-group-label">SDKs &amp; wallet</p>
+        <div class="sec-repo-list">
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-js/security/advisories/new">Midnight.js <span class="sec-repo-slug">midnight-js</span></a>
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-wallet/security">Wallet SDK <span class="sec-repo-slug">midnight-wallet</span></a>
+          <a class="sec-repo" href="https://github.com/midnightntwrk/midnight-dapp-connector-api/security">DApp Connector API <span class="sec-repo-slug">midnight-dapp-connector-api</span></a>
+        </div>
+      </div>
+
+    </div>
+    <div class="sec-foot">
+      <a class="sec-btn sec-btn--ghost" href="https://github.com/midnightntwrk/servicedesk/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
+      <a class="sec-btn sec-btn--ghost" href="mailto:security@midnight.foundation">security@midnight.foundation</a>
     </div>
   </div>
 </section>
