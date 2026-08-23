@@ -104,38 +104,60 @@ jobs:
             core.info(`Found ${pairs.length} linked pair(s).`);
 
             let posted = 0;
+            let skipped = 0;
             for (const p of pairs) {
-              const sdComments = await github.paginate(github.rest.issues.listComments, {
-                owner: SD.owner, repo: SD.repo, issue_number: p.sd, per_page: 100,
-              });
-              const stlComments = await stlApi('GET', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments?per_page=100`);
-              const sdBodies  = sdComments.map(c => c.body || '');
-              const stlBodies = stlComments.map(c => c.body || '');
+              // Per-pair isolation: a single bad pair (e.g. a mirror whose
+              // "Routed from:" points at a deleted/nonexistent servicedesk issue,
+              // which 404s below) must not abort the whole run and every other
+              // pair with it. See midnightntwrk/servicedesk — STL#320 -> #143.
+              try {
+                let sdComments;
+                try {
+                  sdComments = await github.paginate(github.rest.issues.listComments, {
+                    owner: SD.owner, repo: SD.repo, issue_number: p.sd, per_page: 100,
+                  });
+                } catch (e) {
+                  // Dangling servicedesk reference — skip this pair, keep going.
+                  if (e.status === 404) {
+                    core.warning(`STL#${p.stl}: servicedesk#${p.sd} not found (dangling reference) — skipping pair.`);
+                    skipped++;
+                    continue;
+                  }
+                  throw e;
+                }
+                const stlComments = await stlApi('GET', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments?per_page=100`);
+                const sdBodies  = sdComments.map(c => c.body || '');
+                const stlBodies = stlComments.map(c => c.body || '');
 
-              // STL -> servicedesk (opt-in `/public` only; skip already-synced)
-              for (const c of stlComments) {
-                const b = c.body || '';
-                if (isSynced(b)) continue;
-                if (SINCE && new Date(c.created_at) < SINCE) continue;
-                if (!b.trimStart().startsWith(PUBLIC_PREFIX)) continue;
-                const mk = MARK('stl', c.id);
-                if (sdBodies.some(x => x.includes(mk))) continue;
-                const text = b.trimStart().slice(PUBLIC_PREFIX.length).trim();
-                const out = `${mk}\n**${c.user?.login || 'support'}** replied via STL support:\n\n${text}`;
-                core.info(`STL#${p.stl} c${c.id} -> servicedesk#${p.sd}${DRY ? ' [dry]' : ''}`);
-                if (!DRY) { await github.rest.issues.createComment({ owner: SD.owner, repo: SD.repo, issue_number: p.sd, body: out }); posted++; }
-              }
+                // STL -> servicedesk (opt-in `/public` only; skip already-synced)
+                for (const c of stlComments) {
+                  const b = c.body || '';
+                  if (isSynced(b)) continue;
+                  if (SINCE && new Date(c.created_at) < SINCE) continue;
+                  if (!b.trimStart().startsWith(PUBLIC_PREFIX)) continue;
+                  const mk = MARK('stl', c.id);
+                  if (sdBodies.some(x => x.includes(mk))) continue;
+                  const text = b.trimStart().slice(PUBLIC_PREFIX.length).trim();
+                  const out = `${mk}\n**${c.user?.login || 'support'}** replied via STL support:\n\n${text}`;
+                  core.info(`STL#${p.stl} c${c.id} -> servicedesk#${p.sd}${DRY ? ' [dry]' : ''}`);
+                  if (!DRY) { await github.rest.issues.createComment({ owner: SD.owner, repo: SD.repo, issue_number: p.sd, body: out }); posted++; }
+                }
 
-              // servicedesk -> STL (all public comments; skip already-synced)
-              for (const c of sdComments) {
-                const b = c.body || '';
-                if (isSynced(b)) continue;
-                if (SINCE && new Date(c.created_at) < SINCE) continue;
-                const mk = MARK('sd', c.id);
-                if (stlBodies.some(x => x.includes(mk))) continue;
-                const out = `${mk}\n**${c.user?.login || 'user'}** commented on servicedesk#${p.sd}:\n\n${b}`;
-                core.info(`servicedesk#${p.sd} c${c.id} -> STL#${p.stl}${DRY ? ' [dry]' : ''}`);
-                if (!DRY) { await stlApi('POST', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments`, { body: out }); posted++; }
+                // servicedesk -> STL (all public comments; skip already-synced)
+                for (const c of sdComments) {
+                  const b = c.body || '';
+                  if (isSynced(b)) continue;
+                  if (SINCE && new Date(c.created_at) < SINCE) continue;
+                  const mk = MARK('sd', c.id);
+                  if (stlBodies.some(x => x.includes(mk))) continue;
+                  const out = `${mk}\n**${c.user?.login || 'user'}** commented on servicedesk#${p.sd}:\n\n${b}`;
+                  core.info(`servicedesk#${p.sd} c${c.id} -> STL#${p.stl}${DRY ? ' [dry]' : ''}`);
+                  if (!DRY) { await stlApi('POST', `/repos/${STL.owner}/${STL.repo}/issues/${p.stl}/comments`, { body: out }); posted++; }
+                }
+              } catch (e) {
+                // Anything else on this pair: log and move on, don't fail the run.
+                core.warning(`STL#${p.stl} <-> servicedesk#${p.sd}: ${e.message} — skipping pair.`);
+                skipped++;
               }
             }
-            core.info(`${DRY ? 'Would post' : 'Posted'} ${posted} comment(s) across ${pairs.length} pair(s).`);
+            core.info(`${DRY ? 'Would post' : 'Posted'} ${posted} comment(s) across ${pairs.length} pair(s); ${skipped} pair(s) skipped.`);
