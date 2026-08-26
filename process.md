@@ -399,6 +399,40 @@ sequenceDiagram
 
 ---
 
+### Step 3a: Comment sync (servicedesk ↔ STL board)
+
+When a ticket is routed to the private **STL support board** (`mnf-stl-support`), a
+GitHub Action (`sync-stl-comments.yml`) keeps the two conversations in step so
+engineers work on the private board and reporters still get replies on the public
+ticket. It runs **hourly** and is loop-safe (synced comments are marked and never
+re-copied).
+
+**The direction that matters for engineers:**
+
+| Direction | What syncs | Why |
+|-----------|-----------|-----|
+| servicedesk → STL | **Every** public comment mirrors to the STL ticket automatically | Engineers see the full reporter conversation without leaving the board |
+| STL → servicedesk | **Only** comments that **start with `/public`** | Prevents internal notes/triage chatter leaking to the public ticket |
+
+> **⚠️ To reply to the reporter, start your STL comment with `/public`.**
+> Anything else stays internal to the board. The `/public` marker is stripped
+> before the comment is posted to the public servicedesk ticket.
+
+Example — internal note (stays on the board):
+```
+Repro'd locally, looks like the dbsync lag. Assigning to @alice.
+```
+Example — reply that reaches the reporter:
+```
+/public Thanks for the report — we've reproduced this and a fix is in progress. We'll update here when it ships.
+```
+
+Notes:
+- History is **not** back-filled — only comments made after the sync went live are copied.
+- The sync is bidirectional but asymmetric on purpose: public→private is open, private→public is opt-in via `/public`.
+
+---
+
 ### Step 4: Engineering Grooming
 
 **Frequency**: Weekly/Bi-weekly per component team
