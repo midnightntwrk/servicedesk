@@ -155,6 +155,11 @@ jobs:
             core.setOutput('sla_yaml', slaYaml);
             core.setOutput('act_yaml', actYaml);
 
+            // Static JSON consumed directly by the SLA cards on the site,
+            // so the page no longer hits the rate-limited GitHub Search API.
+            const fs = require('fs');
+            fs.writeFileSync('sla.json', JSON.stringify(sla, null, 2) + '\n');
+
       - name: Write data files
         run: |
           cat > _data/sla.yml << 'YAML'
@@ -168,6 +173,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _data/sla.yml _data/activity.yml
+          git add _data/sla.yml _data/activity.yml sla.json
           git diff --staged --quiet || git commit -m "chore(data): refresh sla and activity [skip ci]"
           git push
