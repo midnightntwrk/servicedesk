@@ -129,8 +129,11 @@ Target state: **exactly one** live registration for the stake key.
    `DustTransactionsUtils.buildUnregistrationTransaction(lucid, dustPKH, registrationUtxo)`
    (burns 1 auth NFT + `collectFrom([utxo], Data.void())`, signs payment+stake). Needs a
    Blockfrost key and local wallet signing. **The user runs it themselves — never take
-   their keys/seed.** A companion script (`deregister-specific.ts`, drop into the dapp
-   repo `scripts/`) was written this session; reproduce from the builder if not on hand.
+   their keys/seed.** Companion script: [`scripts/deregister-specific.ts`](scripts/deregister-specific.ts)
+   — drop it into the dapp repo's `scripts/` dir (it imports `../src/lib/dustTransactionsUtils`
+   so it stays in lock-step with production), pass the UTXO ref(s) to spend, dry-run by
+   default, `--submit` to send. Verify the import path still resolves against current dapp
+   `main` before handing it over.
 3. **NOT the fix:** `midnight-node-toolkit deregister-dust-address`. That acts on the
    Midnight-ledger native-NIGHT `DustRegistration` (via `--src-url wss://rpc…`,
    `--wallet-seed`), **not** the Cardano cNIGHT mapping validator. Different path.

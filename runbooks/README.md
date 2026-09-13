@@ -22,3 +22,6 @@ possible), remediation options, and links to source/specs/tracking issues.
 - **Never take user keys or seed phrases.** Remediations that require signing must be run
   by the affected user locally; provide the script, not a request for their secrets.
 - **Add a row to the Index above** when you add a file.
+- **Companion scripts** live in [`scripts/`](scripts/) and are linked from the runbook
+  that uses them. A script meant to run inside another repo must say where it goes and
+  keep any relative imports valid for that location.
