@@ -5,6 +5,9 @@ be picked up by a human or an AI agent mid-incident. Each runbook is self-contai
 symptom, root cause, key identifiers, a runnable diagnostic (prefer no-API-key where
 possible), remediation options, and links to source/specs/tracking issues.
 
+**Agents:** read [AGENTS.md](AGENTS.md) first — separate guidance for agents resolving an
+issue on behalf of a user vs. MNF/STL accounts triaging and authoring runbooks.
+
 ## Index
 
 | Runbook | Covers |
