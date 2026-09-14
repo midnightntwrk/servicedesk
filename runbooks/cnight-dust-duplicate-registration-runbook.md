@@ -14,6 +14,12 @@ current source before asserting — the Midnight ecosystem changes fast._
 - DUST generation is paused / balance is 0, often with a "Replicate Registrations
   Detected" warning, or after the user re-registered (e.g. to change DUST address).
 - User may report "I removed the duplicates but they're still there."
+- **After a successful de-registration**, the DApp still shows a "Replicate Registrations
+  Detected" screen listing UTXOs that are **already spent** (often days old), and this
+  screen **blocks or silently no-ops the register flow** — so the user cannot register a
+  fresh single mapping. This is a **stale client-side view**, not chain state (see
+  "Re-registering from zero" below). Users often re-submit here, which is exactly how the
+  original duplicates were created.
 
 ## Root cause
 
@@ -137,6 +143,48 @@ Target state: **exactly one** live registration for the stake key.
 3. **NOT the fix:** `midnight-node-toolkit deregister-dust-address`. That acts on the
    Midnight-ledger native-NIGHT `DustRegistration` (via `--src-url wss://rpc…`,
    `--wallet-seed`), **not** the Cardano cNIGHT mapping validator. Different path.
+
+## Re-registering from zero (stale DApp view after de-registration)
+
+Once the duplicates are cleared, the user is often at **zero** live registrations and needs
+**exactly one**. But the DApp frequently keeps showing a "Replicate Registrations Detected"
+screen listing the **already-spent** UTXOs (client-side cache, not chain — the data can be
+days old, far longer than any indexer lag), and that screen blocks/no-ops the register
+flow. **First confirm the real count** with the Koios diagnostic — never trust the screen.
+This is a distinct failure mode from the filter bug (still #249); worth its own note there.
+
+Two rules to give the user, both to avoid re-creating duplicates:
+1. Never judge success from the DApp screen — confirm on the Cardano address / re-run the
+   diagnostic.
+2. Never re-submit "because the screen didn't update" — that double-submit is how duplicates
+   are born. Submit once, then verify on-chain.
+
+**Path A — clear the stale view, register once via the DApp (default, no tooling).**
+1. Clear the DApp origin's site data (DevTools → Application → **Clear site data**:
+   localStorage + IndexedDB + cache/service worker), or use a fresh incognito window /
+   different browser; reconnect the wallet. At zero registrations the phantom duplicate
+   screen clears and the register action becomes available.
+2. **Register once**, pointing at the **same DUST address** the user was accruing to (keeps
+   DUST continuous — it lives at the DUST address, not the wallet). Then stop.
+3. Verify: one new tx on the Cardano address → re-run the diagnostic → expect **exactly 1**
+   live registration. DUST resumes.
+Prefer this path because the DApp derives `dustPKH` from the connected wallet, so the user
+never hand-types the DUST address (see Path B hazard).
+
+**Path B — register via script, bypassing the UI (fallback when the stale view won't
+clear).** The DApp's own builder `DustTransactionsUtils.buildRegistrationTransaction(lucid,
+dustPKH)` is a **pure, single-registration builder with no existing-registration guard** —
+calling it once creates exactly one clean registration. Companion script:
+[`scripts/register-once.ts`](scripts/register-once.ts) (internal validation +
+`dustPKH`-sourcing notes: [`scripts/register-once.NOTES.md`](scripts/register-once.NOTES.md)).
+Same runtime caveats as `deregister-specific.ts` (`CARDANO_NET=Mainnet`, `@/` alias
+resolution). Two extra hazards, both enforced/warned by the script:
+- **Only run at ZERO.** The builder has no dup guard; running it when a registration exists
+  recreates the bug. Confirm zero via the diagnostic first.
+- **`dustPKH` correctness is critical.** It is written verbatim into the datum as the DUST
+  address that receives DUST; a wrong value is unrecoverable. Source it authoritatively (the
+  DApp's DUST-address field / `[DustTransactions]` `dustPKH:` log line), never by guessing.
+Verify the import path and builder signature against current dapp `main` before handing over.
 
 ## Reference material
 
