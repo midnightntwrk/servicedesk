@@ -41,7 +41,7 @@ authoritative.
 4. **Never take the user's keys or seed phrase.** Not "paste it here", not "just for this
    step". Any remediation that requires signing is **run by the user, locally, on their
    machine.** Hand them the script; the script reads secrets from a local file that never
-   leaves their machine (see [`scripts/`](scripts/)).
+   leaves their machine (companion scripts live in the runbook's own `scripts/` subdirectory).
 5. **Don't take irreversible or outward-facing actions on their behalf without explicit
    consent.** Submitting an on-chain transaction, posting publicly, moving funds — build it,
    **dry-run it**, show them, and let them run the real thing. Default to dry-run.
@@ -65,11 +65,13 @@ one.
 ### Creating a runbook from a triage discussion
 
 The triage thread *is* your source material — the worked case. (Example: servicedesk `#188`
-→ `cnight-dust-duplicate-registration-runbook.md`.) Distil it, don't transcribe it.
+→ `cnight-dust-duplicate-registration-runbook/`.) Distil it, don't transcribe it.
 
-1. **Follow the README structure and conventions.** Filename `<area>-<short-topic>-runbook.md`
-   (kebab-case). Sections: Symptom → Root cause → Key identifiers → Diagnose → Remediation
-   options → Reference material. Add a row to the README [Index](README.md).
+1. **Follow the README structure and conventions.** One directory per runbook,
+   `<area>-<short-topic>-runbook/` (kebab-case), holding the runbook file
+   `<area>-<short-topic>-runbook.md` and its assets. Sections: Symptom → Root cause →
+   Key identifiers → Diagnose → Remediation options → Reference material. Add a row to the
+   README [Index](README.md).
 2. **Symptom** in the user's terms (what they'd search for), including the exact
    warning/error text. **Root cause** stated only once *verified* — pull the mechanism from
    source/spec/on-chain evidence, not from the thread's speculation. Note the compile date
@@ -81,7 +83,7 @@ The triage thread *is* your source material — the worked case. (Example: servi
    self-contained.
 5. **Remediation**: list the options with trade-offs. Every signing remediation is
    **run by the affected user locally — never request their keys/seed.** Companion scripts
-   go in [`scripts/`](scripts/), linked from the runbook; a script meant to run inside
+   go in the runbook's own `scripts/` subdirectory, linked from the runbook; a script meant to run inside
    another repo must say where it goes, keep relative imports valid for that location, and
    default to a dry-run.
 6. **Scrub PII and secrets.** No seed phrases or private keys, ever. Don't paste an

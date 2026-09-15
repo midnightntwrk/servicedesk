@@ -12,11 +12,14 @@ issue on behalf of a user vs. MNF/STL accounts triaging and authoring runbooks.
 
 | Runbook | Covers |
 |---|---|
-| [cNIGHT→DUST duplicate registrations](cnight-dust-duplicate-registration-runbook.md) | "DUST stopped generating" / balance 0 caused by 2+ live registration UTXOs for one Cardano stake key (DApp filter bug). |
+| [cNIGHT→DUST duplicate registrations](cnight-dust-duplicate-registration-runbook/cnight-dust-duplicate-registration-runbook.md) | "DUST stopped generating" / balance 0 caused by 2+ live registration UTXOs for one Cardano stake key (DApp filter bug). |
 
 ## Conventions for adding a runbook
 
-- **Filename:** `<area>-<short-topic>-runbook.md` (kebab-case).
+- **One directory per runbook.** Each runbook gets its own second-level directory,
+  `<area>-<short-topic>-runbook/`, holding the runbook file and every supporting asset —
+  so all material for an issue stays self-contained. The runbook file inside it keeps the
+  same name: `<area>-<short-topic>-runbook/<area>-<short-topic>-runbook.md` (kebab-case).
 - **Structure:** Symptom → Root cause → Key identifiers → Diagnose (script/steps) →
   Remediation options → Reference material (source, specs, issues, worked cases).
 - **Verify before asserting.** Midnight moves fast; treat code line references and
@@ -24,7 +27,8 @@ issue on behalf of a user vs. MNF/STL accounts triaging and authoring runbooks.
   current source. Prefer verified source/on-chain evidence over recalled knowledge.
 - **Never take user keys or seed phrases.** Remediations that require signing must be run
   by the affected user locally; provide the script, not a request for their secrets.
-- **Add a row to the Index above** when you add a file.
-- **Companion scripts** live in [`scripts/`](scripts/) and are linked from the runbook
-  that uses them. A script meant to run inside another repo must say where it goes and
-  keep any relative imports valid for that location.
+- **Add a row to the Index above** when you add a runbook (link to the file inside its
+  directory).
+- **Companion scripts** live in a `scripts/` subdirectory of the runbook's own directory
+  and are linked from the runbook that uses them. A script meant to run inside another repo
+  must say where it goes and keep any relative imports valid for that location.
