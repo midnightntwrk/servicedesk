@@ -186,6 +186,27 @@ resolution). Two extra hazards, both enforced/warned by the script:
   DApp's DUST-address field / `[DustTransactions]` `dustPKH:` log line), never by guessing.
 Verify the import path and builder signature against current dapp `main` before handing over.
 
+## After registering — expected timing (set this expectation, or the user re-registers)
+
+Once **exactly one** live registration exists, DUST does **not** appear immediately, and the
+gap is where users panic and re-submit — recreating the duplicates. Set the expectation
+explicitly:
+
+- **Start delay ~12h.** On the cNIGHT cross-chain path the registration must *finalize on
+  Cardano and reach a Midnight node* before generation begins — docs put this at
+  **about 12 hours** (docs `guides/networks-and-environments#funding-and-transaction-cost`,
+  `tokens/overview`, `sdks/community/wallets/community-wallets-integration#fees-and-dust`).
+  This is mainnet/Lace; a local network is ~5 min (that's the number users often misremember).
+- **Time to cap ~1 week.** Generation is linear from zero toward the ~5-DUST-per-NIGHT cap:
+  `Δ = ρ ÷ g = 5,000,000,000 ÷ 8,267 ≈ 604,800 s ≈ 7 days` (docs
+  `concepts/dust-architecture#lifecycle-night-generates-dust`). Usable DUST accrues well
+  before the cap, so a growing (non-zero, sub-cap) balance is normal and correct.
+- **No documented 24h figure** — the authoritative number to quote is ~12h to start.
+
+Tell the user: a zero balance in the first few hours is **expected**, do **not** re-register
+(that double-submit is how duplicates are born), and if it's still zero after ~24h, re-run the
+diagnostic to confirm the single registration is still live before doing anything else.
+
 ## Reference material
 
 - Finding format to emulate: `shieldedtech/mnf-stl-support#299` (comment by ozgb).
