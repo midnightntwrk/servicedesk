@@ -48,6 +48,7 @@ P1 critical issues require synchronous notification in addition to filing a GitH
 | [Triage & Workflow Process](./process.md) | Triage team |
 | [AI Bug Report Policy](./ai-reports.md) | All reporters |
 | [Copy-paste Templates](./templates/) | SRE / comms |
+| [Comms Templates](./templates/comms/) | SRE / comms |
 
 ---
 
