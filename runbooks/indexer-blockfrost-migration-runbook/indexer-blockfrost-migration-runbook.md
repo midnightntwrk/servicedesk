@@ -1,12 +1,17 @@
 # Runbook: Migrating a Midnight app from the official indexer/RPC to Blockfrost
 
-> **Mainnet (added 2026-09-30).** The official mainnet indexer and RPC
-> (`indexer.mainnet.midnight.network`, `rpc.mainnet.midnight.network`) are shut down from
-> **18:00 ET / 22:00 UTC on 2026-09-30**. Everything below applies to mainnet too: the same
-> URL swap and `project_id` token, the same cursor break, the same progress lag. The worked
-> case and every measured number come from preprod. On mainnet:
+> **Mainnet (added 2026-09-30, updated 2026-10-02).** The official mainnet indexer and RPC
+> (`indexer.mainnet.midnight.network`, `rpc.mainnet.midnight.network`) are **scheduled to shut
+> down**. The announced time was 18:00 ET / 22:00 UTC on 2026-09-30, but both official indexers
+> (mainnet and preprod) were still answering on 2026-10-02 at ~19:00 UTC. Treat the shutdown as
+> imminent and migrate now. While the official indexer is still up, you can **measure your cursor
+> offset**: see the `check-indexer-cursor.mjs` bullet below.
 >
-> | Service | Official (shut down) | Blockfrost |
+> Everything below applies to mainnet too: the same URL swap and `project_id` token, the same
+> cursor break, the same progress lag. The worked case and every measured number come from
+> preprod. On mainnet:
+>
+> | Service | Official (shutting down) | Blockfrost |
 > |---|---|---|
 > | Indexer HTTP (GraphQL) | `https://indexer.mainnet.midnight.network/api/v4/graphql` | `https://midnight-mainnet.blockfrost.io/api/v0` |
 > | Indexer WS | `wss://indexer.mainnet.midnight.network/api/v4/graphql/ws` | `wss://midnight-mainnet.blockfrost.io/api/v0/ws` |
@@ -34,8 +39,13 @@
 >   ([Remediation](#remediation) step 2). A wallet that syncs cleanly needs no action.
 > - **Measure the offset before the shutdown if you can.** `check-indexer-cursor.mjs`
 >   compares two live indexers, so run it against mainnet (`--a-http`/`--a-ws` official,
->   `--b-*` Blockfrost) before 18:00 ET. Afterwards it can't help: use the stall symptom
->   above instead.
+>   `--b-*` Blockfrost) while the official indexer still answers. The full mainnet command is in
+>   the [cursor-mismatch runbook](../wallet-sync-cursor-indexer-mismatch-runbook/wallet-sync-cursor-indexer-mismatch-runbook.md#diagnose).
+>   Once the official indexer is gone the script can't help: use the stall symptom above instead.
+> - **Official-indexer cursors can break without a migration.** Saved state also broke on the
+>   official endpoints after they were re-synced (mainnet ~2026-09-19, preprod ~2026-09-22;
+>   `midnight-wallet#781`). See the
+>   [cursor-mismatch runbook](../wallet-sync-cursor-indexer-mismatch-runbook/wallet-sync-cursor-indexer-mismatch-runbook.md).
 > - **Mainnet full-sync time is not measured.** Size sync timeouts generously, well above
 >   the 67 min measured on preprod.
 > - **Check endpoints and auth** with [Diagnose](#diagnose) step 1, using the mainnet URLs.
@@ -124,7 +134,11 @@ At compile time the offset was a constant −22 from 989781 to the tip (`maxId` 
 official vs 1575249 Blockfrost). The gap sits between blocks 1130986 (last id 989780) and
 1130996 (first id 989803 official, 989781 Blockfrost); the blocks between carry no dust or
 zswap events on either indexer, and every block hash matches. Why the official indexer skips
-those 22 ids is unconfirmed; tracked in `midnightntwrk/servicedesk#216`.
+those 22 ids is unconfirmed; tracked in `midnightntwrk/servicedesk#216`. The leading
+explanation comes from `midnight-wallet#781`. Preprod checkpoints saved before ~2026-09-22
+are off by exactly 22 against today's official indexer. So the hole most likely appeared
+when the official indexer was re-synced, and before that its numbering matched Blockfrost's.
+The indexer team has not confirmed this.
 
 Wallet sync resumes each ledger-event subscription from a stored event id
 (`dustLedgerEvents(id: $id)`, `zswapLedgerEvents(id: $id)` in
@@ -134,6 +148,12 @@ its generation tree, `DustLocalState.replayEventsWithChanges` rejects the out-of
 insert, and the sync layer retries the same batch forever. Shielded sync can reach
 `isStrictlyComplete()` from the same shifted cursor for an empty wallet. That shows only
 that no tree insert collided, not that the state is correct, so do not rely on it.
+
+The mechanism isn't specific to Blockfrost. Any change of the database behind a wallet
+(another provider, a re-sync of the same endpoint, blue/green) can break a saved cursor. The
+general mechanism, the timestamp-error variant and the remediations are in the
+[cursor-mismatch runbook](../wallet-sync-cursor-indexer-mismatch-runbook/wallet-sync-cursor-indexer-mismatch-runbook.md).
+This section keeps the offsets measured between the official indexer and Blockfrost.
 
 **Transaction ids are indexer numbering too.** The same funding transaction
 (`c9a01ee7…fd849706`, block 2770188) is id 632821 on the official indexer and 632791 on
@@ -333,7 +353,9 @@ anything.
 6. **Not recommended: shift cursors by the offset.** Subtracting 22 from every stored event
    id (or 30 from transaction ids) lines them up today. But the offsets come from the
    indexers numbering differently, and any future skip on either side silently changes
-   them. Treat cursors as bound to their indexer.
+   them. Treat cursors as bound to their indexer. A re-anchoring approach that checks each
+   candidate event against the saved state, with its caveats, is in the
+   [cursor-mismatch runbook](../wallet-sync-cursor-indexer-mismatch-runbook/wallet-sync-cursor-indexer-mismatch-runbook.md#remediation).
 
 **Browser DApps.** With the connector API, endpoints come from the user's wallet
 (`getConfiguration()` → `indexerUri`, `indexerWsUri`, `substrateNodeUri`), not from DApp
@@ -344,7 +366,8 @@ server-side proxy or a token scoped for public use.
 ## Reference material
 
 - Worked case: preprod migration of `midnightntwrk/midnight-examples` hello-world
-  (2026-09-29). Upstream tracking for the id gap: `midnightntwrk/servicedesk#216`. Relevant
+  (2026-09-29). Upstream tracking for the id gap: `midnightntwrk/servicedesk#216`; for the
+  SDK cursor design: `midnightntwrk/midnight-wallet#781`. Relevant
   files in that repo:
   `examples/hello-world/src/config.ts` (the migrated config);
   `packages/fast-sync/src/funding.ts` (funding gate without testkit `waitForFunds`);
@@ -368,7 +391,9 @@ server-side proxy or a token scoped for public use.
 - Official endpoints: <https://docs.midnight.network/guides/networks-and-environments>.
 - Open questions to settle before relying on this long-term:
   - Why the official preprod indexer skips ids 989781–989802, and whether more skips should
-    be expected (indexer team; `servicedesk#216`).
+    be expected (indexer team; `servicedesk#216`). `midnight-wallet#781` points to a re-sync
+    around 2026-09-22 on preprod, and to renumbering on mainnet (offset 13 since ~09-19, 37
+    for a 09-01 checkpoint).
   - Blockfrost request quotas for a full genesis sync (preprod event ids run to ~1.58M).
   - Lace support for custom Blockfrost endpoints.
   - Which indexer versions Blockfrost and the official preprod endpoint run. The progress

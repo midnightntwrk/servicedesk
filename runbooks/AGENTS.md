@@ -62,6 +62,32 @@ cheap. **Create a runbook when the issue is recurring, or when diagnosing it too
 investigation that would otherwise be repeated.** One-off, self-evident issues don't need
 one.
 
+### Triaging a ticket against the runbooks
+
+Do these before writing new diagnosis:
+
+1. **Grep the error text against the [Error-string lookup](README.md#error-string-lookup).** On
+   a match, confirm the runbook's root cause fits, then reply with the runbook link and the
+   specific step that applies.
+2. **Search the component repos too, not just this one.** Users file straight into
+   `midnight-wallet`, `midnight-indexer` and others, bypassing the front door. Search the
+   error text across `midnightntwrk` and cross-link what you find: the component issue, the
+   servicedesk tracking issue and the runbook. (Example: `midnight-wallet#781` ↔
+   `servicedesk#216` ↔ `midnight-wallet#643`, all one cursor mechanism.)
+3. **Keep version hygiene separate from root cause.** An old version is an easy suspect. It is
+   only the cause if the diff between the reported and current version touches the failing
+   code path. Check the release diff (or the error site in current source) before saying
+   "upgrade to fix". Recommend the upgrade on its own terms either way. (Example: #781 ran
+   `ledger-v8` 8.1.0. The 8.1.0→8.1.3 diff doesn't touch dust replay, and both error strings
+   still exist in 8.1.3, so upgrading is hygiene, not the fix.) Ask for the resolved tree
+   (`npm ls <pkg>`), not just `package.json`: a `^` range resolving to an old patch means a
+   lockfile pin.
+4. **When it "started failing on date X", look for an infra change on that date:** indexer
+   re-syncs or redeploys, blue/green swaps, endpoint shutdowns, provider migrations, runtime
+   upgrades. Operator-side changes break client state with no deploy on the user's side.
+5. **Re-check point-in-time runbook claims before quoting them.** Shutdown dates, endpoint
+   status, offsets and `latest` versions go stale. A quick `curl` or `npm view` is enough.
+
 ### Creating a runbook from a triage discussion
 
 The triage thread *is* your source material — the worked case. (Example: servicedesk `#188`
