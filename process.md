@@ -246,6 +246,20 @@ The triage team looks at the "New Triage" column:
 ✓ Is there enough information to reproduce?
 ✓ What component is actually affected?
 
+#### 1b. Runbook Match
+
+Before reproducing, check whether the issue is already understood:
+
+- Grep the error text and logs against the runbooks' [Error-string lookup](runbooks/README.md#error-string-lookup).
+  On a match, confirm the runbook's root cause fits, then reply with the runbook link and the
+  step that applies.
+- Search the same error text across the component repos (`midnight-wallet`,
+  `midnight-indexer`, …) and link related issues together.
+- If it started on a specific date with no change on the user's side, check for infra changes
+  on that date (indexer re-syncs or redeploys, blue/green swaps, endpoint shutdowns).
+
+See [runbooks/AGENTS.md](runbooks/AGENTS.md) Section 2 for the full triage checklist.
+
 #### 2. Validation & Reproduction
 
 The triage engineer attempts to reproduce using:
@@ -389,6 +403,18 @@ sequenceDiagram
 | Documentation | `midnight-docs` |
 | Deployment/Infra | `midnight-charts` |
 
+#### Issues filed directly in a component repo
+
+Some users skip the front door and file in the component repo (e.g. `midnight-wallet#781`).
+These don't need transferring. Triage them in place:
+
+- Add the matching runbook or servicedesk tracking issue as a comment.
+- Link related issues across repos.
+- Make sure a `status:untriaged` label doesn't sit unanswered.
+
+If the investigation produced new knowledge, update the runbook in this repo so the next
+occurrence is cheap.
+
 #### What Happens During Transfer
 
 1. Issue physically moves from issues repo to target repo
@@ -523,7 +549,9 @@ graph LR
 
 - Parse version strings from issue body
 - Auto-tag with version labels (e.g., `v0.26.0`)
-- Flag if version is outdated/unsupported
+- Flag if version is outdated/unsupported. Treat an outdated version as a request for info
+  (`npm ls` output), not as the root cause. It is only the cause if the diff between versions
+  touches the failing code path.
 
 ### Duplicate Detection
 
