@@ -73,12 +73,12 @@ Options:
    size stay within `headroom × limit`. It compares against the limits in `budget`, not the ones
    in `initialParameters`, whose `blockUsage` is lower than mainnet's.
 5. With `execute: true`:
-   1. It saves the signing key (`setContractAddress` + `setSigningKey`) **before** the deploy is
-      submitted.
+   1. It saves the signing key (`setContractAddress` + `setSigningKey`) and, if `privateStateId`
+      is set, the private state, **before** the deploy is submitted. Private state is scoped by
+      contract address, so a failed deploy leaves only an unused entry behind.
    2. It submits with `submitTx` (the same path `submitDeployTx` uses: prove → balance → submit)
       and throws `DeployTxFailedError` on anything other than `SucceedEntirely`.
-   3. It then stores the private state.
-   4. It calls `submitInsertVerifierKeyTx` for each remaining circuit, one at a time.
+   3. It calls `submitInsertVerifierKeyTx` for each remaining circuit, one at a time.
 
 ## Verified before hand-off (2026-09-29)
 

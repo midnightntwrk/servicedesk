@@ -13,8 +13,8 @@
 //
 // SAFETY: defaults to a dry run (prints the plan, submits nothing). Pass `execute: true` to submit.
 // Keys are read only through YOUR local providers; nothing private is logged. The CMA signing key
-// is persisted to your private state provider BEFORE the deploy is submitted — back it up: without
-// it the remaining circuits can never be added.
+// (and the private state, if any) is persisted to your private state provider BEFORE the deploy is
+// submitted — back it up: without the key the remaining circuits can never be added.
 
 import {
   type ContractProviders,
@@ -195,16 +195,18 @@ export async function batchDeploy<C extends Contract.Any>(
 
     if (execute) {
       const pds = providers.privateStateProvider;
-      // Persist the CMA key under the (already known) address BEFORE submitting, so a crash after
-      // the deploy lands cannot orphan the contract. Harmless if the deploy then fails.
+      // Persist the CMA key and the constructor's private state under the (already known) address
+      // BEFORE submitting, so a crash after the deploy lands cannot orphan the contract or lose its
+      // private state. Harmless if the deploy then fails: private state is scoped by contract
+      // address, and this address is fresh.
       pds.setContractAddress(contractAddress);
       await pds.setSigningKey(contractAddress, unsubmitted.private.signingKey);
-      log(`[${mode}] contract address: ${contractAddress}  (CMA key stored; re-run with contractAddress to resume)`);
-      const finalized = await submitTx(providers, { unprovenTx: tx });
-      if (finalized.status !== SucceedEntirely) throw new DeployTxFailedError(finalized);
       if (options.privateStateId !== undefined) {
         await pds.set(options.privateStateId, unsubmitted.private.initialPrivateState);
       }
+      log(`[${mode}] contract address: ${contractAddress}  (CMA key stored; re-run with contractAddress to resume)`);
+      const finalized = await submitTx(providers, { unprovenTx: tx });
+      if (finalized.status !== SucceedEntirely) throw new DeployTxFailedError(finalized);
       log(`[${mode}] batch 1 finalized in block ${finalized.blockHeight} (tx ${finalized.txId})`);
     } else {
       log(`[${mode}] contract address would be ${contractAddress} (re-sampled on a real run)`);
