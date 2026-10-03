@@ -36,24 +36,38 @@ const MAINNET_LIMITS = {
   },
 };
 
+const USAGE = 'usage: node measure-deploy-cost.mjs <compiled-dir> [--headroom 0.6] [--params ledger-parameters-config.json]';
+const fail = (msg) => {
+  console.error(msg);
+  process.exit(2);
+};
+
 const args = process.argv.slice(2);
 const flag = (name, dflt) => {
   const i = args.indexOf(name);
-  return i >= 0 ? args.splice(i, 2)[1] : dflt;
+  if (i < 0) return dflt;
+  const value = args[i + 1];
+  if (value === undefined || value.startsWith('--')) fail(`${name} needs a value\n${USAGE}`);
+  args.splice(i, 2);
+  return value;
 };
-const headroom = Number(flag('--headroom', '0.6'));
+const headroomArg = flag('--headroom', '0.6');
+const headroom = Number(headroomArg);
+if (!Number.isFinite(headroom) || headroom <= 0 || headroom > 1) fail(`--headroom must be in (0, 1], got '${headroomArg}'`);
 const paramsFile = flag('--params', undefined);
 const compiledDir = args[0];
-if (!compiledDir) {
-  console.error('usage: node measure-deploy-cost.mjs <compiled-dir> [--headroom 0.6] [--params ledger-parameters-config.json]');
-  process.exit(2);
-}
+if (!compiledDir) fail(USAGE);
 
 const limits = structuredClone(MAINNET_LIMITS);
 if (paramsFile) {
   const p = JSON.parse(fs.readFileSync(paramsFile, 'utf8')).limits;
-  limits.transactionByteLimit = BigInt(p.transaction_byte_limit);
-  for (const k of Object.keys(limits.block)) limits.block[k] = BigInt(p.block_limits[k]);
+  const need = (v, key) => {
+    if (v === undefined || v === null) fail(`${paramsFile}: missing ${key} (has the ledger-parameters-config format changed?)`);
+    return BigInt(v);
+  };
+  if (!p) fail(`${paramsFile}: missing limits (has the ledger-parameters-config format changed?)`);
+  limits.transactionByteLimit = need(p.transaction_byte_limit, 'limits.transaction_byte_limit');
+  for (const k of Object.keys(limits.block)) limits.block[k] = need(p.block_limits?.[k], `limits.block_limits.${k}`);
 }
 
 const keysDir = path.join(compiledDir, 'keys');
@@ -109,7 +123,7 @@ const over = ({ bytes, cost }, factor) => {
   return bad;
 };
 
-// Largest prefix of `list` (largest keys first) whose tx fits within headroom.
+// Largest prefix of `vks` (largest keys first) whose tx fits within headroom: a worst-case lower bound.
 const maxFitting = (build) => {
   let n = 0;
   while (n < vks.length && over(measure(build(vks.slice(0, n + 1))), headroom).length === 0) n++;
@@ -138,9 +152,10 @@ const d = maxFitting(deployTx);
 const m = maxFitting(insertTx);
 const one = measure(insertTx([vks[0]]));
 console.log(`\nbatch plan at ${headroom * 100}% of limits (worst case: largest keys first):`);
-console.log(`  first deploy can carry up to ${d} verifier keys`);
+console.log(`  first deploy can carry at least ${d} verifier keys`);
 console.log(`  a single-insert maintenance tx (submitInsertVerifierKeyTx) costs bytesWritten ${one.cost.bytesWritten}`);
 console.log(`  a multi-insert MaintenanceUpdate could carry up to ${m} keys per tx`);
 const remaining = Math.max(0, vks.length - d);
-console.log(`  => 1 deploy tx + ${remaining} single-insert txs (SDK path used by batch-deploy.ts)`);
+console.log(`  => 1 deploy tx + at most ${remaining} single-insert txs (SDK path used by batch-deploy.ts)`);
+console.log('  batch-deploy.ts fills in priority/compiled order, not largest-first, so it usually fits more keys');
 process.exit(over(full, headroom).length > 0 ? 1 : 0);

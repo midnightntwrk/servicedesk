@@ -95,7 +95,7 @@ the same ledger limits as mainnet. The funded wallet was built with testkit-js 4
   31,291) were **included** (`SucceedEntirely`). 15 circuits (34,067) got RPC
   `1010 Transaction would exhaust the block limits`. Wallet balancing adds only 224 `bytesWritten`.
 - **`batchDeploy` with `execute: true`, default budget, `priorityCircuits: ['c40']`:**
-  - Batch 1 was 14 circuits (stopped at `c14`: 32,560 > 30,000) and was finalized in block 338.
+  - Batch 1 was 14 circuits (stopped at `c14`: unbalanced 32,560 > 30,000; a different subset from the runbook's table, which is balanced) and was finalized in block 338.
   - Inserts of c14, c15 and c16 followed, each about 18 s apart, then a simulated crash.
 - **Partial state:**
   - `findDeployedContract` threw `ContractTypeError`: "Following operations: c17, …, c39, are
@@ -122,7 +122,9 @@ the same ledger limits as mainnet. The funded wallet was built with testkit-js 4
 - The module's own `batchDeploy`, run with stub providers:
   - The dry run calls no provider write or submit method.
   - Resume against a partial state inserts only the missing circuits.
-  - A mismatched on-chain key aborts, and a missing CMA key aborts.
+  - A mismatched on-chain key aborts, an on-chain circuit missing from the build aborts, and a
+    missing CMA key aborts.
+  - Duplicate `priorityCircuits` are de-duplicated (counts still add up to 40).
 
 **Not yet verified:** preview, preprod or mainnet. The first real-network run should add its tx
 hashes here.

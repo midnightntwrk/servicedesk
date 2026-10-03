@@ -157,10 +157,10 @@ export async function batchDeploy<C extends Contract.Any>(
   const circuitIds = ContractExecutable.make(options.compiledContract).getProvableCircuitIds() as string[];
   const vkEntries = await providers.zkConfigProvider.getVerifierKeys(circuitIds as Contract.ProvableCircuitId<C>[]);
   const vks = new Map<string, VerifierKey>(vkEntries.map(([id, vk]) => [id as string, vk]));
-  const priority = (options.priorityCircuits ?? []).filter((id) => {
+  const priority = [...new Set(options.priorityCircuits ?? [])];
+  for (const id of priority) {
     if (!vks.has(id)) throw new Error(`priorityCircuits: '${id}' is not a provable circuit of this contract`);
-    return true;
-  });
+  }
   const ordered = [...priority, ...circuitIds.filter((id) => !priority.includes(id))];
   log(`[${mode}] ${ordered.length} provable circuits, ${[...vks.values()].reduce((a, v) => a + v.length, 0)} verifier-key bytes`);
 
@@ -219,8 +219,11 @@ export async function batchDeploy<C extends Contract.Any>(
     const onChain = new Set(state.operations().map(String));
     for (const id of onChain) {
       const local = vks.get(id);
+      if (!local) {
+        throw new Error(`circuit '${id}' is on chain but not in this build — recompiled? Stop and see the runbook.`);
+      }
       const remote = state.operation(id)?.verifierKey;
-      if (local && remote && Buffer.compare(Buffer.from(local), Buffer.from(remote)) !== 0) {
+      if (remote && Buffer.compare(Buffer.from(local), Buffer.from(remote)) !== 0) {
         throw new Error(`circuit '${id}' is on chain with a DIFFERENT verifier key — recompiled? Stop and see the runbook.`);
       }
     }

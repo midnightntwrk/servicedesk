@@ -46,8 +46,12 @@ Which error you see depends on how far over the limit the deploy is.
     `Validated transaction <hash> for mempool`.
   - `author_submitAndWatchExtrinsic` then returns
     `{"code":1010,"message":"Invalid Transaction","data":"Transaction would exhaust the block limits"}`.
-  - The SDK shows this as a generic **`Error: Transaction submission error`**. In one live run it
-    didn't surface at all: the deploy call **hung**, and no block ever included the transaction.
+  - The SDK shows this as a generic **`Error: Transaction submission error`**. The node's reason
+    is still on the error, three levels down behind Effect's `FiberFailure`. To see it, run
+    `Cause.pretty(e[Runtime.FiberFailureCauseId], { renderErrorCause: true })` (from `effect`), or
+    follow `Cause.failures(...)` → `.cause` → `.cause` to the `RpcError: 1010 ...`. In one live
+    run it didn't surface at all: the deploy call **hung**, and no block ever included the
+    transaction.
 - The contract compiles fine, and small contracts deploy fine from the same wallet and setup. The
   failing contract has **many exported circuits**, roughly 15 or more for small circuits.
 - Rarer relatives:
@@ -119,7 +123,7 @@ Which error you see depends on how far over the limit the deploy is.
 
 The SDK is not defective in the deploy path; it simply has no batch mode, so the batching has to
 be done by hand. This runbook and its companion script do that. One arguable SDK/wallet defect:
-the 1010 rejection is reduced to a generic `Transaction submission error`, and at least once it
+the 1010 rejection is hidden behind a generic `Transaction submission error`, and at least once it
 caused a hang. See "Upstream follow-ups" below.
 
 ## Key identifiers
@@ -177,8 +181,9 @@ caused a hang. See "Upstream follow-ups" below.
    mkdir /tmp/measure && cd /tmp/measure && npm i @midnight-ntwrk/ledger-v8@8.1.0
    cp <this-repo>/runbooks/contract-batched-deploy-runbook/scripts/measure-deploy-cost.mjs .
    node measure-deploy-cost.mjs <out>            # exit 1 = needs batching
-   # optional: another network's limits
-   curl -sO https://raw.githubusercontent.com/midnightntwrk/midnight-node/main/res/mainnet/ledger-parameters-config.json
+   # optional: a specific network's limits (<network> = mainnet | preprod | preview), pinned to the
+   # midnight-node commit in the header; switch to a newer ref only if the limits have changed
+   curl -sO https://raw.githubusercontent.com/midnightntwrk/midnight-node/eaecadc03efd06464bcf1dbaf2c7c770967ae9e9/res/<network>/ledger-parameters-config.json
    node measure-deploy-cost.mjs <out> --params ledger-parameters-config.json
    ```
 
@@ -188,9 +193,12 @@ caused a hang. See "Upstream follow-ups" below.
    bytesWritten 83261 (block limit 50000)
    RESULT: DOES NOT FIT in one block — exceeds: bytesWritten 83261 > 50000
    batch plan at 60% of limits (worst case: largest keys first):
-     first deploy can carry up to 12 verifier keys
-     => 1 deploy tx + 28 single-insert txs
+     first deploy can carry at least 12 verifier keys
+     => 1 deploy tx + at most 28 single-insert txs
    ```
+
+   12 is a worst case: the script packs the largest keys first. `batchDeploy` fills in
+   priority/compiled order and usually fits more (14 for the same contract in the live run).
 
    The default `--headroom 0.6` reflects the live ceiling of about 65%. Anything over it needs
    batching, even when it is under 100%. The script slightly under-estimates the real deploy: it
@@ -223,8 +231,8 @@ caused a hang. See "Upstream follow-ups" below.
         (14 circuits) plus 26 inserts, about 8 minutes in total.
    3. **If it is interrupted**, re-run with `contractAddress: '<printed address>'`. It compares the
       on-chain operations with the compiled circuits and inserts only the missing ones; live, it
-      resumed at 17/40. It stops if a circuit on chain has a *different* key, which means the
-      contract was recompiled; see the caveats below.
+      resumed at 17/40. It stops if a circuit on chain has a *different* key, or is missing from
+      the compiled build; either means the contract was recompiled. See the caveats below.
    4. **When all keys are in**, use `findDeployedContract()` as normal.
 
    *Trade-off:* 1 + (N − fit) transactions, each paying DUST fees, and they must run one after
@@ -269,9 +277,12 @@ caused a hang. See "Upstream follow-ups" below.
   still paid. The script's on-chain check before each insert avoids this. To *change* a key, run
   `submitRemoveVerifierKeyTx` first and then insert.
 - **Recompiling in the middle of a deploy changes the keys.** If you recompile (for example with a
-  new compiler version) between batches, the keys already on chain won't match the new ones. The
-  script refuses to continue in that case. Either finish with the original build artefacts, or
-  remove and re-insert the mismatched circuits (the remove costs one more maintenance tx each).
+  new compiler version) between batches, the keys already on chain won't match the new ones. If a
+  circuit was removed or renamed, the old one stays on chain with no counterpart in the new build.
+  The script refuses to continue in either case. Either finish with the original build artefacts,
+  or remove the stale circuits with `submitRemoveVerifierKeyTx` and re-insert any that changed
+  (each remove costs one more maintenance tx). `findDeployedContract()` alone would not catch a
+  leftover circuit: it only checks that every compiled circuit is on chain.
 - **A wrong CMA key is rejected up front** (`InvalidCommitteeSignature` / well-formedness failure).
   No fee is paid, but nothing progresses.
 - **The address is only known at execute time.** It includes a random nonce, so the dry-run
@@ -280,12 +291,14 @@ caused a hang. See "Upstream follow-ups" below.
   script stored under that unused address is harmless. Lower `budget.headroom` and re-run *without*
   `contractAddress`.
 
-## Upstream follow-ups (not filed at compile date)
+## Upstream follow-ups
 
-- midnight-js / wallet: surface node RPC 1010 ("Transaction would exhaust the block limits")
-  instead of a generic `Transaction submission error`, and never hang on it.
-- midnight-js: an SDK-level batched deploy, or at least a `deployContract` option to deploy a
-  subset of circuits, plus a multi-insert maintenance API.
+- [servicedesk#225](https://github.com/midnightntwrk/servicedesk/issues/225) (bug): wallet SDK
+  hides node RPC 1010 ("Transaction would exhaust the block limits") behind a generic
+  `Transaction submission error`; the hang seen once is noted there as unreproduced.
+- [servicedesk#226](https://github.com/midnightntwrk/servicedesk/issues/226) (feature): a
+  `deployContract` option to deploy a subset of circuits, a multi-insert maintenance API, and
+  optionally an SDK-level batched deploy.
 
 ## Reference material
 
