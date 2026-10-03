@@ -172,7 +172,7 @@ caused a hang. See "Upstream follow-ups" below.
 
    ```sh
    ls <out>/keys/*.verifier | wc -l
-   du -cb <out>/keys/*.verifier | tail -1    # total VK bytes; > ~25,000 is suspect
+   cat <out>/keys/*.verifier | wc -c         # total VK bytes; > ~25,000 is suspect
    ```
 2. **Price the deploy exactly** with [`scripts/measure-deploy-cost.mjs`](scripts/measure-deploy-cost.mjs).
    It needs no wallet, node or API key, and nothing is signed.
@@ -180,10 +180,10 @@ caused a hang. See "Upstream follow-ups" below.
    ```sh
    mkdir /tmp/measure && cd /tmp/measure && npm i @midnight-ntwrk/ledger-v8@8.1.0
    cp <this-repo>/runbooks/contract-batched-deploy-runbook/scripts/measure-deploy-cost.mjs .
-   node measure-deploy-cost.mjs <out>            # exit 1 = needs batching
+   node measure-deploy-cost.mjs <out>            # exit 3 = needs batching, 0 = fits, 2 = bad input
    # optional: a specific network's limits (<network> = mainnet | preprod | preview), pinned to the
    # midnight-node commit in the header; switch to a newer ref only if the limits have changed
-   curl -sO https://raw.githubusercontent.com/midnightntwrk/midnight-node/eaecadc03efd06464bcf1dbaf2c7c770967ae9e9/res/<network>/ledger-parameters-config.json
+   curl -fsSLO https://raw.githubusercontent.com/midnightntwrk/midnight-node/eaecadc03efd06464bcf1dbaf2c7c770967ae9e9/res/<network>/ledger-parameters-config.json
    node measure-deploy-cost.mjs <out> --params ledger-parameters-config.json
    ```
 
@@ -220,11 +220,13 @@ caused a hang. See "Upstream follow-ups" below.
    [`batch-deploy.NOTES.md`](scripts/batch-deploy.NOTES.md) for setup. The user runs it
    **locally** with their own providers; nobody else ever handles their keys.
    1. **Dry run first** (the default). It runs the constructor locally, builds the full deploy tx,
-      then shrinks the tx to the largest set of circuits that fits within **60%** of the block
-      limits (`priorityCircuits` go first). It prints the plan and submits nothing.
+      then shrinks the tx to as many circuits as fit within **60%** of the block limits, taken in
+      order (`priorityCircuits` first, then compiled order; it stops at the first that doesn't
+      fit). It prints the plan and submits nothing.
    2. **Execute** (`execute: true`).
-      - **Batch 1:** the subset deploy. The CMA signing key is saved to the private state provider
-        under the new address **before** submitting, and the address is printed.
+      - **Batch 1:** the subset deploy. The CMA signing key, and the initial private state if the
+        contract has one, are saved to the private state provider under the new address
+        **before** submitting, and the address is printed.
       - **Batches 2..N:** `submitInsertVerifierKeyTx` runs once per remaining circuit,
         sequentially. On-chain state is re-checked before each insert.
       - Live timing was about **18 s per insert** (3 blocks). The 40-circuit contract was 1 deploy
@@ -233,6 +235,12 @@ caused a hang. See "Upstream follow-ups" below.
       on-chain operations with the compiled circuits and inserts only the missing ones; live, it
       resumed at 17/40. It stops if a circuit on chain has a *different* key, or is missing from
       the compiled build; either means the contract was recompiled. See the caveats below.
+      **Not sure whether batch 1 landed** (the call hung, or the process died while waiting)?
+      Don't re-run with `execute: true` yet: that samples a new nonce and deploys a second
+      partial contract. First do a dry run with `contractAddress: '<printed address>'`. If it
+      throws `no contract state on chain`, nothing landed; check again after a few blocks in case
+      the tx is still pending, then re-run *without* `contractAddress`. Otherwise it prints the
+      resume plan.
    4. **When all keys are in**, use `findDeployedContract()` as normal.
 
    *Trade-off:* 1 + (N − fit) transactions, each paying DUST fees, and they must run one after
@@ -287,9 +295,12 @@ caused a hang. See "Upstream follow-ups" below.
   No fee is paid, but nothing progresses.
 - **The address is only known at execute time.** It includes a random nonce, so the dry-run
   address is **not** the real one. Use the address printed by the `execute: true` run.
-- **If batch 1 is rejected** (1010, or any submission error), nothing is on chain. The CMA key the
-  script stored under that unused address is harmless. Lower `budget.headroom` and re-run *without*
-  `contractAddress`.
+- **If batch 1 is rejected** (1010, or any submission error), nothing is on chain. The CMA key
+  (and private state) the script stored under that unused address is harmless. Lower
+  `budget.headroom` and re-run *without* `contractAddress`.
+- **If you don't know whether batch 1 landed** (hang, killed process), don't re-run with
+  `execute: true` blindly: you'd deploy a second partial contract next to the first. Dry-run with
+  `contractAddress: '<printed address>'` first, as in step 3 above.
 
 ## Upstream follow-ups
 

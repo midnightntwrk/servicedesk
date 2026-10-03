@@ -69,16 +69,17 @@ Options:
    - It wraps that state in a fresh `ContractDeploy`, swaps it into the intent, and reassigns
      `tx.intents`. The tx is unproven and unbound, so the binding is recomputed.
    - The Zswap offers built by the SDK are kept unchanged, so constructor-minted coins still work.
-4. It adds circuits one by one while `tx.cost(LedgerParameters.initialParameters())` and the tx
-   size stay within `headroom × limit`. It compares against the limits in `budget`, not the ones
+4. It adds circuits one by one, in priority/compiled order, while
+   `tx.cost(LedgerParameters.initialParameters())` and the tx size stay within `headroom × limit`.
+   It stops at the first circuit that doesn't fit, even if a smaller one later would. It compares against the limits in `budget`, not the ones
    in `initialParameters`, whose `blockUsage` is lower than mainnet's.
 5. With `execute: true`:
-   1. It saves the signing key (`setContractAddress` + `setSigningKey`) **before** the deploy is
-      submitted.
+   1. It saves the signing key (`setContractAddress` + `setSigningKey`) and, if `privateStateId`
+      is given, the initial private state, **before** the deploy is submitted. (midnight-js's own
+      `submitDeployTx` stores both only after finalization, so a crash in between loses them.)
    2. It submits with `submitTx` (the same path `submitDeployTx` uses: prove → balance → submit)
       and throws `DeployTxFailedError` on anything other than `SucceedEntirely`.
-   3. It then stores the private state.
-   4. It calls `submitInsertVerifierKeyTx` for each remaining circuit, one at a time.
+   3. It calls `submitInsertVerifierKeyTx` for each remaining circuit, one at a time.
 
 ## Verified before hand-off (2026-09-29)
 
@@ -125,6 +126,10 @@ the same ledger limits as mainnet. The funded wallet was built with testkit-js 4
   - A mismatched on-chain key aborts, an on-chain circuit missing from the build aborts, and a
     missing CMA key aborts.
   - Duplicate `priorityCircuits` are de-duplicated (counts still add up to 40).
+  - With `execute: true`, the call order is `setSigningKey` → `set(privateStateId)` → `proveTx`,
+    so both are stored before anything in `submitTx` runs.
+  - A dry run with a `contractAddress` that has no state on chain throws
+    `no contract state on chain`, which is how to check whether batch 1 landed.
 
 **Not yet verified:** preview, preprod or mainnet. The first real-network run should add its tx
 hashes here.

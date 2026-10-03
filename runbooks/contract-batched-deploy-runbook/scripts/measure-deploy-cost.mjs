@@ -10,6 +10,9 @@
 //   npm i @midnight-ntwrk/ledger-v8@8.1.0      # match the ledger your SDK uses (midnight-js 4.1.x -> ledger-v8 8.1.x)
 //   node measure-deploy-cost.mjs <compiled-dir> [--headroom 0.6] [--params ledger-parameters-config.json]
 //
+// Exit codes: 0 = fits in one block, 3 = needs batching, 2 = bad input (usage, missing keys/,
+// unreadable params file). Anything else (e.g. 1) is an unexpected crash, not a verdict.
+//
 // <compiled-dir> is the compiler output directory (the one containing contract/, keys/, zkir/).
 // --params takes a midnight-node `res/<network>/ledger-parameters-config.json` to read the block
 // limits from; without it the mainnet values below are used (verified 2026-09-29).
@@ -36,7 +39,10 @@ const MAINNET_LIMITS = {
   },
 };
 
-const USAGE = 'usage: node measure-deploy-cost.mjs <compiled-dir> [--headroom 0.6] [--params ledger-parameters-config.json]';
+const USAGE =
+  'usage: node measure-deploy-cost.mjs <compiled-dir> [--headroom 0.6] [--params ledger-parameters-config.json]\n' +
+  'exit: 0 = fits, 3 = needs batching, 2 = bad input';
+const NEEDS_BATCHING = 3;
 const fail = (msg) => {
   console.error(msg);
   process.exit(2);
@@ -54,13 +60,27 @@ const flag = (name, dflt) => {
 const headroomArg = flag('--headroom', '0.6');
 const headroom = Number(headroomArg);
 if (!Number.isFinite(headroom) || headroom <= 0 || headroom > 1) fail(`--headroom must be in (0, 1], got '${headroomArg}'`);
+// Same 0.1% granularity as the scaling in over(); avoids printing 55.00000000000001%.
+const pct = Math.round(headroom * 1000) / 10;
 const paramsFile = flag('--params', undefined);
 const compiledDir = args[0];
 if (!compiledDir) fail(USAGE);
 
 const limits = structuredClone(MAINNET_LIMITS);
 if (paramsFile) {
-  const p = JSON.parse(fs.readFileSync(paramsFile, 'utf8')).limits;
+  let text;
+  try {
+    text = fs.readFileSync(paramsFile, 'utf8');
+  } catch (e) {
+    fail(`${paramsFile}: cannot read (${e.code ?? e.message})`);
+  }
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    fail(`${paramsFile}: not valid JSON (did curl save an error page? starts with: ${JSON.stringify(text.slice(0, 40))})`);
+  }
+  const p = json?.limits;
   const need = (v, key) => {
     if (v === undefined || v === null) fail(`${paramsFile}: missing ${key} (has the ledger-parameters-config format changed?)`);
     return BigInt(v);
@@ -71,15 +91,14 @@ if (paramsFile) {
 }
 
 const keysDir = path.join(compiledDir, 'keys');
+const noKeys = `no *.verifier files in ${keysDir} — compile without --skip-zk first`;
+if (!fs.existsSync(keysDir)) fail(noKeys);
 const vks = fs
   .readdirSync(keysDir)
   .filter((f) => f.endsWith('.verifier'))
   .map((f) => ({ id: f.slice(0, -'.verifier'.length), vk: new Uint8Array(fs.readFileSync(path.join(keysDir, f))) }))
   .sort((a, b) => b.vk.length - a.vk.length);
-if (vks.length === 0) {
-  console.error(`no *.verifier files in ${keysDir} — compile without --skip-zk first`);
-  process.exit(2);
-}
+if (vks.length === 0) fail(noKeys);
 
 // Uses the ledger's initial parameters for the cost model only; limits are checked against `limits`.
 const params = L.LedgerParameters.initialParameters();
@@ -143,7 +162,7 @@ if (hardFail.length > 0) {
   console.log(`\nRESULT: DOES NOT FIT in one block — exceeds: ${hardFail.join('; ')}`);
   console.log('        Fee computation (wallet balancing) fails with "exceeded block limit in transaction fee computation".');
 } else if (over(full, headroom).length > 0) {
-  console.log(`\nRESULT: under the raw block limit but over ${headroom * 100}% of it — the node will likely reject it with 1010 "Transaction would exhaust the block limits". Batch it.`);
+  console.log(`\nRESULT: under the raw block limit but over ${pct}% of it — the node will likely reject it with 1010 "Transaction would exhaust the block limits". Batch it.`);
 } else {
   console.log('\nRESULT: fits in one block — a normal deployContract() should work.');
 }
@@ -151,11 +170,11 @@ if (hardFail.length > 0) {
 const d = maxFitting(deployTx);
 const m = maxFitting(insertTx);
 const one = measure(insertTx([vks[0]]));
-console.log(`\nbatch plan at ${headroom * 100}% of limits (worst case: largest keys first):`);
+console.log(`\nbatch plan at ${pct}% of limits (worst case: largest keys first):`);
 console.log(`  first deploy can carry at least ${d} verifier keys`);
 console.log(`  a single-insert maintenance tx (submitInsertVerifierKeyTx) costs bytesWritten ${one.cost.bytesWritten}`);
 console.log(`  a multi-insert MaintenanceUpdate could carry up to ${m} keys per tx`);
 const remaining = Math.max(0, vks.length - d);
 console.log(`  => 1 deploy tx + at most ${remaining} single-insert txs (SDK path used by batch-deploy.ts)`);
 console.log('  batch-deploy.ts fills in priority/compiled order, not largest-first, so it usually fits more keys');
-process.exit(over(full, headroom).length > 0 ? 1 : 0);
+process.exit(over(full, headroom).length > 0 ? NEEDS_BATCHING : 0);
