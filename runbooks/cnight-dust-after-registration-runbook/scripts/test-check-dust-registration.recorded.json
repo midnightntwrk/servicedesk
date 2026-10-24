@@ -1,0 +1,565 @@
+{
+ "source": "Koios and the Midnight indexer (Blockfrost on Mainnet and Preprod, the public Preview indexer), read by gatherFacts() in check-dust-registration.mjs on 2026-10-22. On Mainnet, stake keys, transaction hashes and DUST addresses are replaced by stand-ins, the same one for each real value, so the cases keep their shape without naming anyone. BigInts are strings ending in n.",
+ "cases": {
+  "removed": {
+   "net": "mainnet",
+   "stake": "stake1uyl0nxylj9m5z8tcqm52es42q2x4ecjh6p7sd457qjfj0tgve8nwl",
+   "now": 1792668892,
+   "live": [],
+   "others": [],
+   "cnight": {
+    "total": "0n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "f192397baa82c7582ebdbbbb14ebc7f5ec6e9ec554fab3d96ed9db101cab3459#0",
+      "tx": "f192397baa82c7582ebdbbbb14ebc7f5ec6e9ec554fab3d96ed9db101cab3459",
+      "time": 1784990619,
+      "dust": "2a6d3b01090bcb2aacf3a9e74bb6649e52a144e3f227da1ef42f3fb6deae9eb82a"
+     },
+     {
+      "type": "removed",
+      "ref": "f192397baa82c7582ebdbbbb14ebc7f5ec6e9ec554fab3d96ed9db101cab3459#0",
+      "tx": "0972d57424c2edc2c9424164fbb3ef8890e02c4d1b28fb9560e50a7d3db1a0d4",
+      "time": 1785090965,
+      "dust": "2a6d3b01090bcb2aacf3a9e74bb6649e52a144e3f227da1ef42f3fb6deae9eb82a"
+     },
+     {
+      "type": "registered",
+      "ref": "4156c6a75a64465da2de1936bb8c651583bfefa5ac002e6a7a7f066511972a82#0",
+      "tx": "4156c6a75a64465da2de1936bb8c651583bfefa5ac002e6a7a7f066511972a82",
+      "time": 1785508639,
+      "dust": "2a6d3b01090bcb2aacf3a9e74bb6649e52a144e3f227da1ef42f3fb6deae9eb82a"
+     },
+     {
+      "type": "removed",
+      "ref": "4156c6a75a64465da2de1936bb8c651583bfefa5ac002e6a7a7f066511972a82#0",
+      "tx": "afec965a3b28605441317c48a9983612d9d134afb160e5ee4802a8de0cabdb7d",
+      "time": 1785635416,
+      "dust": "2a6d3b01090bcb2aacf3a9e74bb6649e52a144e3f227da1ef42f3fb6deae9eb82a"
+     }
+    ],
+    "read": 23
+   },
+   "midnight": {
+    "status": {
+     "registered": false,
+     "dustAddress": null,
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": []
+   },
+   "midnightSkipped": false
+  },
+  "fresh": {
+   "net": "mainnet",
+   "stake": "stake1u88k53ah82rt0080r9pmjdn743ym97qv7cx5a5xs3jlp94seqgjhu",
+   "now": 1792668927,
+   "live": [
+    {
+     "tx": "13cfb5b93c3d76da131a1e41e7c64d49df6c4e215378ce6837dcd2398d8b6e0c",
+     "ix": 0,
+     "time": 1792664936,
+     "dust": "429b4e62b34685945e7297fffaf377212f3129779386a0678c875ff5451ea26f42"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "10000000000n",
+    "recent": "10000000000n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "13cfb5b93c3d76da131a1e41e7c64d49df6c4e215378ce6837dcd2398d8b6e0c#0",
+      "tx": "13cfb5b93c3d76da131a1e41e7c64d49df6c4e215378ce6837dcd2398d8b6e0c",
+      "time": 1792664936,
+      "dust": "429b4e62b34685945e7297fffaf377212f3129779386a0678c875ff5451ea26f42"
+     }
+    ],
+    "read": 100
+   },
+   "midnight": {
+    "status": {
+     "registered": false,
+     "dustAddress": null,
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": []
+   },
+   "midnightSkipped": false
+  },
+  "recentNight": {
+   "net": "mainnet",
+   "stake": "stake1u8ul4z2r4pgdel8ek8zhpkue5787xp8s8hml0hvp007jges3nar82",
+   "now": 1792668967,
+   "live": [
+    {
+     "tx": "4febe5b94453192857a5bfc38f64ae6ed262319fe9ac925a6b83f551d1899e07",
+     "ix": 0,
+     "time": 1792608191,
+     "dust": "429b4e62b34685945e7297fffaf377212f3129779386a0678c875ff5451ea26f42"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "26599744800n",
+    "recent": "13803173600n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "4febe5b94453192857a5bfc38f64ae6ed262319fe9ac925a6b83f551d1899e07#0",
+      "tx": "4febe5b94453192857a5bfc38f64ae6ed262319fe9ac925a6b83f551d1899e07",
+      "time": 1792608191,
+      "dust": "429b4e62b34685945e7297fffaf377212f3129779386a0678c875ff5451ea26f42"
+     }
+    ],
+    "read": 4
+   },
+   "midnight": {
+    "status": {
+     "registered": true,
+     "dustAddress": "mn_dust1g2d5uc4ng6zeghnjjlll4umhyyhnz2thjwr2qeuvsa0l23g75fh5yfw5w5q",
+     "nightBalance": "12796571200",
+     "generationRate": "105789254110400",
+     "currentCapacity": "6433150331707534400",
+     "utxoTxHash": "4febe5b94453192857a5bfc38f64ae6ed262319fe9ac925a6b83f551d1899e07",
+     "utxoOutputIndex": 0
+    },
+    "registrations": [
+     {
+      "dustAddress": "mn_dust1g2d5uc4ng6zeghnjjlll4umhyyhnz2thjwr2qeuvsa0l23g75fh5yfw5w5q",
+      "valid": true,
+      "nightBalance": "12796571200",
+      "generationRate": "105789254110400",
+      "maxCapacity": "63982856000000000000",
+      "currentCapacity": "6433150331707534400",
+      "utxoTxHash": "4febe5b94453192857a5bfc38f64ae6ed262319fe9ac925a6b83f551d1899e07",
+      "utxoOutputIndex": 0
+     }
+    ]
+   },
+   "midnightSkipped": false
+  },
+  "dappShort": {
+   "net": "mainnet",
+   "stake": "stake1u8nprgymwwjjnd7dnqn6j4ru6zlhmctvlmfqslwcq7cadjclufyg2",
+   "now": 1792669018,
+   "live": [
+    {
+     "tx": "1f7de9ad3f8f023e09ceceb72f10c4f54311a3e75b34196fe60b48c12826d607",
+     "ix": 0,
+     "time": 1792442362,
+     "dust": "9273a301eff076a5eb7018738a3dbd933b6a38220827b51e1a8698d3d905cd6c92"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "796298573429n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "removed",
+      "ref": "77efbb7065f1aef4ffb3159729cbb9992b9ae7d2ebf56a748b67dc5b54e32438#0",
+      "tx": "1f7de9ad3f8f023e09ceceb72f10c4f54311a3e75b34196fe60b48c12826d607",
+      "time": 1792442362,
+      "dust": "3f7ab2d4cc3716165e1a890260f1ab25ed2e3ae1b6714b0fef46638c8809cdb33f"
+     },
+     {
+      "type": "registered",
+      "ref": "1f7de9ad3f8f023e09ceceb72f10c4f54311a3e75b34196fe60b48c12826d607#0",
+      "tx": "1f7de9ad3f8f023e09ceceb72f10c4f54311a3e75b34196fe60b48c12826d607",
+      "time": 1792442362,
+      "dust": "9273a301eff076a5eb7018738a3dbd933b6a38220827b51e1a8698d3d905cd6c92"
+     }
+    ],
+    "read": 100
+   },
+   "midnight": {
+    "status": {
+     "registered": true,
+     "dustAddress": "mn_dust1jfe6xq007pm2t6msrpec50dajvak5wpzpqnm28s6s6vd8kg9e4kfyedvnvp",
+     "nightBalance": "2158542682",
+     "generationRate": "17844672352094",
+     "currentCapacity": "1676274986738654078",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": [
+     {
+      "dustAddress": "mn_dust1jfe6xq007pm2t6msrpec50dajvak5wpzpqnm28s6s6vd8kg9e4kfyedvnvp",
+      "valid": true,
+      "nightBalance": "796298573429",
+      "generationRate": "6583000306537543",
+      "maxCapacity": "3981492867145000000000",
+      "currentCapacity": "866926873314967316691",
+      "utxoTxHash": null,
+      "utxoOutputIndex": null
+     }
+    ]
+   },
+   "midnightSkipped": false
+  },
+  "duplicates": {
+   "net": "mainnet",
+   "stake": "stake1uy6efrsas4uszh3qxrys5lq9nlhn8peh5zczphudtj3tvasjursky",
+   "now": 1792669071,
+   "live": [
+    {
+     "tx": "cc8b4ea603cc5e42ceedaf090c647a512c437ebf49a79073a15e8772d5ef187b",
+     "ix": 0,
+     "time": 1775067309,
+     "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+    },
+    {
+     "tx": "89a80c4240d3bba55769c8f21df59dead41efa566768dd63ea8a777093a6a805",
+     "ix": 0,
+     "time": 1775214832,
+     "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+    },
+    {
+     "tx": "ae7b31239cb81359475c79c64914289ec83edbf78643d94ed79ce7333a26c56f",
+     "ix": 0,
+     "time": 1775333376,
+     "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+    },
+    {
+     "tx": "0be1837610b4fdcf5bcbe78497fa7d530121b1bf50b552360bff5ffaa2f43651",
+     "ix": 0,
+     "time": 1775586725,
+     "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+    },
+    {
+     "tx": "922d904bc0810065e620e92172c7e6f4b25cf08170afe3a18eb1c41387dd4480",
+     "ix": 0,
+     "time": 1791959892,
+     "dust": "bb5f4b74229a95748ebee495f783f217b70ef0df5cc7cf3faab0a8c0eb0f3366bb"
+    },
+    {
+     "tx": "7fd56a3fbd95d4e835dea336c09fe5a95fc9127680a09c722b9952e09ccbec30",
+     "ix": 0,
+     "time": 1792190482,
+     "dust": "bb5f4b74229a95748ebee495f783f217b70ef0df5cc7cf3faab0a8c0eb0f3366bb"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "1314814460n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "34620b187a17806e6afe40a2dbd14e09d0a91331339274a0e40adf363115fd9f#0",
+      "tx": "34620b187a17806e6afe40a2dbd14e09d0a91331339274a0e40adf363115fd9f",
+      "time": 1775067185,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "cc8b4ea603cc5e42ceedaf090c647a512c437ebf49a79073a15e8772d5ef187b#0",
+      "tx": "cc8b4ea603cc5e42ceedaf090c647a512c437ebf49a79073a15e8772d5ef187b",
+      "time": 1775067309,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "89a80c4240d3bba55769c8f21df59dead41efa566768dd63ea8a777093a6a805#0",
+      "tx": "89a80c4240d3bba55769c8f21df59dead41efa566768dd63ea8a777093a6a805",
+      "time": 1775214832,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "ae7b31239cb81359475c79c64914289ec83edbf78643d94ed79ce7333a26c56f#0",
+      "tx": "ae7b31239cb81359475c79c64914289ec83edbf78643d94ed79ce7333a26c56f",
+      "time": 1775333376,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "0be1837610b4fdcf5bcbe78497fa7d530121b1bf50b552360bff5ffaa2f43651#0",
+      "tx": "0be1837610b4fdcf5bcbe78497fa7d530121b1bf50b552360bff5ffaa2f43651",
+      "time": 1775586725,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "922d904bc0810065e620e92172c7e6f4b25cf08170afe3a18eb1c41387dd4480#0",
+      "tx": "922d904bc0810065e620e92172c7e6f4b25cf08170afe3a18eb1c41387dd4480",
+      "time": 1791959892,
+      "dust": "bb5f4b74229a95748ebee495f783f217b70ef0df5cc7cf3faab0a8c0eb0f3366bb"
+     },
+     {
+      "type": "removed",
+      "ref": "34620b187a17806e6afe40a2dbd14e09d0a91331339274a0e40adf363115fd9f#0",
+      "tx": "7fd56a3fbd95d4e835dea336c09fe5a95fc9127680a09c722b9952e09ccbec30",
+      "time": 1792190482,
+      "dust": "9a90b8a731e5d588970b1dbafa42139fead8ad43143067eb68ea8d30fe6c63329a"
+     },
+     {
+      "type": "registered",
+      "ref": "7fd56a3fbd95d4e835dea336c09fe5a95fc9127680a09c722b9952e09ccbec30#0",
+      "tx": "7fd56a3fbd95d4e835dea336c09fe5a95fc9127680a09c722b9952e09ccbec30",
+      "time": 1792190482,
+      "dust": "bb5f4b74229a95748ebee495f783f217b70ef0df5cc7cf3faab0a8c0eb0f3366bb"
+     }
+    ],
+    "read": 100
+   },
+   "midnight": {
+    "status": {
+     "registered": false,
+     "dustAddress": null,
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": []
+   },
+   "midnightSkipped": false
+  },
+  "never": {
+   "net": "mainnet",
+   "stake": "stake1u9c48he0fffrfx4v8dcxlvlv3eg2jyzcek5dyhq0hfmfcec2ayp5s",
+   "now": 1792669105,
+   "live": [],
+   "others": [],
+   "cnight": {
+    "total": "0n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [],
+    "read": 0
+   },
+   "midnight": {
+    "status": {
+     "registered": false,
+     "dustAddress": null,
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": []
+   },
+   "midnightSkipped": false
+  },
+  "otherNetwork": {
+   "net": "mainnet",
+   "stake": "stake1ux8d6a2h40fvrcjzh5fqpc9yujfvr3quvrvvv007yn8u0ngxh6g67",
+   "now": 1792669135,
+   "live": [],
+   "others": [
+    {
+     "net": "preview",
+     "count": 1
+    }
+   ],
+   "cnight": {
+    "total": "0n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [],
+    "read": 0
+   },
+   "midnight": {
+    "status": {
+     "registered": false,
+     "dustAddress": null,
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": null,
+     "utxoOutputIndex": null
+    },
+    "registrations": []
+   },
+   "midnightSkipped": false
+  },
+  "preprodSingle": {
+   "net": "preprod",
+   "stake": "stake_test1uq4hpm9qnaxpq8kgf8u8famp3pq5awph5982g7j6e2qtdqqnnwpdj",
+   "now": 1792669167,
+   "live": [
+    {
+     "tx": "18d3f9fdd73ce9916e876cf872c30f90d998eb22a66feadb5e9106c9af00a7fa",
+     "ix": 0,
+     "time": 1771441123,
+     "dust": "73d40ac380a646d56d74b1557cf15e682a57bab3c15747175f3be644121d832619"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "1000n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "18d3f9fdd73ce9916e876cf872c30f90d998eb22a66feadb5e9106c9af00a7fa#0",
+      "tx": "18d3f9fdd73ce9916e876cf872c30f90d998eb22a66feadb5e9106c9af00a7fa",
+      "time": 1771441123,
+      "dust": "73d40ac380a646d56d74b1557cf15e682a57bab3c15747175f3be644121d832619"
+     }
+    ],
+    "read": 3
+   },
+   "midnight": {
+    "status": {
+     "registered": true,
+     "dustAddress": "mn_dust_preprod1w02q4suq5erd2mt5k92heu27dq490w4nc9t5w96l80nygysasvnpjtw8kq2",
+     "nightBalance": "1000",
+     "generationRate": "8267000",
+     "currentCapacity": "5000000000000",
+     "utxoTxHash": "18d3f9fdd73ce9916e876cf872c30f90d998eb22a66feadb5e9106c9af00a7fa",
+     "utxoOutputIndex": 0
+    },
+    "registrations": [
+     {
+      "dustAddress": "mn_dust_preprod1w02q4suq5erd2mt5k92heu27dq490w4nc9t5w96l80nygysasvnpjtw8kq2",
+      "valid": true,
+      "nightBalance": "1000",
+      "generationRate": "8267000",
+      "maxCapacity": "5000000000000",
+      "currentCapacity": "5000000000000",
+      "utxoTxHash": "18d3f9fdd73ce9916e876cf872c30f90d998eb22a66feadb5e9106c9af00a7fa",
+      "utxoOutputIndex": 0
+     }
+    ]
+   },
+   "midnightSkipped": false
+  },
+  "noNight": {
+   "net": "preview",
+   "stake": "stake_test1urkk5lxlnufk8wgjf878p72t55gke44jftgf84p3jmgvt9st8ph23",
+   "now": 1792669199,
+   "live": [
+    {
+     "tx": "4957840dbe0cafaeed2859e17a4dfff1b567457af32104791d92870a6ad6c84e",
+     "ix": 0,
+     "time": 1771117294,
+     "dust": "739d75309a28a302cc6e0ef37ccf03660ccda4f952be1ec0abfe263f1343589224"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "0n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "4957840dbe0cafaeed2859e17a4dfff1b567457af32104791d92870a6ad6c84e#0",
+      "tx": "4957840dbe0cafaeed2859e17a4dfff1b567457af32104791d92870a6ad6c84e",
+      "time": 1771117294,
+      "dust": "739d75309a28a302cc6e0ef37ccf03660ccda4f952be1ec0abfe263f1343589224"
+     }
+    ],
+    "read": 3
+   },
+   "midnight": {
+    "status": {
+     "registered": true,
+     "dustAddress": "mn_dust_preview1wwwh2vy69z3s9nrwpmehencrvcxvmf8e22lpas9tlcnr7y6rtzfzgrll75a",
+     "nightBalance": "0",
+     "generationRate": "0",
+     "currentCapacity": "0",
+     "utxoTxHash": "4957840dbe0cafaeed2859e17a4dfff1b567457af32104791d92870a6ad6c84e",
+     "utxoOutputIndex": 0
+    },
+    "registrations": [
+     {
+      "dustAddress": "mn_dust_preview1wwwh2vy69z3s9nrwpmehencrvcxvmf8e22lpas9tlcnr7y6rtzfzgrll75a",
+      "valid": true,
+      "nightBalance": "0",
+      "generationRate": "0",
+      "maxCapacity": "0",
+      "currentCapacity": "0",
+      "utxoTxHash": "4957840dbe0cafaeed2859e17a4dfff1b567457af32104791d92870a6ad6c84e",
+      "utxoOutputIndex": 0
+     }
+    ]
+   },
+   "midnightSkipped": false
+  },
+  "previewGenerating": {
+   "net": "preview",
+   "stake": "stake_test1uraqwvewc5pp5vc4el8zsh69ztll4ltwunzmejaq8g754tgdh53th",
+   "now": 1792669250,
+   "live": [
+    {
+     "tx": "84692c3354692c89bd2f05d56ae6f4d185bdbe44ef13ffa85fa86a0e85e344b0",
+     "ix": 0,
+     "time": 1792582382,
+     "dust": "736303bdde512a109fdea395e4c7a7816be7d44aed9546c27e9f12925b257fbe71"
+    }
+   ],
+   "others": [],
+   "cnight": {
+    "total": "1000000000n",
+    "recent": "0n"
+   },
+   "history": {
+    "events": [
+     {
+      "type": "registered",
+      "ref": "84692c3354692c89bd2f05d56ae6f4d185bdbe44ef13ffa85fa86a0e85e344b0#0",
+      "tx": "84692c3354692c89bd2f05d56ae6f4d185bdbe44ef13ffa85fa86a0e85e344b0",
+      "time": 1792582382,
+      "dust": "736303bdde512a109fdea395e4c7a7816be7d44aed9546c27e9f12925b257fbe71"
+     }
+    ],
+    "read": 3
+   },
+   "midnight": {
+    "status": {
+     "registered": true,
+     "dustAddress": "mn_dust_preview1wd3s80w72y4pp8775w27f3a8s94704z2ak25dsn7nuffyke907l8zlyugnt",
+     "nightBalance": "1000000000",
+     "generationRate": "8267000000000",
+     "currentCapacity": "718319630000000000",
+     "utxoTxHash": "84692c3354692c89bd2f05d56ae6f4d185bdbe44ef13ffa85fa86a0e85e344b0",
+     "utxoOutputIndex": 0
+    },
+    "registrations": [
+     {
+      "dustAddress": "mn_dust_preview1wd3s80w72y4pp8775w27f3a8s94704z2ak25dsn7nuffyke907l8zlyugnt",
+      "valid": true,
+      "nightBalance": "1000000000",
+      "generationRate": "8267000000000",
+      "maxCapacity": "5000000000000000000",
+      "currentCapacity": "718319630000000000",
+      "utxoTxHash": "84692c3354692c89bd2f05d56ae6f4d185bdbe44ef13ffa85fa86a0e85e344b0",
+      "utxoOutputIndex": 0
+     }
+    ]
+   },
+   "midnightSkipped": false
+  }
+ }
+}
