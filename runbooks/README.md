@@ -28,6 +28,7 @@ issue on behalf of a user vs. MNF/STL accounts triaging and authoring runbooks.
 | [Compact compile fails at the proving keys](compact-zkir-keygen-failures-runbook/compact-zkir-keygen-failures-runbook.md) | `compact compile` gets to `Compiling N circuits:` and stops with `Exception: zkir returned a non-zero exit status N`, or sits on that line. -4 is a CPU without ADX (Intel Core before Broadwell, Atom-class Celeron and Pentium up to Tremont, AMD before Zen, or a VM with a generic CPU model such as `kvm64` or Proxmox's default `x86-64-v2-AES`); -9 is out of memory (zkir peaked at 2.8 GB for a k=19 circuit); 1 is a public-parameter download that failed (`Failed to fetch data … Giving up.`; zkir 0.31.x can't download from srs.midnight.network) or a damaged cached file (`Hash mismatch in data stored at`); 101 is a zkir panic (four have issues). Also `compiler toolchain was terminated by a signal` from a broken install or too little memory, and `ZKIR not found` or status 127 from a broken install; and a Linux container on a Mac where key generation never finished. A failed compile leaves 0-byte keys and keeps any older `contract/`. Checker that reads the compile output and checks the CPU, memory limit, install and parameter cache; tested on the real output of each cause. |
 | [Test funds don't arrive from the faucet](wallet-test-funds-runbook/wallet-test-funds-runbook.md) | A Preview or Preprod faucet request hangs, errors or never arrives, or tNIGHT arrived but there is no DUST. A read-only script shows which, and where to go next. |
 | [DUST doesn't arrive after registering cNIGHT](cnight-dust-after-registration-runbook/cnight-dust-after-registration-runbook.md) | cNIGHT was registered for DUST in the cNgD DApp and no DUST has arrived, the DApp stays on "Registration Syncing" or says "NO REGISTRATION FOUND", or the DApp, the wallet and the indexer show different DUST figures. A read-only script reads the registration on Cardano and on Midnight and names the state: still inside the wait, removed, duplicated, generating for another DUST address, no cNIGHT on the key, or generating, with a DApp figure that counts only part of the NIGHT. |
+| [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) | npm or yarn fails before any Midnight code runs: no package.json, a missing script, Windows paths under WSL, a Node engine warning, EACCES on a global install, or a project made from an archived repo or create-mn-app. |
 
 ## Error-string lookup
 
@@ -102,6 +103,23 @@ Triage shortcut: search the issue body or logs for these exact strings (a grep i
 | `Transaction submission error` on a faucet page | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |
 | `Could not find Task with id` (faucet request status) | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |
 | `Token request failed due to timeout` (faucet) | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |
+| `Could not read package.json` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `Missing script:` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `UNC paths are not supported` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `Defaulting to Windows directory` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `EPERM: operation not permitted` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `EBADENGINE` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `EBADDEVENGINES` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `EACCES: permission denied` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `command not found: yarn` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `yarn: command not found` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `However the current global version of Yarn is` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `Command 'nvm' not found` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `failed to resolve` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `EJSONPARSE` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `ENOSPC: no space left on device` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `This repository is archived and no longer maintained` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
+| `DEPRECATED — migrate to Kapa + Midnight Expert` | [npm, yarn or Node fail while setting up a Midnight project](toolchain-project-setup-runbook/toolchain-project-setup-runbook.md) |
 
 ## Conventions for adding a runbook
 
