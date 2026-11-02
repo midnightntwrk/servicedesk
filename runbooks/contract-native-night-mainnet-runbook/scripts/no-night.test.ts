@@ -7,7 +7,7 @@
 //
 //   cd examples/token-transfers
 //   compact compile +0.31.1 contract/token-transfers.compact contract/managed/token-transfers
-//   yarn env:up
+//   npm run env:up
 //   NODE_OPTIONS='--experimental-vm-modules' MIDNIGHT_NETWORK=local npx vitest run src/test/no-night.test.ts
 //
 // Alice (a genesis seed) has NIGHT and deploys. Dave (a non-genesis seed) gets DUST without NIGHT: a
