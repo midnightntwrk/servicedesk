@@ -33,6 +33,9 @@ Package discovery walks `<project>/node_modules`, follows symlinks to their real
 directory is counted once. Copies outside every `node_modules` (a contract package that isn't
 linked in) are only found through `--compiled`. Yarn Plug'n'Play is detected and skipped.
 
+Each expected version comes from the network entry's `version` field, or, in matrix copies from
+before midnight-docs `f0d3fdc` (2026-10-09), from the version at the end of its `tag`.
+
 If the matrix has no `Compact toolchain` or `Compact runtime` entry for the network, the script
 stops with exit 1 rather than compare against nothing. The same goes for a `--project` with no
 `node_modules` (unless it's Yarn Plug'n'Play): every package check depends on it, so carrying on
@@ -140,10 +143,55 @@ compiler is 0.34.0) and is left out below.
 The Blockfrost success path (a valid token) was not tested. In review on #237, the script and the
 facts were re-checked independently on Linux with Node 24.16.0.
 
+## Re-checked 2026-11-04 (toolchain 0.36.0, `compact-runtime` 0.21.0)
+
+Toolchain 0.36.0 was released on 2026-11-04 and `compact-runtime` 0.21.0 became npm `latest` on
+2026-11-03. Machine: macOS x86_64, Node 24.20.0, Docker 28.0.4. Same one-circuit counter.
+
+1. **The script could not run against the live matrix.** midnight-docs `f0d3fdc` (2026-10-09)
+   moved each version into a `version` field and set most `tag`s to `null` (the toolchain's became
+   `compactc-v0.31.1`). The script read only `tag`, so every run since then stopped with exit 1:
+   `the support matrix has no 'Compact runtime' version for preprod`. It now reads `version` and
+   falls back to `tag`; runs against the live matrix and against the 2026-10-01 copy
+   (`a7a9cfe`) give the same expected versions.
+2. **Runtime check.** Compiled with 0.31.1, 0.35.0 and 0.36.0 (`checkRuntimeVersion('0.16.0')`,
+   `('0.20.0')`, `('0.21.0')`) and imported with runtimes 0.16.0, 0.20.0 and 0.21.0. Each loaded
+   only with its own runtime; the other six pairs threw `CompactError: Version mismatch: compiled
+   code expects X, runtime is Y`, including `expects 0.16.0, runtime is 0.21.0` for 0.31.1.
+3. **Through midnight-js 4.1.1** (the same offline `createUnprovenDeployTxFromVerifierKeys`
+   harness). A 0.31.1 contract with the stack's own runtime: OK. After an unpinned
+   `npm i @midnight-ntwrk/compact-runtime` (0.21.0, on `@midnightntwrk/onchain-runtime-v4`
+   4.0.0-rc.5): a 0.36.0 contract gives `ContractConfigurationError: Failed to configure
+   constructor context with coin public key`, cause `TypeError: Cannot read properties of undefined
+   (reading 'coinPublicKey')`; a 0.31.1 contract gives `Version mismatch: compiled code expects
+   0.16.0, runtime is 0.21.0`.
+4. **ZKIR.** 0.36.0 writes `midnight:ir-source[v3-generic]` with no flag (0.31.1 and 0.35.0 still
+   write `[v2]`). `compact compile +0.36.0 --feature-zkir-v3 …` prints only the `Usage: compactc.bin
+   …` line and exits 1. Proof server 8.1.3 (`midnightntwrk/proof-server:8.1.3`, the matrix
+   version now): `POST /k` with the 0.31.1 `.bzkir` → `5`, HTTP 200; with the 0.36.0 `.bzkir` →
+   `Unsupported ZKIR version`, HTTP 400.
+5. **Script runs** (preprod unless noted):
+
+   | Project | Expected | Exit | Flagged |
+   |---|---|---|---|
+   | Empty `node_modules`, live matrix (before the fix) | could not run | 1 | no `Compact runtime` version |
+   | Empty `node_modules`, live matrix / 2026-10-01 matrix | no mismatch | 0 / 0 | compiler `WARN` |
+   | 0.36.0 contract, unpinned runtime 0.21.0 | mismatch | 2 | loaded runtime 0.21.0; contract wants 0.21.0; v4 vs v3 on-chain runtime; ZKIR v3 |
+   | 0.31.1 contract, unpinned runtime 0.21.0 | mismatch | 2 | loaded runtime; contract loads 0.21.0; v4 vs v3 on-chain runtime |
+   | 0.31.1 contract, no runtime added (preprod and preview) | no mismatch | 0 | — |
+   | 0.31.1 contract with `--feature-zkir-v3`, mainnet / 2026-10-01 matrix | mismatch | 2 | ZKIR v3; the fix names proof server 8.1.3 / 8.1.0 |
+   | Matrix with the runtime's `version` removed | could not run | 1 | no `Compact runtime` version |
+
+   The ZKIR row's note and fix now say that 0.36 writes v3 without a flag, take the proof server
+   version from the matrix, and point at `compact compile +<matrix compiler>`.
+
+Not re-run: the wallet SDK, ledger-vs-node and package-manager layouts above. Nothing they depend
+on changed in the matrix or on npm `latest`.
+
 ## Re-verify when versions move
 
-- The matrix: component names (`Compact runtime`, `Compact toolchain`, …) and the `tag` format
-  (`toolchain-0.31.1`) are what the script looks up.
+- The matrix: component names (`Compact runtime`, `Compact toolchain`, …) and the `version`
+  field (or, in older copies, the `tag` format `toolchain-0.31.1`) are what the script looks up.
 - Which runtime each compiler pins (`checkRuntimeVersion` in the compiled `contract/index.js`),
   and which on-chain runtime package each `compact-runtime` depends on.
 - What midnight-js pins: `compact-runtime`, `compact-js`, `onchain-runtime-v3`, `ledger-v8`
