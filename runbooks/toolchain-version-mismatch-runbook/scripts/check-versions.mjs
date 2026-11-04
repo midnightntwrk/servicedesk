@@ -332,9 +332,12 @@ const listVersions = (cs) => [...new Set(cs.map((c) => c.version))].join(', ');
 async function main() {
   const matrixSrc = opts.matrix ?? MATRIX_URL;
   const matrix = await loadMatrix(matrixSrc);
+  // Each network entry has `version` (since midnight-docs f0d3fdc, 2026-10-09; `tag` is often null
+  // now). Older copies of the matrix only have `tag`, e.g. `toolchain-0.31.1`.
   const expectedFor = (component) => {
     const c = matrix.components.find((x) => x.component === component);
-    return fullVer(c?.versions?.[opts.network]?.tag);
+    const v = c?.versions?.[opts.network];
+    return fullVer(v?.version) ?? fullVer(v?.tag);
   };
   // These two decide MISMATCH rows. If the matrix no longer has them, stop rather than compare
   // against nothing.
