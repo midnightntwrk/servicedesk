@@ -127,10 +127,9 @@ Four couplings turn that drift into the errors above:
    0.35 and 0.36) run on `@midnightntwrk/onchain-runtime-v4`, a 4.0.0 release candidate. No
    released midnight-js can deploy those contracts. Installing the newer runtime only turns the
    version error into the `coinPublicKey` one. The midnight-js 5.0.0 release candidates (npm `rc`
-   tag, 5.0.0-rc.5 at the last check) do depend on the newer runtimes (0.20.0 in
-   `midnight-js-protocol`, 0.21.0-rc.0 in `midnight-js-contracts`) and `onchain-runtime-v4`, but
-   they're built for the ledger-9 line, which no network runs yet, so they aren't the way out
-   either.
+   tag, 5.0.0-rc.5 at the last check) do depend on runtime 0.20.0 (through
+   `midnight-js-protocol`) and `onchain-runtime-v4`, but they're built for the ledger-9 line,
+   which no network runs yet, so they aren't the way out either.
 3. **The on-chain runtime's classes are checked with `instanceof`.** `onchain-runtime-v3` owns
    WASM classes such as `ContractMaintenanceAuthority`. The contract (through its
    `compact-runtime`) and midnight-js (through `compact-js`'s `compact-runtime`) must reach the
@@ -154,6 +153,15 @@ what a node runs, query it (Key identifiers below): image tags and the matrix's 
 reliably identify the build.
 
 ## Key identifiers
+
+The daily facts check tests the rows below. They hold the matrix values this runbook and
+`check-versions.mjs` rely on, so a change to the matrix's format or versions shows up there. If a
+source disagrees with a row, the source is right.
+
+| Fact this runbook relies on | Source of truth | Must contain |
+|---|---|---|
+| The networks' compiler, read from each entry's `version` field | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact toolchain"` `"version": "0.31.1"` |
+| The networks' Compact runtime, read the same way | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact runtime"` `"version": "0.16.0"` |
 
 - **Support matrix:** page `https://docs.midnight.network/relnotes/support-matrix`;
   machine-readable `midnight-docs/docs/relnotes/support-matrix.json`
