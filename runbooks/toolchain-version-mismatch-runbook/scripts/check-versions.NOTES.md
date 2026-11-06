@@ -188,6 +188,16 @@ Toolchain 0.36.0 was released on 2026-11-04 and `compact-runtime` 0.21.0 became 
 Not re-run: the wallet SDK, ledger-vs-node and package-manager layouts above. Nothing they depend
 on changed in the matrix or on npm `latest`.
 
+### npm `latest` moved again (2026-11-06)
+
+midnight-js 5.0.0, compact-js 3.0.0, testkit-js 5.0.0, wallet SDK 2.0.0 (both scopes) and
+`wallet-sdk-facade` 5.0.0 became npm `latest` on 2026-11-05 and 2026-11-06; `onchain-runtime-v4`
+4.0.0 on 2026-11-04. midnight-js 5.0.0 pins `compact-runtime` 0.21.0 and 0.16.0 (as
+`compact-runtime-ledger8`), `ledger-v8` 8.1.3 and `ledger-v9` 1.0.0, and its deploy functions take
+a `MidnightConfig` and have separate ledger 8 and ledger 9 overloads. The support matrix still
+lists midnight-js 4.1.1 and wallet SDK 1.2.0. The runbook's table and wording were updated; none of
+the reproductions above were re-run on 5.0.0.
+
 ## Re-verify when versions move
 
 - The matrix: component names (`Compact runtime`, `Compact toolchain`, …) and the `version`

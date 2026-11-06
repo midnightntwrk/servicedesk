@@ -10,7 +10,8 @@ the error to the cause, confirm it with one read-only script, and pin the projec
 supported set.
 
 _Compiled 2026-10-05 from local reproductions; re-checked 2026-11-04 for toolchain 0.36.0 and
-`compact-runtime` 0.21.0 (method and results in
+`compact-runtime` 0.21.0, and npm `latest` re-read on 2026-11-06 after midnight-js 5.0.0 and wallet
+SDK 2.0.0 shipped (method and results in
 [`scripts/check-versions.NOTES.md`](scripts/check-versions.NOTES.md)). Sources, pinned:_
 
 - _support matrix: `midnight-docs` `docs/relnotes/support-matrix.json` at
@@ -102,18 +103,19 @@ before anything is submitted.
 
 **npm `latest` is not the network.** The support matrix lists the one set tested against each
 network; at the last check it was the same for preview, preprod and mainnet. The newest releases
-were ahead of it for the compiler and the runtime packages, level for midnight-js, and behind it
-for one wallet SDK tag:
+were ahead of it for the compiler, the runtime packages, midnight-js, testkit-js and the wallet
+SDK:
 
 | Component | Network (matrix) | Newest release |
 |---|---|---|
 | Compact compiler (`compact list`, not npm) | 0.31.1 | 0.36.0 |
 | `@midnight-ntwrk/compact-runtime` | 0.16.0 | 0.21.0 |
-| `@midnight-ntwrk/compact-js` | 2.5.1 | 2.5.3 |
+| `@midnight-ntwrk/compact-js` | 2.5.1 | 3.0.0 |
 | `@midnight-ntwrk/onchain-runtime-v3` | 3.0.0 | 3.1.2 |
 | `@midnight-ntwrk/platform-js` | 2.2.4 | 3.0.0 |
-| `@midnight-ntwrk/midnight-js-*` | 4.1.1 | 4.1.1 (pins compact-runtime 0.16.0, compact-js 2.5.1, ledger-v8 8.1.0) |
-| `@midnight-ntwrk/wallet-sdk` | 1.2.0 | `latest` tag is **1.1.0** (1.2.0 is published; `@midnightntwrk/wallet-sdk` `latest` is 1.2.0) |
+| `@midnight-ntwrk/midnight-js-*` | 4.1.1 (pins compact-runtime 0.16.0, compact-js 2.5.1, ledger-v8 8.1.0) | 5.0.0 (pins compact-runtime 0.21.0 and, as `compact-runtime-ledger8`, 0.16.0; ledger-v8 8.1.3 and ledger-v9 1.0.0) |
+| `@midnight-ntwrk/testkit-js` | 4.1.1 | 5.0.0 |
+| `@midnight-ntwrk/wallet-sdk` | 1.2.0 | 2.0.0 (`latest` under both scopes) |
 
 Four couplings turn that drift into the errors above:
 
@@ -124,12 +126,13 @@ Four couplings turn that drift into the errors above:
 2. **midnight-js pins the runtime too, and the newest runtimes are a different generation.**
    midnight-js 4.1.1 brings `compact-js` 2.5.1 and `compact-runtime` 0.16.0, which run on
    `@midnight-ntwrk/onchain-runtime-v3`. `compact-runtime` 0.19, 0.20 and 0.21 (compilers 0.34,
-   0.35 and 0.36) run on `@midnightntwrk/onchain-runtime-v4`, a 4.0.0 release candidate. No
-   released midnight-js can deploy those contracts. Installing the newer runtime only turns the
-   version error into the `coinPublicKey` one. The midnight-js 5.0.0 release candidates (npm `rc`
-   tag, 5.0.0-rc.5 at the last check) do depend on runtime 0.20.0 (through
-   `midnight-js-protocol`) and `onchain-runtime-v4`, but they're built for the ledger-9 line,
-   which no network runs yet, so they aren't the way out either.
+   0.35 and 0.36) run on `@midnightntwrk/onchain-runtime-v4`. midnight-js 4.1.1 can't deploy
+   those contracts: installing the newer runtime only turns the version error into the
+   `coinPublicKey` one. midnight-js 5.0.0 (npm `latest` at the last check) carries both
+   generations: `compact-runtime` 0.21.0 on `onchain-runtime-v4`, and 0.16.0 as
+   `compact-runtime-ledger8`, with separate ledger 8 and ledger 9 deploy paths chosen through a
+   new `MidnightConfig` argument. The support matrix still lists 4.1.1, and every reproduction in
+   this runbook used 4.1.1; it hasn't been re-run on 5.0.0.
 3. **The on-chain runtime's classes are checked with `instanceof`.** `onchain-runtime-v3` owns
    WASM classes such as `ContractMaintenanceAuthority`. The contract (through its
    `compact-runtime`) and midnight-js (through `compact-js`'s `compact-runtime`) must reach the
@@ -140,7 +143,8 @@ Four couplings turn that drift into the errors above:
 4. **Wallet SDK packages ship as a set.** `wallet-sdk-facade` 4.1.0 imports `Clock`, which only
    `wallet-sdk-utilities` 1.2.1 and later export, but it declares utilities only as a dev
    dependency, and the `wallet-sdk` 1.2.0 umbrella accepts `^1.2.0`. The packages are published
-   under two scopes, `@midnight-ntwrk/` and `@midnightntwrk/`, whose `latest` tags differ.
+   under two scopes, `@midnight-ntwrk/` and `@midnightntwrk/`. At the last check both scopes'
+   `latest` was 2.0.0, not the matrix's 1.2.0.
    testkit-js 4.1.1 pins `@midnight-ntwrk/wallet-sdk` 1.1.0, so a project that also installs the
    matrix's wallet-sdk 1.2.0 has both.
 
@@ -245,7 +249,7 @@ source disagrees with a row, the source is right.
 
 1. **Pin the matrix set exactly.** At the last check, for all three networks:
    `@midnight-ntwrk/compact-runtime` 0.16.0, every `@midnight-ntwrk/midnight-js-*` 4.1.1, and
-   `@midnight-ntwrk/wallet-sdk` 1.2.0 (its `latest` tag is 1.1.0, so name the version). Use exact
+   `@midnight-ntwrk/wallet-sdk` 1.2.0 (its `latest` tag is 2.0.0, so name the version). Use exact
    versions in `package.json` and commit the lockfile. Take versions from the matrix, not from
    `npm view <pkg> version` or an unpinned install, which give `latest`. **Don't match the runtime
    to the contract:** match both to the matrix, and do this together with step 2, or the
@@ -291,7 +295,8 @@ source disagrees with a row, the source is right.
 - [midnight-docs#1494](https://github.com/midnightntwrk/midnight-docs/issues/1494): support-matrix
   `tag`, `github` and `container` fields that don't resolve.
 - [midnight-wallet#791](https://github.com/midnightntwrk/midnight-wallet/issues/791): `latest` on
-  the `@midnight-ntwrk` wallet SDK packages still points at the 1.1.0 line.
+  the `@midnight-ntwrk` wallet SDK packages pointed at the 1.1.0 line while the matrix listed 1.2.0.
+  At the last check it pointed at 2.0.0 under both scopes, still not the matrix's version.
 - `servicedesk#88`: the `Clock` export, fixed by `wallet-sdk-utilities` 1.2.1.
 
 ## Reference material
