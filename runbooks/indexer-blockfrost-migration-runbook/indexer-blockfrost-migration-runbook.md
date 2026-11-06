@@ -124,22 +124,22 @@ Include the error text, the token check's output, and `npm ls @midnight-ntwrk/wa
 
 ## Key identifiers
 
-Each row names a public source and text it must contain: a repo file (`github:`), a published package file (`npm:`), or an issue's state (`issue:`). [check-runbook.mjs](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/authoring/check-runbook.mjs) tests every row daily against each source's newest version. For your installed version, look under `node_modules/<package>/<path>`. If a source disagrees with a row, the source is right.
+Each row names a public source and text it must contain: a repo file (`github:`), a published package file (`npm:`), or an issue's state (`issue:`). [check-runbook.mjs](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/authoring/check-runbook.mjs) tests every row daily against each source's newest version, or the npm version a row pins. For your installed version, look under `node_modules/<package>/<path>`. If a source disagrees with a row, the source is right.
 
 | Fact this runbook relies on | Source of truth | Must contain |
 |---|---|---|
 | The docs give the endpoints, the token setup and its check, token hygiene for logs, each error's first fix, the funding wait, the progress interval and the full-sync time | `github:midnightntwrk/midnight-docs/docs/guides/networks-and-environments.mdx`, published as [Networks and environments](https://docs.midnight.network/guides/networks-and-environments) | `{/* #migrating-from-the-midnight-hosted-mainnet-endpoints */}` `indexer.preprod.midnight.network` `rpc.preprod.midnight.network` `indexer.mainnet.midnight.network` `rpc.mainnet.midnight.network` `nightpreprod` `nightmainnet` `value from URLs and errors before you log them` `Missing project token` `Invalid project token` `TypeError: Invalid URL` `values inserted non-linearly` `transaction ids differ between indexers` `takes over an hour` `Wallet sync timeout` `backing off to about 4 minutes` `or for spendable DUST` |
 | Event ids are database row ids that each indexer assigns | `github:midnightntwrk/midnight-indexer/indexer-common/migrations/postgres/001_initial.sql` | `CREATE TABLE ledger_events (` `id BIGSERIAL PRIMARY KEY` |
-| The dust wallet saves its last applied event id | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet/dist/v1/Serialization.js` | `offset: w.progress?.appliedIndex` |
-| The dust wallet resumes sync from that saved id | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet/dist/v1/Sync.js` | `const { appliedIndex } = state.progress;` |
-| Unshielded "synced" compares the applied id with the indexer's latest progress | `npm:@midnight-ntwrk/wallet-sdk-unshielded-wallet/dist/v1/SyncProgress.js` | `isStrictlyComplete()` `return SyncProgress.isCompleteWithin(this, 0n)` |
+| The dust wallet saves its last applied event id | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet@4.2.0/dist/v1/Serialization.js` | `offset: w.progress?.appliedIndex` |
+| The dust wallet resumes sync from that saved id | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet@4.2.0/dist/v1/Sync.js` | `const { appliedIndex } = state.progress;` |
+| Unshielded "synced" compares the applied id with the indexer's latest progress | `npm:@midnight-ntwrk/wallet-sdk-unshielded-wallet@3.1.0/dist/v1/SyncProgress.js` | `isStrictlyComplete()` `return SyncProgress.isCompleteWithin(this, 0n)` |
 | Progress messages back off on an idle subscription | `github:midnightntwrk/midnight-indexer/indexer-api/src/infra/api/v4/subscription/polling.rs` | `IDLE_BACKOFF_MAX_MULTIPLE` |
 | The indexer's config sets the progress interval | `github:midnightntwrk/midnight-indexer/indexer-api/config.yaml` | `progress_update_interval` |
-| `waitForFunds` takes no timeout and uses the `syncWallet` default of 90 s | `npm:@midnight-ntwrk/testkit-js/dist/index.mjs` | `const waitForFunds = async (wallet, env, fundFromFaucet = false, unshieldedKeystore) =>` `await syncWallet(wallet);` `timeout = 90_000)` |
+| `waitForFunds` takes no timeout and uses the `syncWallet` default of 90 s | `npm:@midnight-ntwrk/testkit-js@4.1.1/dist/index.mjs` | `const waitForFunds = async (wallet, env, fundFromFaucet = false, unshieldedKeystore) =>` `await syncWallet(wallet);` `timeout = 90_000)` |
 | The `midnight-examples` cutter writes the indexer host into the manifest | `github:midnightntwrk/midnight-examples/packages/fast-sync/scripts/cut-preseed.ts` | `const indexer = new URL(config.indexer).host;` |
 | That cutter seeds only wallets whose birthday is at or after the bundle height | `github:midnightntwrk/midnight-examples/FAST-SYNC.md` | `seeds a wallet whose birthday is at or after the reference height` |
 | `midnight-examples` has a funding helper that waits for spendable DUST | `github:midnightntwrk/midnight-examples/packages/fast-sync/src/funding.ts` | `registerNightUtxosForDustGeneration` `availableCoins.length >= minCoins` |
-| Spendable DUST is `availableCoins` on the dust wallet, whose state is saved with `serializeState` and read with `restore` | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet/dist/DustWallet.d.ts` | `get availableCoins()` `serializeState(): Promise<TSerialized>` `restore(serializedState: TSerialized)` |
+| Spendable DUST is `availableCoins` on the dust wallet, whose state is saved with `serializeState` and read with `restore` | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet@4.2.0/dist/DustWallet.d.ts` | `get availableCoins()` `serializeState(): Promise<TSerialized>` `restore(serializedState: TSerialized)` |
 | A wallet cursor that survives renumbering has not shipped | `issue:midnightntwrk/midnight-wallet#781` | `open` |
 | Ids that are stable across indexer deployments have not shipped | `issue:midnightntwrk/midnight-indexer#1460` | `open` |
 
