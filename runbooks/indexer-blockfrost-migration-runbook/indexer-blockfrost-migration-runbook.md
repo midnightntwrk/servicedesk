@@ -124,7 +124,7 @@ Include the error text, the token check's output, and `npm ls @midnight-ntwrk/wa
 
 ## Key identifiers
 
-Each row names a public source and text it must contain: a repo file (`github:`), a published package file (`npm:`), or an issue's state (`issue:`). [check-runbook.mjs](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/authoring/check-runbook.mjs) tests every row daily. The npm rows are pinned to the versions the support matrix lists for the networks (wallet SDK 1.2.0, which brings `wallet-sdk-dust-wallet` 4.2.0 and `wallet-sdk-unshielded-wallet` 3.1.0, and testkit-js 4.1.1), because npm `latest` has moved to the wallet SDK 2.0 line. For your installed version, look under `node_modules/<package>/<path>`. If a source disagrees with a row, the source is right.
+Each row names a public source and text it must contain: a repo file (`github:`), a published package file (`npm:`), or an issue's state (`issue:`). [check-runbook.mjs](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/authoring/check-runbook.mjs) tests every row daily against each source's newest version, or the npm version a row pins. For your installed version, look under `node_modules/<package>/<path>`. If a source disagrees with a row, the source is right.
 
 | Fact this runbook relies on | Source of truth | Must contain |
 |---|---|---|
