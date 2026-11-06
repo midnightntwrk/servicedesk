@@ -332,9 +332,12 @@ const listVersions = (cs) => [...new Set(cs.map((c) => c.version))].join(', ');
 async function main() {
   const matrixSrc = opts.matrix ?? MATRIX_URL;
   const matrix = await loadMatrix(matrixSrc);
+  // Each network entry has `version` (since midnight-docs f0d3fdc, 2026-10-09; `tag` is often null
+  // now). Older copies of the matrix only have `tag`, e.g. `toolchain-0.31.1`.
   const expectedFor = (component) => {
     const c = matrix.components.find((x) => x.component === component);
-    return fullVer(c?.versions?.[opts.network]?.tag);
+    const v = c?.versions?.[opts.network];
+    return fullVer(v?.version) ?? fullVer(v?.tag);
   };
   // These two decide MISMATCH rows. If the matrix no longer has them, stop rather than compare
   // against nothing.
@@ -556,7 +559,8 @@ async function main() {
         }
       }
     }
-    // ZKIR v3 is rejected by proof server 8.1.0: "bad input" on /check and /prove.
+    // ZKIR v3 is rejected by proof servers 8.1.0 and 8.1.3: "bad input" on /check and /prove.
+    // Compilers before 0.36 write v3 only with --feature-zkir-v3; 0.36 always writes it.
     const zkirDir = path.join(compiledDir, 'zkir');
     let bz = [];
     let zkirReadable = true;
@@ -581,8 +585,9 @@ async function main() {
       }
     }
     if (v3) {
-      add('ZKIR format', `v3 (${v3} circuits)`, 'v2', 'MISMATCH', 'built with --feature-zkir-v3');
-      fix('The circuits were compiled to ZKIR v3 (--feature-zkir-v3). Proof server 8.1.0 rejects them: midnight-js gets HTTP 400 "bad input" from /check. Recompile without the flag.');
+      const ps = expectedFor('Proof server');
+      add('ZKIR format', `v3 (${v3} circuits)`, 'v2', 'MISMATCH', 'compiler 0.36+, or --feature-zkir-v3');
+      fix(`The circuits were compiled to ZKIR v3: compiler 0.36 and later always write it, older ones with --feature-zkir-v3. Proof server ${ps ?? '8.1.x'} rejects them: midnight-js gets HTTP 400 "bad input" from /check. Recompile with \`compact compile +${expToolchain} …\` and without --feature-zkir-v3.`);
     } else if (bz.length > unread) {
       add('ZKIR format', 'v2', 'v2', 'OK');
     }
