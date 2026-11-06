@@ -21,8 +21,9 @@ _Compiled 2026-10-11 from a recall test and local reproductions (method and resu
   `@midnight-ntwrk/wallet` 4.0.0_
 - _a corpus of 30 files written from memory by three AI models for ten everyday DApp tasks
   ([`scripts/cases/`](scripts/cases/))_
-- _maintained code, for the false-positive test: `midnight-examples` `95d4f50`, `example-bboard`
-  `f9df09a`, `midnight-local-dev` `902561d`, `example-counter` `273f083`_
+- _Midnight's own example code, for the false-positive test: `midnight-examples` `95d4f50`,
+  `example-bboard` `f9df09a`, `midnight-local-dev` `902561d`, `example-counter` `273f083` (the
+  last three are archived now)_
 
 _Versions, `latest` tags and package names move with every release: re-check them before
 asserting anything._
@@ -269,7 +270,7 @@ tasks and across models, which is what makes them worth a runbook. They fall int
 
    On the corpus it flags the line of 68 of the 70 SDK errors `tsc` reports. The two misses are
    wallet configuration objects with missing fields, which `tsc` reports. It also flags 16 lines
-   that `tsc` only reaches once an earlier error is fixed. On maintained example code
+   that `tsc` only reaches once an earlier error is fixed. On Midnight's own example code
    (`midnight-examples`, `example-bboard`, `midnight-local-dev`; 614 files) it reports nothing.
 2. **Or paste the error.** `--explain` takes npm, tsc or Node error text and says what it means
    and what to use:

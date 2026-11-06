@@ -266,9 +266,14 @@ Expect 1.2.0, 4.2.0 and 1.2.3. Anything else: install `@midnight-ntwrk/wallet-sd
 
 1. **Iterate on a local chain, and save Preprod for the final check.** A local network has almost
    no DUST history, so a wallet syncs in seconds. Every example in midnight-examples runs locally:
-   `yarn env:up` starts a node, indexer and proof server from the example's `compose.yml`, and
-   `yarn test:local` runs it with the local network's pre-funded wallets. `midnight-local-dev` gives
-   the same for any app.
+   in the example's folder, `npm run env:up` starts a node, indexer and proof server from its
+   `compose.yml`, and `npm run test:local` runs it with the local network's pre-funded wallets.
+   For a browser wallet on that network, `npm run fund:wallet <mn_dust_undeployed1… address>` from
+   the repo root gets it DUST. That replaces `midnight-local-dev`, which is archived. On Apple
+   silicon, `npm run env:up` stops with `no matching manifest for linux/arm64/v8`: the examples pin
+   `midnightntwrk/indexer-standalone:4.3.5`, which is published for amd64 only. Change the
+   indexer's image in `compose.yml` to `midnightntwrk/indexer-standalone:4.3.5-arm64` until the
+   examples move to a multi-arch tag.
 
    *Trade-off:* a local chain won't show Preprod-only problems such as the shut-down endpoints or
    faucet outages.

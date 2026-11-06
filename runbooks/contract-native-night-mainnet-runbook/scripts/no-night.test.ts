@@ -2,9 +2,13 @@
 // the position of a Mainnet wallet funded through cNIGHT. It's the experiment behind the
 // contract-native-night-mainnet runbook (results in check-night-usage.NOTES.md).
 //
-// Where it goes: midnight-examples, examples/token-transfers/src/test/no-night.test.ts (its imports are
-// relative to that folder). It runs on the example's local network only, never on a public one.
+// Where it goes: midnight-examples at commit 7c8c0a0, the one it was run on, in
+// examples/token-transfers/src/test/no-night.test.ts (its imports are relative to that folder). The
+// repo used Yarn then; later commits renamed @midnight-ntwrk/example-fast-sync and changed the
+// wallet and deploy APIs, so the test doesn't compile on main. It runs on the example's local
+// network only, never on a public one.
 //
+//   git checkout 7c8c0a0 && yarn install
 //   cd examples/token-transfers
 //   compact compile +0.31.1 contract/token-transfers.compact contract/managed/token-transfers
 //   yarn env:up
