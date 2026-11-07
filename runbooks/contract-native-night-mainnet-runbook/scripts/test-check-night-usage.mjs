@@ -627,6 +627,12 @@ const ERR_OTHER_TOKEN_JSON = ERR_RECEIVE_JSON.replace(ZEROS, 'ab'.repeat(32));
 const ERR_SEND_RPC = '2026-10-19 11:21:54        RPC-CORE: submitAndWatchExtrinsic(extrinsic: Extrinsic): ExtrinsicStatus:: 1010: Invalid Transaction: Custom error: 194';
 const ERR_SEND_JS = "Unexpected error submitting scoped transaction '<unnamed>': (FiberFailure) SubmissionError: Transaction submission error";
 const ERR_DUST = '(FiberFailure) Wallet.InsufficientFunds: Insufficient Funds: could not balance dust';
+// midnight-js 5.0.0's ProviderFailedError (atProviderMethod), with the causes it rebuilds.
+const MJS5_TAIL = ". The provider's own failure is on `cause`, with its message redacted of anything that could carry transaction or witness material; read the provider's own logs for the unredacted detail.";
+const ERR5_RECEIVE = `balanceTx rejected the transaction (circuit 'receiveNightTokens')${MJS5_TAIL}`;
+const ERR5_SEND = `submitTx rejected the transaction (circuit 'sendNightTokensToUser')${MJS5_TAIL}`;
+const ERR5_RECEIVE_CAUSE = `${ERR5_RECEIVE}\nInsufficientFundsError: Wallet.InsufficientFunds: Insufficient funds`;
+const ERR5_SEND_CAUSE = `${ERR5_SEND}\nSubmissionError: Transaction submission error\nSubmissionError: Transaction submission failed\nRpcError: 1010: Invalid Transaction: Custom error: 194`;
 const ERR_SHIELDED = `Unexpected error submitting scoped transaction '<unnamed>': (FiberFailure) Wallet.InsufficientFunds: Insufficient funds
     at Object.catch (file:///app/node_modules/@midnight-ntwrk/wallet-sdk-shielded/dist/v1/Transacting.js:180:32)`;
 
@@ -780,6 +786,14 @@ const cases = [
   ['error: SubmissionError without the code says where the code is', () => { const { code, j } = json(['--error', ERR_SEND_JS]); return code === 3 && j.summary.includes('RPC-CORE') && j.summary.includes('err.message'); }],
   ['error: another code is not this runbook', () => { const { code, j } = json(['--error', '1010: Invalid Transaction: Custom error: 182']); return code === 0 && j.verdict === null; }],
   ['error: unrelated text points to the lookup', () => { const r = text(['--error', 'ECONNREFUSED 127.0.0.1:6300']); return r.code === 0 && r.out.startsWith('Not this runbook') && r.out.includes('README.md#error-string-lookup') && !r.out.includes('Runbook:'); }],
+  ['error: midnight-js 5 balanceTx message alone could be, names the circuit and asks for err.cause.message', () => { const { code, j } = json(['--error', ERR5_RECEIVE]); return code === 3 && j.circuit === 'receiveNightTokens' && j.summary.includes('err.cause.message') && j.summary.includes('NIGHT receive'); }],
+  ['error: midnight-js 5 submitTx message alone could be, as a send', () => { const { code, j } = json(['--error', ERR5_SEND]); return code === 3 && j.circuit === 'sendNightTokensToUser' && j.summary.includes('Custom error: 194') && j.summary.includes('NIGHT send'); }],
+  ['error: midnight-js 5 balanceTx with its cause is decided by the circuit', () => { const { code, j } = json(['--error', ERR5_RECEIVE_CAUSE]); return code === 3 && j.summary.includes("circuit decides") && !j.summary.includes('JSON.stringify'); }],
+  ['error: midnight-js 5 submitTx with 194 in its causes is decided by the circuit', () => { const { code, j } = json(['--error', ERR5_SEND_CAUSE]); return code === 3 && j.summary.includes('194') && j.summary.includes("'sendNightTokensToUser'"); }],
+  ['error: midnight-js 5 on preprod is not this runbook', () => { const { code, j } = json(['--error', ERR5_RECEIVE_CAUSE, '--network', 'preprod']); return code === 0 && j.verdict === null && j.summary.includes('tNIGHT'); }],
+  ['error: midnight-js 5 proveTx is not this runbook', () => { const { code, j } = json(['--error', ERR5_RECEIVE.replace('balanceTx', 'proveTx')]); return code === 0 && j.verdict === null && j.summary.includes('Proving failed'); }],
+  ['error: midnight-js 5 DUST shortage is still not this runbook', () => { const { code, j } = json(['--error', `${ERR5_RECEIVE}\nInsufficientFundsError: Wallet.InsufficientFunds: Insufficient Funds: could not balance dust`]); return code === 0 && j.tokenType === 'dust'; }],
+  ['error: the err.cause advice says it prints {} on midnight-js 5', () => json(['--error', ERR_RECEIVE]).j.summary.includes('prints {}')],
   ['error: --error - reads stdin', () => { const { code, j } = json(['--error', '-'], ERR_RECEIVE_JSON); return code === 2 && j.verdict === 'night'; }],
   // As a module
   ['importing it doesn\'t run the command', () => { const r = spawnSync(process.execPath, ['--input-type=module', '-e', `import(${JSON.stringify(pathToFileURL(CHECK).href)}).then((m) => console.log(Object.keys(m).sort().join(',')))`], { encoding: 'utf8' }); return r.status === 0 && r.stdout.trim() === 'explainError,scanCompiled,scanSource,stripCode'; }],
