@@ -244,7 +244,7 @@ async function main() {
   if (identifier) {
     const tx = await findTransaction(net, identifier);
     if (!tx) {
-      say(`ON CHAIN FINDING: the ${net} indexer has no transaction with ID ${identifier}. Diagnose 2.`);
+      say(`ON CHAIN FINDING: the ${net} indexer has no transaction with ID ${identifier}.${net === 'preview' ? ' If it was sent before Preview was reset on 6 November 2026, it is gone with the old chain: Root cause 4.' : ''} Diagnose 2.`);
       finding = true;
     } else {
       const status = tx.transactionResult?.status ?? 'unknown';

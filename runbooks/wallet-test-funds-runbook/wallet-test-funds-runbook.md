@@ -36,7 +36,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 | `Failed to prove transaction`, `Insufficient funds to move …`, `Services are currently unavailable. Please try again later.` or `Transaction submission error` on the faucet page | Remediation 2 |
 | `You can't resubmit right now, next attempt is allowed at …` or `Token request failed due to timeout` | Remediation 2 |
 | tNIGHT is in the wallet but there is no DUST, so transactions cannot pay fees | Diagnose 3 |
-| tNIGHT, DUST or a DUST registration you had on Preview before the reset is gone | Root cause 4, then Remediation 1 and 3 |
+| Preview tNIGHT or DUST from before the reset is gone | Root cause 4, then Remediation 1 and 3 |
 
 ### Not this runbook
 
@@ -49,7 +49,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 1. **The faucet page only waits.** It submits a request, which the faucet calls a drip, then polls its status about every 10 s for as long as it is `PENDING`, showing `Your transaction is being submitted.` (measured). A faucet whose wallet is stuck, empty or failing to prove leaves it waiting, while its health endpoint can still answer `SERVING` (measured). The faucet's own code fails a stranded drip with `Token request failed due to timeout` and returns the address's daily slot; which version each host runs is not known.
 2. **Each faucet serves one network and keeps a daily limit per address, set by each deployment.** An address for another network, a shielded or DUST address, or a mistyped one gets `Provided address is invalid`, and no drip is created. So the two faucets for a network keep separate limits, and the Nethermind ones served the same address again after a few minutes (reported).
 3. **tNIGHT generates no DUST until it is registered.** The registration is a transaction the wallet submits, and the indexer marks each registered NIGHT output.
-4. **Preview was reset, not upgraded.** On 6 November 2026 Preview became a new ledger 9 chain, and nothing carried over: balances, DUST registrations, contracts and transaction history from before are gone, and the indexer only has the new chain. The endpoints, the faucets and the address format didn't change, so an old address still works: request tNIGHT again and register it again. Its genesis hash didn't change either (measured: `0x3c096de2…` before and after), so a wallet won't notice the reset by itself; resync it from genesis, which is quick on the new chain.
+4. **Preview was reset, not upgraded.** On 6 November 2026 it became a new chain and nothing carried over ([Preview reset](https://docs.midnight.network/relnotes/ledger-9#preview-reset)). Its genesis hash didn't change (measured: `0x3c096de2…`), so a wallet won't notice: resync it from genesis.
 
 ## Before you start
 
@@ -82,6 +82,7 @@ Run [scripts/check-test-funds.mjs](https://github.com/midnightntwrk/servicedesk/
    - `REQUEST … FAILED: <reason>`: the faucet gave up. `Could not find Task with id` means a mistyped `dripId` or a `--faucet` other than the page that made the request: fix it and run again. `Token request failed due to timeout`, or any other reason: Remediation 2.
    - `ON CHAIN ok: it paid … to this address`: the funds arrived. A wallet that does not show them has not synced: see Not this runbook. With no DUST, Diagnose 3.
    - `ON CHAIN FINDING: this transaction paid no tNIGHT to this address`: the page was given another address. Remediation 1.
+   - `ON CHAIN FINDING: … has no transaction`, sent on Preview before 6 November 2026: Root cause 4.
    - `ON CHAIN FINDING: … has no transaction`: run it again in a few minutes. Still missing 10 minutes after the page or the drip said it was sent: Stop and escalate.
    - `TNIGHT FINDING: no tNIGHT has ever reached this address`, with no drip or ID to check: the request never got through. Remediation 2.
 
