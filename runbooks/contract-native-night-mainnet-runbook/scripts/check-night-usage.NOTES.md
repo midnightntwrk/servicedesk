@@ -346,3 +346,15 @@ It found, and these are fixed:
   2026-10-20: a leftover deploy filter was removed from the affected nodes, and a test deploy was
   included in block 3,097,000. The deploy caveat came off the page (option 3, option 4 and the
   "Other errors" list) and off the checker's `Fix:` line. The NIGHT findings are unchanged.
+
+## Ledger 9 upgrade re-check (2026-11-07)
+
+- midnight-docs `docs/relnotes/ledger-9.mdx`: "The upgrade doesn't turn on the cNIGHT to mNIGHT
+  protocol token bridge on Mainnet. Turning it on is a separate governance action". Mainnet runs node
+  2.1.101 (`system_version` `2.1.101-913ec011`).
+- `decode-1010.mjs 194 --node 2.x`: `Invalid.BalanceCheckOutOfBounds`, the same as on 1.0.x.
+- The checker on midnight-examples PR #88's 0.36.0 `token-transfers.compact` (`pragma
+  language_version 0.28`): 9 exported circuits, `receiveNightTokens` (receive, line 37) and
+  `sendNightTokensToUser` (send, line 41), as on the 0.31.1 source.
+- Not run again on ledger 9: the receive and send failures themselves, so the midnight-js 5.0.0 and
+  wallet SDK 2.0.0 messages aren't checked. `test-check-night-usage.mjs`: 77 of 77.

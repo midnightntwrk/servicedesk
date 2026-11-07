@@ -30,7 +30,9 @@ import { fileURLToPath } from 'node:url';
 const RUNBOOK = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md';
 const DUST_RUNBOOK = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/cnight-dust-duplicate-registration-runbook/cnight-dust-duplicate-registration-runbook.md';
 const LOOKUP = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/README.md#error-string-lookup';
-const AS_OF = '2026-10-19';
+// Re-checked after the ledger 9 upgrade, which didn't turn on the cNIGHT-to-mNIGHT bridge
+// (midnight-docs relnotes/ledger-9.mdx).
+const AS_OF = '2026-11-07, after the ledger 9 upgrade, which left the bridge off';
 
 const USAGE = `usage: node check-night-usage.mjs <file.compact | directory | compiled contract dir | contract/index.js>... [--json]
        node check-night-usage.mjs --error '<error text>' | --error - [--network mainnet|preprod|preview|local] [--json]`;
