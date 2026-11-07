@@ -47,6 +47,7 @@ Triage shortcut: search the issue body or logs for these exact strings (a grep i
 | `exceeded block limit in transaction fee computation` | [Batched deploy](contract-batched-deploy-runbook/contract-batched-deploy-runbook.md) |
 | `Transaction would exhaust the block limits` (RPC 1010) | [Batched deploy](contract-batched-deploy-runbook/contract-batched-deploy-runbook.md) |
 | `1010: Invalid Transaction: Custom error:` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
+| `Invalid Transaction` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
 | `Transaction submission error` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
 | `Transaction submission failed` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
 | `submitTx rejected the transaction` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
@@ -55,6 +56,7 @@ Triage shortcut: search the issue body or logs for these exact strings (a grep i
 | `Rejecting transaction` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
 | `guaranteed execution would fail` | [Node rejects a transaction (1010, Custom error: N)](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) |
 | `index_blocks_task failed: apply transactions` with `Intent TTL has expired` or `dust is outside of its validity window` (a self-hosted indexer exits at the same block on every restart) | [Sync halt](node-indexer-sync-halt-runbook/node-indexer-sync-halt-runbook.md) |
+| `Aborting the rest of the block execution` after `Intent TTL has expired` (a node syncing from genesis stops importing) | [Sync halt](node-indexer-sync-halt-runbook/node-indexer-sync-halt-runbook.md) (a DApp's own transaction rejected with `Custom error: 182`: [Node rejection codes](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md)) |
 | `Wallet.InsufficientFunds: Insufficient funds` on Mainnet, with DUST in the wallet (`"tokenType":"0000…0000"`, 64 zeros, in `err.cause`) | [NIGHT on Mainnet](contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md) |
 | `Custom error: 194` (`Invalid.BalanceCheckOutOfBounds`) from a circuit that sends NIGHT (`sendUnshielded(nativeToken(), …)`) on Mainnet | [NIGHT on Mainnet](contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md) |
 | `Insufficient Funds: could not balance dust` (capital F: short of DUST for the fee, not NIGHT) | [cNIGHT→DUST duplicates](cnight-dust-duplicate-registration-runbook/cnight-dust-duplicate-registration-runbook.md) if DUST stopped generating; otherwise wait for DUST to generate |
@@ -99,6 +101,7 @@ Triage shortcut: search the issue body or logs for these exact strings (a grep i
 | `Waiting to receive tokens...` for an hour or more on Preprod | [Preprod wallet sync](wallet-preprod-sync-runbook/wallet-preprod-sync-runbook.md) |
 | `Wallet synced state emission (synced=false)` with `dust=false`, for an hour on Preprod | [Preprod wallet sync](wallet-preprod-sync-runbook/wallet-preprod-sync-runbook.md) (with `unshielded=false` and `Wallet sync timeout after 90000ms`: [Blockfrost](indexer-blockfrost-migration-runbook/indexer-blockfrost-migration-runbook.md)) |
 | `Wallet.Sync: [object ErrorEvent]` | [Preprod wallet sync](wallet-preprod-sync-runbook/wallet-preprod-sync-runbook.md) |
+| `1000:: Normal Closure` from `subscribeRuntimeVersion()` while a wallet syncs (harmless) | [Preprod wallet sync](wallet-preprod-sync-runbook/wallet-preprod-sync-runbook.md) (at submission, with no code: [Node rejection codes](node-1010-custom-error-runbook/node-1010-custom-error-runbook.md)) |
 | `Provided address is invalid` (faucet) | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |
 | `Your transaction is being submitted.` (faucet page that never finishes) | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |
 | `You can't resubmit right now, next attempt is allowed at` (faucet) | [Test funds](wallet-test-funds-runbook/wallet-test-funds-runbook.md) |

@@ -7,6 +7,7 @@ compiled: "2026-10-07"
 last_reviewed: "2026-11-07"
 error_strings:
   - "1010: Invalid Transaction: Custom error:"
+  - "Invalid Transaction"
   - "Transaction submission error"
   - "Transaction submission failed"
   - "submitTx rejected the transaction"
@@ -34,6 +35,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 | `(FiberFailure) SubmissionError: Transaction submission error` and no code in `err.message` (wallet SDK) | Diagnose 1 |
 | `ProviderFailedError: submitTx rejected the transaction (circuit '…')` (midnight-js 5) | Diagnose 1 |
 | `Unexpected error submitting scoped transaction '<unnamed>': …` (midnight-js 4.1.1) | Diagnose 1 |
+| A raw JSON-RPC error, `{"code":1010,"message":"Invalid Transaction","data":"Custom error: N"}` | Diagnose 2 |
 | `TransactionInvalidError: Transaction is invalid and was rejected by the node`, with no code | Remediation 3 |
 | A node log line `Rejected transaction … from mempool` or `Rejecting transaction … at pre-dispatch` | Diagnose 2 |
 
@@ -74,7 +76,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
    mkdir -p /tmp/decode-1010
    curl -fsSL -o /tmp/decode-1010/decode-1010.mjs \
      https://raw.githubusercontent.com/midnightntwrk/servicedesk/main/runbooks/node-1010-custom-error-runbook/scripts/decode-1010.mjs
-   node /tmp/decode-1010/decode-1010.mjs 'Custom error: 196' --rpc https://rpc.mainnet.midnight.network   # or rpc.preview / rpc.preprod
+   node /tmp/decode-1010/decode-1010.mjs 'Custom error: 196' --rpc https://rpc.mainnet.midnight.network   # or rpc.preview / rpc.preprod; or Blockfrost's RPC
    node /tmp/decode-1010/decode-1010.mjs app.log --rpc <the node URL the DApp uses>
    ```
 
@@ -97,7 +99,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
    | 104 | 104 | The call's on-chain program failed against the state it met | Remediation 7 |
    | 194 | 194 | A call pays out more of a token than the contract holds | [NIGHT on Mainnet](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md), if the token is NIGHT |
 
-   On node 1.0.x, 182 and 193 each wrap all three TTL and intent cases (reproduced: TTL as 182, a landed resubmission as 193). A 1.0.x-only code such as 182 from a 2.x network means the log came from a 1.0.x node: check `--rpc` against the node that submitted. Copies of the docs from before midnight-docs#1454 called 182 and 193 retired; node 1.0.x still uses them. Anything else: Remediation 8.
+   The 1.0.x codes come from midnight-node `node-1.0.400`, a tag the daily check can't follow (NOTES). On node 1.0.x, 182 and 193 each wrap all three TTL and intent cases (reproduced: TTL as 182, a landed resubmission as 193). A 1.0.x-only code such as 182 from a 2.x network means the log came from a 1.0.x node: check `--rpc` against the node that submitted. Copies of the docs from before midnight-docs#1454 called 182 and 193 retired; node 1.0.x still uses them. Anything else: Remediation 8.
 
 ## Remediation
 
@@ -112,7 +114,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 3. **DUST already spent (196, or `TransactionInvalidError`).** Run one wallet instance per seed: two instances on one seed picked the same DUST, while one instance submitted back-to-back transfers without a conflict. With several processes, send every submission through the one that holds the wallet.
 
    *Trade-off:* one submitter per seed (separate seeds with their own DUST would allow more; not tested).
-4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate.
+4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate. If only your client fails, compare its ledger package (`npm ls` for `ledger-v8` or `ledger-v9`) with the node's `midnight_ledgerVersion` RPC.
 
    *Trade-off:* none.
 5. **Fee check (168; 231, 232).** 231 (168 on 1.0.x, with "maximum time to dismiss" in the node log): it would take longer to validate than its size allows. Fewer intents may help (`servicedesk#100`); the limit is a network parameter. 232 (168 with "block limit"): too big for one block; for a deploy, see the batched deploy runbook. Without the node log, treat a deploy as the block limit. On node 2.x a moderately expensive call paid with exactly one DUST spend can also hit 231, a known defect (midnight-ledger#838) with no DApp workaround yet.
@@ -153,7 +155,8 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 |---|---|---|
 | The node turns a ledger failure into a u8 code | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `impl From<LedgerApiError> for u8` |
 | Node 2.x: 196, 194 and 104 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `InvalidError::DustDoubleSpend => 196,` `InvalidError::BalanceCheckOutOfBounds => 194,` `InvalidError::Transcript => 104,` |
-| Node 2.x: TTL and replay codes 228, 229 and 244 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `TransactionApplicationErrorCode::IntentTtlExpired => 228,` `TransactionApplicationErrorCode::IntentTtlTooFarInFuture => 229,` `TransactionApplicationErrorCode::IntentAlreadyExists => 244,` |
+| Node 2.x: TTL and replay codes 228, 229, 242, 243 and 244 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `TransactionApplicationErrorCode::IntentTtlExpired => 228,` `TransactionApplicationErrorCode::IntentTtlTooFarInFuture => 229,` `TransactionApplicationErrorCode::IntentTtlExpired => 242,` `TransactionApplicationErrorCode::IntentTtlTooFarInFuture => 243,` `TransactionApplicationErrorCode::IntentAlreadyExists => 244,` |
+| Node 2.x: effects check codes 212 to 218 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `EffectsCheckErrorCode::RealCallsSubsetCheckFailure => 212,` `EffectsCheckErrorCode::CommitmentsNeqClaimedShieldedReceives => 218,` |
 | Node 2.x: fee codes 231 and 232, and 170 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/types.rs` | `FeeCalculationErrorCode::OutsideTimeToDismiss => 231,` `FeeCalculationErrorCode::BlockLimitExceeded => 232,` `MalformedError::InvalidDustSpendProof => 170,` |
 | Every transcript rejection becomes 104 | `github:midnightntwrk/midnight-node/ledger/src/ledger_9/conversions.rs` | `Ti::Transcript(..) => Ie::Transcript,` |
 | Substrate returns the code as 1010, Invalid Transaction, Custom error | `github:paritytech/polkadot-sdk/substrate/client/rpc-api/src/author/error.rs` | `"Invalid Transaction",` `format!("Custom error: {}", e)` |

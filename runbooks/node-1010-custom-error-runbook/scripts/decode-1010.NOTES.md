@@ -174,43 +174,12 @@ On Node 20.19.1, macOS, unless noted; 47 cases, all as expected.
   client package upgrade.
 
 
-## Moved from the runbook page (lean template, 2026-11-07)
+## Codes node 2.x dropped or split (kept from the old page)
 
-The page moved to the lean runbook template (#292). These parts left it unchanged; they record
-where each fact came from and what was checked when.
-
-### Sources the page was compiled from
-
-_Compiled 2026-10-07 from local reproductions on node 1.0.400; re-checked 2026-11-07 after the
-ledger 9 fork: the 2.x table is the same at `node-2.1.0-rc.4` and on midnight-node `main`, in both
-`ledger/src/ledger_8/types.rs` and `ledger/src/ledger_9/types.rs` (node 2.1.101's own source isn't
-public yet), and #838 and #839 come from the ledger 9.1.0.0 release notes (method and results in
-[`scripts/decode-1010.NOTES.md`](scripts/decode-1010.NOTES.md)). Sources, pinned:_
-
-- _midnight-node `node-1.0.400` (`3acfd2edecdcd91373b6a506933f4c14ad3f0308`):
-  `ledger/src/versions/common/types.rs` (the code table), `conversions.rs`, `mod.rs` (the node
-  log lines), `pallets/midnight/src/lib.rs`_
-- _midnight-node `node-2.1.0-rc.4` (`1b2b31c714f8986a082b8690f15e805981c771dd`):
-  `ledger/src/ledger_8/types.rs`_
-- _midnight-ledger `ledger-8.1.3` (`b5d3e965a18e4cac17fac4f38446fc55c524439a`), the version node
-  1.0.400 pins: `ledger/src/error.rs` (the texts in the node log)_
-- _polkadot-sdk `polkadot-stable2603` (`2e4dd0bc22366a5af820492528869a493b5a5208`):
-  `substrate/client/rpc-api/src/author/error.rs`_
-- _midnight-docs: `docs/nodes/error-codes.mdx` and
-  `docs/troubleshoot/decode-1010-transaction-rejection-errors.mdx` at
-  `6a971bf2845645599c5f49e21fb13cbdae6f91dc` (midnight-docs#1454)_
-- _`@midnight-ntwrk/wallet-sdk-facade` 4.1.0, `wallet-sdk-node-client` 1.1.3, `effect` 3.22.0,
-  midnight-js 4.1.1 (`midnight-js-utils`, `midnight-js-contracts`, testkit-js)_
-- _midnight-ledger `ledger-9.1.0.0` release notes (known defects #838 and #839)_
-- _live node RPC on preview, preprod and mainnet (`system_version` `1.0.400-c338b9ac` on
-  2026-10-07; on 2026-11-07, `2.1.101-913ec011` on mainnet and preview)_
-
-### Codes node 2.x dropped or split
-
-**Why the code depends on the node version.** The table is in the node. Nodes 1.0.0 to 1.0.400
-share one table of 120 codes. Node 2.0.0-rc.x has 154, and 2.1.0-rc.x and `main` have 155 (140
-was added in 2.1.0-rc.1). Seven 1.0.x codes are gone in 2.x, and three more become the
-`…Unknown` case of a finer split:
+The runbook page moved to the lean template in #292. The page as it was before that is in git
+history at `2e0b50f` (`runbooks/node-1010-custom-error-runbook/node-1010-custom-error-runbook.md`),
+with its pinned sources. This table is the one part of it the page points to. From midnight-node
+`node-1.0.400` (`ledger/src/versions/common/types.rs`) and `main` (`ledger/src/ledger_9/types.rs`):
 
 | 1.0.x | Name on 1.0.x | On node 2.x |
 |---|---|---|
@@ -225,70 +194,4 @@ was added in 2.1.0-rc.1). Seven 1.0.x codes are gone in 2.x, and three more beco
 | 127 | `Malformed.Zswap` | stays as `Malformed.Zswap.Unknown`; adds 235 to 238 |
 | 174 | `Malformed.MalformedContractDeploy` | stays as `….Unknown`; adds 233 and 234 |
 
-140, 156, 157, 248 and 249 are new. So `Custom error: 231` (`servicedesk#117`) came from a node
-2.0.0-rc.4 devnet; on node 1.0.x the same failure is 168. Stagenet already runs node 2.0.0
-(`system_version` `2.0.0-d9729c13`).
-
-**The docs.** [Node error codes](https://docs.midnight.network/nodes/error-codes) is the
-reference for node 1.0.x and matches node 1.0.400 code for code.
-[Decode 1010 errors](https://docs.midnight.network/how-to/decode-1010-transaction-rejection-errors)
-links to it. Until
-[midnight-docs#1454](https://github.com/midnightntwrk/midnight-docs/pull/1454) (merged
-2026-10-07), the decode page had its own 2.x table that marked 168, 182, 186, 187, 188, 193 and
-205 as retired, although node 1.0.400 still uses all seven (182 and 193 were reproduced on it).
-Copies of the docs made before then, including answers built from them, can still carry it.
-
-### Key identifiers (old page)
-
-- **RPC error:** `{"code":1010,"message":"Invalid Transaction","data":"Custom error: N"}`, with N
-  from 0 to 255. Without `Custom error:`, the data is Substrate's own reason (for example
-  `Transaction would exhaust the block limits`). Other pool codes (`author/error.rs`): 1011
-  Unknown Transaction Validity, 1012 Transaction is temporarily banned, 1013 Transaction Already
-  Imported, 1014 Priority is too low, 1016 Immediately Dropped (the pool is full).
-- **Code ranges on node 1.0.x:** 0-11 deserialization, 50-63 serialization, 100-109 and 193-200
-  `Invalid`, 110-139 and 166-192 `Malformed`, 150-155 and 165 node ledger API, 201-211 system
-  transactions, 255 host API. The tables themselves are linked under Reference material.
-- **Node version:** JSON-RPC `system_version`. `1.0.400-c338b9ac` on preview, preprod and
-  mainnet on 2026-10-07 (the build hash isn't a public commit); on 2026-11-07, after the ledger 9
-  fork, `2.1.101-913ec011` on mainnet and preview and still `1.0.400-c338b9ac` on preprod; and `2.0.0-d9729c13` on stagenet,
-  a 2.0.0 build with no public tag, so its table is assumed to be 2.0.0-rc.x's; the
-  `midnightntwrk/midnight-node:1.0.400` image reports `1.0.400-87c0fbdb`, with the same table.
-  `rpc.<network>.midnight.network` answered without a key on 2026-10-07; for their shutdown and
-  Blockfrost's project token, see the
-  [Blockfrost migration runbook](../indexer-blockfrost-migration-runbook/indexer-blockfrost-migration-runbook.md).
-- **Wallet SDK errors:** name `(FiberFailure) SubmissionError`; messages
-  `Transaction submission error` (outer) and `Transaction submission failed` (inner). With no
-  node code: `TransactionInvalidError: Transaction is invalid and was rejected by the node`,
-  `TransactionDroppedError` and `TransactionUsurpedError` (`wallet-sdk-node-client` 1.1.3,
-  `PolkadotNodeClient.js`).
-- **Node log:** `Rejected transaction <hash> from mempool: Transaction Error: …` (the node's
-  error), `… from mempool: guaranteed execution would fail: …` and `Rejecting transaction <hash>
-  at pre-dispatch: guaranteed execution would fail: …` (the ledger's).
-- **TTL:** set by the caller. `wallet-sdk-facade` 4.1.0 requires `ttl` in `transferTransaction`
-  and the `balance…Transaction` methods (its own one-hour `DEFAULT_TTL_MS` only covers DUST
-  registrations and fee estimates). Midnight.js uses `ttlOneHour()`, the machine clock + 1 hour
-  (`midnight-js-utils` 4.1.1), for deploy and call intents, and testkit-js's `balanceTx` defaults
-  to it.
-- **Transaction id and timing:** `WalletFacade.submitTransaction` resolves only once the
-  transaction is finalized, and returns `tx.identifiers().at(-1)`, which you can read before
-  submitting. That took 14 to 22 s on the local network. Preprod and mainnet made a block every
-  6 s and finalized 2 to 3 blocks behind (measured 2026-10-07).
-
-### Pinned source links
-
-- **Source:**
-  - midnight-node `node-1.0.400`: [`ledger/src/versions/common/types.rs` L277-419](https://github.com/midnightntwrk/midnight-node/blob/3acfd2edecdcd91373b6a506933f4c14ad3f0308/ledger/src/versions/common/types.rs#L277-L419)
-    (the code table), [`conversions.rs` L48-51 and L137-139](https://github.com/midnightntwrk/midnight-node/blob/3acfd2edecdcd91373b6a506933f4c14ad3f0308/ledger/src/versions/common/conversions.rs#L48-L51)
-    (catch-alls), [`mod.rs` L946, L972 and L1017](https://github.com/midnightntwrk/midnight-node/blob/3acfd2edecdcd91373b6a506933f4c14ad3f0308/ledger/src/versions/common/mod.rs#L946)
-    (the log lines), [`pallets/midnight/src/lib.rs` L557-574](https://github.com/midnightntwrk/midnight-node/blob/3acfd2edecdcd91373b6a506933f4c14ad3f0308/pallets/midnight/src/lib.rs#L557-L574)
-    and [L476](https://github.com/midnightntwrk/midnight-node/blob/3acfd2edecdcd91373b6a506933f4c14ad3f0308/pallets/midnight/src/lib.rs#L476) (`pre_dispatch`)
-  - midnight-node `node-2.1.0-rc.4`: [`ledger/src/ledger_8/types.rs` L359-556](https://github.com/midnightntwrk/midnight-node/blob/1b2b31c714f8986a082b8690f15e805981c771dd/ledger/src/ledger_8/types.rs#L359-L556)
-  - midnight-ledger `ledger-8.1.3`: [`ledger/src/error.rs`](https://github.com/midnightntwrk/midnight-ledger/blob/b5d3e965a18e4cac17fac4f38446fc55c524439a/ledger/src/error.rs)
-    (`FeeCalculationError`, `TransactionApplicationError`, `InvalidDustSpendProof` texts)
-  - polkadot-sdk `polkadot-stable2603`: [`substrate/client/rpc-api/src/author/error.rs` L107-111](https://github.com/paritytech/polkadot-sdk/blob/2e4dd0bc22366a5af820492528869a493b5a5208/substrate/client/rpc-api/src/author/error.rs#L107-L111)
-  - `effect` 3.22.0 `internal/runtime.ts` (`FiberFailureImpl.toString`); `wallet-sdk-facade`
-    4.1.0 `dist/index.js` (`submitTransaction`, `transferTransaction`, `DEFAULT_TTL_MS`);
-    `wallet-sdk-node-client` 1.1.3 `dist/effect/PolkadotNodeClient.js` (the no-code errors);
-    midnight-js 4.1.1: `midnight-js-utils` (`ttlOneHour`), `packages/contracts` (`Unexpected error
-    submitting scoped transaction`), `midnight-js-types` (`watchForTxData`)
-
+140, 156, 157, 248 and 249 are new on node 2.x.
