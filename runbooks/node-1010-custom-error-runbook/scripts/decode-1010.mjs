@@ -274,7 +274,7 @@ const DISPLAY_2_X = {
 
 const TABLES = {
   '1.0': { table: NODE_1_0, display: DISPLAY_1_0, label: 'node 1.0.x', range: '1.0.0 to 1.0.400' },
-  '2.x': { table: NODE_2_X, display: DISPLAY_2_X, label: 'node 2.x', range: '2.0.0-rc.4 to 2.1.0-rc.4, release candidates' },
+  '2.x': { table: NODE_2_X, display: DISPLAY_2_X, label: 'node 2.x', range: '2.0.0-rc.4 to 2.1.0-rc.4, and main on 2026-11-06; ledger 8 and ledger 9 alike' },
 };
 
 // Node 1.0.x codes that node 2.x split into finer ones (same source as the tables).
@@ -321,13 +321,14 @@ const HINTS = {
     196: DUST_196,
   },
   '2.x': {
+    104: "On ledger 9 (mainnet and preview), midnight-ledger#839 (open): a contract call that spends a held shielded coin and writes the change back with writeCoin can be rejected with 104 once the chain's commitment tree isn't empty. The node measures more bytes_written than the client declared, so the call runs out of its gas budget. Nothing in the call is wrong; it waits on a ledger fix.",
     170: DUST_170,
     194: BALANCE_194,
     196: DUST_196,
     228: `Intent TTL expired. On node 1.0.x this was 182, reproduced there with a TTL 5 minutes in the past. ${TTL_FIX}`,
     229: `Intent TTL too far in the future. On node 1.0.x this was 182, reproduced there with a TTL 30 days ahead. ${TTL_FIX}`,
     230: 'Intent already exists. On node 1.0.x this was 182.',
-    231: `Node log: ${DISMISS_TEXT}. The transaction would take longer to validate than its size allows. servicedesk#117 (node 2.0.0-rc.4): contract calls that use unshielded-token effects. On node 1.0.x this was 168 (servicedesk#100, a swap that gained a third intent).`,
+    231: `Node log: ${DISMISS_TEXT}. The transaction would take longer to validate than its size allows. servicedesk#117 (node 2.0.0-rc.4): contract calls that use unshielded-token effects. On node 1.0.x this was 168 (servicedesk#100, a swap that gained a third intent). On ledger 9 (mainnet and preview), midnight-ledger#838 (open): a moderately expensive contract call (about 10 ms to apply) paid with exactly one DUST spend can fail this check because the client overestimates the transaction's size; pay with two or more DUST spends.`,
     232: `Node log: ${BLOCK_TEXT}. Too big for one block; for a contract deploy, see the contract-batched-deploy runbook. On node 1.0.x this was 168.`,
     242: `Replay protection, checked against ledger state: intent TTL expired (the well-formedness check, 228, usually catches this first). On node 1.0.x this was 193. ${TTL_FIX}`,
     243: `Replay protection, checked against ledger state: intent TTL too far in the future (the well-formedness check, 229, usually catches this first). On node 1.0.x this was 193. ${TTL_FIX}`,
@@ -645,12 +646,12 @@ async function main() {
     header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). ${rpcOpt} runs ${ver}.`);
     if (key === '1.0' && patch > 400) header.push(`  Caution: ${ver} is newer than 1.0.400, the last 1.0.x release this table was checked against.`);
     if (key === '2.x' && !/^2\.1\.0-rc\.4\b/.test(ver)) {
-      header.push(`  Caution: the 2.x table is node-2.1.0-rc.4's (2.0.0-rc.x lacks only 140); ${ver} itself wasn't checked.`);
+      header.push(`  Caution: the 2.x table is node-2.1.0-rc.4's, unchanged on main on 2026-11-06 (2.0.0-rc.x lacks only 140); ${ver}'s own source wasn't checked.`);
     }
   } else if (nodeOpt) {
     header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}), from --node ${key}.`);
   } else {
-    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}); preview, preprod and mainnet ran 1.0.400 on 2026-10-07.`);
+    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). On 2026-11-07 preprod ran node 1.0.400 (this table); mainnet and preview ran 2.1.101 (--node 2.x).`);
     header.push('  Check the node that rejected the transaction with --rpc <url>, or pass --node 2.x.');
   }
 

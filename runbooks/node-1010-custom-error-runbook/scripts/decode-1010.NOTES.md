@@ -159,3 +159,16 @@ On Node 20.19.1, macOS, unless noted; 47 cases, all as expected.
   the output as a new table, and re-run the checks above.
 - Re-run the reproductions on a local network with the new node image: the 182, 193 and 196
   cases each take under a minute once the wallet has synced.
+
+## Ledger 9 fork re-check (2026-11-07)
+
+- Live RPC: mainnet and preview `system_version` `2.1.101-913ec011`, preprod `1.0.400-c338b9ac`.
+  `--rpc https://rpc.mainnet.midnight.network` picks the 2.x table and prints the caution line.
+- `gen-tables.mjs` on `ledger/src/ledger_8/types.rs` and `ledger/src/ledger_9/types.rs`, at
+  `node-2.1.0-rc.4` and at `main` (newest commit 2026-11-06): all four give the same 93-entry
+  table, identical to the embedded `NODE_2_X`. Node 2.1.101's own source isn't public yet, so the
+  table isn't checked against it.
+- #838 (231, `OutsideTimeToDismiss`, one DUST spend) and #839 (104, coin write-back out of gas
+  budget) come from the ledger 9.1.0.0 release notes' known defects and the issues themselves (both
+  open on 2026-11-07); neither was reproduced here. #838's triage comment expects the fix as a
+  client package upgrade.
