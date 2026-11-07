@@ -154,12 +154,10 @@ _Event counts, rates and snapshot ages change daily. Re-check them before quotin
   `?project_id=` (tokens are per network); Preview `https://indexer.preview.midnight.network/api/v4/graphql`.
 - **Snapshots for brand-new wallets:** midnight-examples `preseed/preprod/` (height 2,779,435, cut
   2026-09-30 against Blockfrost) and `preseed/preview/` (height 1,474,876, cut 2026-10-27 from the
-  Preview chain before its reset). A wallet made after the reset has a birthday far below that
-  height, so fast-sync doesn't seed it from the old bundle and it syncs from genesis. A wallet whose
-  `_BIRTHDAY` `npm run wallets:new` wrote before the reset is above it, so fast-sync would seed it
-  with the old chain's DUST and Zswap event cursor (from `isSeedable()` in
-  `packages/fast-sync/src/preseed.ts`; not run). After the reset, delete those `_BIRTHDAY` lines from
-  `.env.preview`, or run `wallets:new` again.
+  Preview chain before its reset). Before seeding, fast-sync reads the bundle's block from the
+  indexer and compares its hash (`checkChainIdentity()` in
+  `packages/fast-sync/src/reference-bundle.ts`). The reset chain has no block at that height, so
+  every Preview wallet now syncs from genesis, which is quick on the new chain.
 
 ## Diagnose (no wallet keys)
 
@@ -408,7 +406,7 @@ Expect 1.2.0, 4.2.0 and 1.2.3. Anything else: install `@midnight-ntwrk/wallet-sd
   `isConnected`. Fixed in the wallet SDK 2.0 line, which the support matrix lists for Mainnet and
   Preview; Preprod still lists 1.2.0, so Remediation 5 stays until Preprod moves.
 - **midnight-examples `preseed/preview/`** (to raise): it was cut from the Preview chain before the
-  reset, so it should be cut again from the new chain or removed.
+  reset, so fast-sync no longer uses it; a new cut from the reset chain would bring fast-sync back.
 - **A stream that goes quiet on an open socket:**
   [servicedesk#251](https://github.com/midnightntwrk/servicedesk/issues/251) (open), with a relay
   that reproduces it. Seen only through Blockfrost, and it isn't known yet whether the wallet,
