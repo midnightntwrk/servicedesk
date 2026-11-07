@@ -202,6 +202,34 @@ build in Docker Desktop on the same Mac (8 vCPUs, 7.8 GB), none of these finishe
 
 Blank cells weren't run. The panic lines in the test are the real output, verbatim.
 
+### 0.36.0 (2026-11-07, x86_64 macOS)
+
+0.36.0 ships only `zkir-v3` (no `zkir` in the install) and always builds ZKIR v3. `compact compile
++0.36.0 --feature-zkir-v3 …` prints `Usage: compactc.bin <flag> ... <source-pathname>
+<target-directory-pathname>` and exits 1. Each contract below had `pragma` left out and a ledger write
+so the circuit reaches zkir.
+
+| Contract | 0.36.0 |
+|---|---|
+| #299, the contract from the issue | panic (`midnight-circuits-7.3.0`, `native_gadget.rs:179`) |
+| #616, the contract from the issue (`Secp256k1Point`) | panic (`midnight-zk-stdlib-2.4.0`) |
+| #616, `ecMulGenerator(x as JubjubScalar)` with `x: Field` | panic |
+| #616, `x as JubjubScalar` returned, no `ecMulGenerator` | panic |
+| #616, `ecMulGenerator(x)` with `x: JubjubScalar` (an argument) | keys |
+| #757, the contract from the issue | keys |
+| #280 (`p0 == p1` on `JubjubPoint`) | keys |
+
+- On 0.36.0, `ecMulGenerator` takes `JubjubScalar` (also `Secp256k1Scalar`, `Secp256r1Scalar`,
+  `Curve25519Scalar`); passing a `Field` is a compile error naming the four.
+- An install copy with `zkir-v3` removed (`compact --directory <copy>`) printed `Warning: ZKIR not
+  found; skipping final circuit compilation.`, exited 0 and wrote no `keys/`. The checker reported
+  `install incomplete: zkir-v3 is missing` and the reinstall fix.
+- A compile with an empty cache (`XDG_CACHE_HOME` set to a new directory) downloaded
+  `bls_midnight_2p11` and built the keys, and so did one with `MIDNIGHT_PARAM_SOURCE` set to srs, so
+  0.36.0's zkir sends a User-Agent. All 26 `PARAM_SHA256` values are in the 0.36.0 `zkir-v3` binary as
+  raw bytes, as they are in 0.35.0's.
+- The test file has the #616 and #299 output from these runs (`panic616v036`, `panic299v036`).
+
 ## Broken installs
 
 - **Found here:** this machine's 0.30.0 install was broken:
