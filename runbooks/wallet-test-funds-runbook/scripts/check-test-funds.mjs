@@ -244,7 +244,7 @@ async function main() {
   if (identifier) {
     const tx = await findTransaction(net, identifier);
     if (!tx) {
-      say(`ON CHAIN FINDING: the ${net} indexer has no transaction with ID ${identifier}. Diagnose 2.`);
+      say(`ON CHAIN FINDING: the ${net} indexer has no transaction with ID ${identifier}.${net === 'preview' ? ' If it was sent before Preview was reset on 6 November 2026, it is gone with the old chain: Root cause 4.' : ''} Diagnose 2.`);
       finding = true;
     } else {
       const status = tx.transactionResult?.status ?? 'unknown';
@@ -277,7 +277,9 @@ export function fundsReport(history, address, net) {
   const lines = [];
 
   if (deposits.length === 0) {
-    lines.push(`TNIGHT FINDING: no tNIGHT has ever reached this address on ${net}. Diagnose 2.`);
+    // Preview was reset as a new chain on 6 November 2026 (midnight-docs relnotes/ledger-9.mdx), and
+    // the indexer only has the new chain, so tNIGHT sent before the reset doesn't show here.
+    lines.push(`TNIGHT FINDING: no tNIGHT has ever reached this address on ${net}${net === 'preview' ? ' since Preview was reset on 6 November 2026; tNIGHT and DUST from before the reset are gone, so request again' : ''}. Diagnose 2.`);
     return { lines, code: 2 };
   }
   if (deposits.length > SHOWN) lines.push(`TNIGHT ${deposits.length - SHOWN} earlier tNIGHT output(s) not shown`);
