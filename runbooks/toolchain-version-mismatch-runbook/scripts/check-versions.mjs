@@ -455,7 +455,12 @@ async function main() {
     // On a ledger 9 network with midnight-js 5, a ledger 8 contract loading its own 0.16 copy is the
     // pre-fork call setup (runbook Remediation 6); the compiled-contract rows report it.
     const preForkCopy = (c) => era === 9 && c === contractRuntime && eraOfRuntime(c.version) === 8 && sdkL8Runtimes.length > 0;
-    const badLoaded = loaded.filter((c) => c.version && !runtimeAccepts(expRuntime, c.version) && !preForkCopy(c));
+    // On a ledger 8 network, midnight-js 5 (not the matrix's 4.1.1, but it serves both ledgers) loads
+    // its own 0.21 for ledger 9 contracts and uses its ledger 8 copy for this network's contracts.
+    // Its 0.21 copy is expected there; the contract's own copy is what has to match.
+    const sdkOwnL9 = (c) => era === 8 && sdkL8Runtimes.length > 0 && c !== contractRuntime && eraOfRuntime(c.version) === 9 && sdkRuntimes.some((x) => x.dir === c.dir);
+    const badLoaded = loaded.filter((c) => c.version && !runtimeAccepts(expRuntime, c.version) && !preForkCopy(c) && !sdkOwnL9(c));
+    const sdkL9Copies = loaded.filter(sdkOwnL9);
     // midnight-js 5's own ledger 8 copy, installed under an alias: expected, not a stray.
     const isL8Alias = (c) => l8AliasDirs.has(c.dir);
     const aliasCopies = all.filter((c) => !loadedDirs.has(c.dir) && isL8Alias(c));
@@ -469,6 +474,9 @@ async function main() {
     } else if (others.some((c) => !runtimeAccepts(expRuntime, c.version))) {
       add('Compact runtime', shown, expRuntime, 'WARN', 'an unused copy is another version');
       fix(`Other ${RUNTIME} copies are installed but not loaded by the contract or midnight-js: ${others.map((c) => `${c.version} at ${rel(c.dir)}`).join('; ')}. Harmless today; remove them if nothing needs them.`);
+    } else if (sdkL9Copies.length) {
+      add('Compact runtime', shown, expRuntime, 'WARN', `${listVersions(sdkL9Copies)} is midnight-js 5's own, for ledger 9 contracts`);
+      fix(`midnight-js 5 loads ${RUNTIME} ${listVersions(sdkL9Copies)} (${sdkL9Copies.map((c) => rel(c.dir)).join('; ')}) for ledger 9 contracts, and its ledger 8 copy for ${opts.network}'s. That's expected for a DApp that serves both ledgers, but the matrix tests midnight-js 4.1.1 on ${opts.network}. The contract rows below check the copy this contract loads.`);
     } else {
       add('Compact runtime', shown, expRuntime, 'OK', all.length > 1 ? (aliasCopies.length ? `${listVersions(aliasCopies)} is midnight-js 5's ledger 8 copy` : 'all copies acceptable') : '');
     }
@@ -562,6 +570,7 @@ async function main() {
   }
 
   // 3. Compiled contract.
+  let zkirV3Circuits = 0; // read again by the proof server check
   if (compiledDir) {
     let src = '';
     try {
@@ -625,6 +634,8 @@ async function main() {
             fix(era === 9
               ? `The contract's runtime loads ${desc(cOn)}, midnight-js loads ${desc(other)}: different on-chain runtimes. ${opts.network} runs onchain-runtime-v4: a contract on v3 was built for ledger 8, and midnight-js on v3 is 4.1.1, which needs upgrading to 5.0.0. See the Compact runtime, Midnight.js and compiled-contract rows.`
               : `The contract's runtime loads ${desc(cOn)}, midnight-js loads ${desc(other)}: different on-chain runtimes. A compact-runtime 0.19+ copy brings onchain-runtime-v4, which ${opts.network} doesn't run: an unpinned runtime install, or a contract compiled by 0.34+. See the Compact runtime and compiled-contract rows.`);
+          } else if (viaL8) {
+            fix(`The ledger 8 contract reaches the on-chain runtime at ${desc(cOn)}, midnight-js 5's ledger 8 runtime at ${desc(other)}. They have to be one copy. midnight-js's v5.0.0 migration guide ("Dependencies of a ledger 8 contract") has the layout its own tests use: the contract in a workspace package that depends on ${RUNTIME}@0.16.0, with @midnight-ntwrk/onchain-runtime-v3 pinned to 3.1.2 so both resolve the same copy. A contract package with its own node_modules gets its own copy.`);
           } else {
             fix(`The contract reaches the on-chain runtime at ${desc(cOn)}, midnight-js at ${desc(other)}. Deploys fail with "expected instance of ContractMaintenanceAuthority" even when both are the same version. Install ${RUNTIME}@${expRuntime} once where both resolve it (usually the workspace root), not inside the contract package, then reinstall.`);
           }
@@ -657,6 +668,7 @@ async function main() {
         unread++;
       }
     }
+    zkirV3Circuits = v3;
     if (era === 9) {
       // Ledger 9: compiler 0.36 writes v3 only. v2 means an older compiler, which the runtime rows
       // above already report.
@@ -689,8 +701,12 @@ async function main() {
       if (!v) {
         add('Proof server', 'no version', expProof, 'WARN', 'answered without a version (wrong URL or port?)');
       } else {
-        add('Proof server', v, expProof, !expProof ? 'WARN' : v === expProof ? 'OK' : 'DIFFERS', expProof ? '' : 'not in matrix');
-        if (expProof && v !== expProof) fix(`The proof server is ${v}; ${opts.network} is tested with ${expProof}. Run midnightntwrk/proof-server:${expProof}.`);
+        // Proof servers before 9.0.0 can't read ZKIR v3: /k answers "Unsupported ZKIR version" and
+        // midnight-js gets HTTP 400 "bad input" from /check.
+        const cantReadV3 = zkirV3Circuits > 0 && nums(v)[0] < 9;
+        add('Proof server', v, expProof, cantReadV3 ? 'MISMATCH' : !expProof ? 'WARN' : v === expProof ? 'OK' : 'DIFFERS', cantReadV3 ? "can't read the ZKIR v3 circuits" : expProof ? '' : 'not in matrix');
+        if (cantReadV3) fix(`The proof server is ${v}, and the circuits in ${rel(compiledDir)} are ZKIR v3, which proof servers before 9.0.0 reject (/k answers "Unsupported ZKIR version"; midnight-js gets HTTP 400 "bad input" from /check). Run midnightntwrk/proof-server:${expProof && nums(expProof)[0] >= 9 ? expProof : '9.0.0'}.`);
+        else if (expProof && v !== expProof) fix(`The proof server is ${v}; ${opts.network} is tested with ${expProof}. Run midnightntwrk/proof-server:${expProof}.`);
       }
     }
   } else {
