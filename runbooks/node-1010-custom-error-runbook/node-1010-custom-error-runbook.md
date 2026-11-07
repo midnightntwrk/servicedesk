@@ -300,14 +300,14 @@ expired and 30 days ahead, came back as 182, from the first check.
    | 170 | 170 | `Malformed.InvalidDustSpendProof` | The DUST spend proof didn't verify, which is as likely a disagreement on DUST state as a bad proof | `servicedesk#150`, `servicedesk#52` | Remediation 4 |
    | 168 | 231, 232 | `Malformed.FeeCalculation` | Too slow to validate for its size, or too big for a block | `servicedesk#100`, `servicedesk#117` | Remediation 5 |
    | none | 231 | `OutsideTimeToDismiss` on ledger 9 | A contract call paid with exactly one DUST spend | [midnight-ledger#838](https://github.com/midnightntwrk/midnight-ledger/issues/838) (open) | Remediation 5 |
-   | none | 104 | `Invalid.Transcript` on ledger 9 | A contract call spends a held shielded coin and writes the change back with `writeCoin`: out of gas budget | [midnight-ledger#839](https://github.com/midnightntwrk/midnight-ledger/issues/839) (open) | Remediation 7 |
+   | 104 | 104 | `Invalid.Transcript` | The call's on-chain program failed against the state it met, e.g. the contract's state changed after the call was built; on ledger 9 also a held shielded coin written back with `writeCoin` (node log: `ran out of gas budget`) | from source; [midnight-ledger#839](https://github.com/midnightntwrk/midnight-ledger/issues/839) (open) | Remediation 7 |
    | 186 | 212 to 218 | `Malformed.EffectsCheckFailure` | The transaction's effects don't match what its contract calls claim | `servicedesk#37` | Remediation 6 |
    | 194 | 194 | `Invalid.BalanceCheckOutOfBounds` | A contract call pays out more of a token than the contract holds. On Mainnet, every circuit that sends NIGHT | reproduced (node 1.0.0 and 1.0.400) | [NIGHT on Mainnet](../contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md) |
 
    On node 1.0.x, 182 and 193 can each carry all three cases (TTL expired, TTL too far ahead,
    intent already exists), because both wrap the ledger's `TransactionApplicationError`. In the
    reproductions, TTL failures came back as 182 and a resubmitted transaction that had landed as
-   193. Anything else → Remediation 7.
+   193. Anything else → Remediation 8.
 
 ## Remediation
 
@@ -373,9 +373,11 @@ expired and 30 days ahead, came back as 182, from the first check.
    On a public network you won't see the node log: if it's a deploy, start with the batched deploy
    runbook, otherwise treat it as the time-to-dismiss check. On ledger 9 (mainnet and preview),
    a moderately expensive contract call (about 10 ms to apply) paid with exactly one DUST spend can
-   hit 231 because the client overestimates the transaction's size; pay with two or more DUST spends
-   (midnight-ledger#838, from the ledger 9.1.0.0 release notes, not reproduced here; triage expects
-   the fix as a client package upgrade).
+   hit 231 because the client overestimates the transaction's size (midnight-ledger#838, a known
+   defect, from the ledger 9.1.0.0 release notes, not reproduced here). The release notes say two
+   or more DUST spends avoid it, but wallet-sdk-facade 5.0.0's balancing options are only `ttl` and
+   `tokenKindsToBalance`, so a DApp can't choose that: there's no workaround yet. Triage expects the
+   fix as a client package upgrade.
 
    *Trade-off:* splitting one transaction into several gives up atomicity; a later one can fail
    after an earlier one landed.
@@ -387,9 +389,13 @@ expired and 30 days ahead, came back as 182, from the first check.
    *Trade-off:* midnight-js 4.1.1 goes with compact-runtime 0.16.0, so the rest of the project
    moves to the matrix set with it (see the
    [toolchain version mismatch runbook](../toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md)).
-7. **Coin write-back on ledger 9 (104).** A contract call that spends a shielded coin the contract
-   holds and writes the change back with `writeCoin` can be rejected with 104 on mainnet and preview
-   once the chain's commitment tree isn't empty: the node measures a few more `bytes_written` than
+7. **Transcript rejected (104).** 104 is every transcript rejection
+   (`ledger/src/ledger_9/conversions.rs` maps `Transcript(..)` to it): the call's on-chain program
+   failed against the state it met. Often the contract's state changed after the call was built
+   (ledger 9.1.0.0's own tests expect `ReadMismatch` for that); build the call again against the
+   current state. One case is a known defect on ledger 9: if the call spends a shielded coin the
+   contract holds and writes the change back with `writeCoin`, and the node log says `ran out of gas
+   budget`, it's rejected once the chain's commitment tree isn't empty: the node measures a few more `bytes_written` than
    the client declared, because the stored coin's `mt_index` is its real tree position
    (midnight-ledger#839, open; from the ledger 9.1.0.0 release notes; [midnight-examples#88](https://github.com/midnightntwrk/midnight-examples/pull/88)
    reports it for shielded-chips' `burnFromTreasury`). Nothing in the call is wrong, and the release notes give no

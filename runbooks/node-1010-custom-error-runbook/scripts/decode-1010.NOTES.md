@@ -165,7 +165,7 @@ On Node 20.19.1, macOS, unless noted; 47 cases, all as expected.
 - Live RPC: mainnet and preview `system_version` `2.1.101-913ec011`, preprod `1.0.400-c338b9ac`.
   `--rpc https://rpc.mainnet.midnight.network` picks the 2.x table and prints the caution line.
 - `gen-tables.mjs` on `ledger/src/ledger_8/types.rs` and `ledger/src/ledger_9/types.rs`, at
-  `node-2.1.0-rc.4` and at `main` (newest commit 2026-11-06): all four give the same 93-entry
+  `node-2.1.0-rc.4` and at `main` (newest commit 2026-11-06): all four give the same 155-code
   table, identical to the embedded `NODE_2_X`. Node 2.1.101's own source isn't public yet, so the
   table isn't checked against it.
 - #838 (231, `OutsideTimeToDismiss`, one DUST spend) and #839 (104, coin write-back out of gas
