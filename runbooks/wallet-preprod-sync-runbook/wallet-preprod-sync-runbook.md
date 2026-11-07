@@ -56,7 +56,9 @@ _Event counts, rates and snapshot ages change daily. Re-check them before quotin
      other work we measured 80 to 190 a second, which makes it two to six hours.
    - **It isn't the indexer.** Blockfrost streamed DUST events at 3,000 to 14,000 a second in our
      tests, many times what a wallet applies. The wallet's own work is the limit.
-   - **Preview is much faster**, because its tree is smaller: moth-wallet measured 103 s.
+   - **Preview is much faster**, because its tree is smaller: moth-wallet measured 103 s on the
+     Preview chain before its reset. Preview was reset as a new chain on 6 November 2026, so its
+     tree starts over and a fresh sync is shorter still.
 2. **Nothing is kept between runs unless the app saves it.** Each sub-wallet can write its position
    and state with `serializeState()` (or `state.serialize()`) and continue from there with
    `restore()`: the DUST wallet resumes from the saved `appliedIndex`. Apps that only keep the seed,
@@ -151,7 +153,13 @@ _Event counts, rates and snapshot ages change daily. Re-check them before quotin
 - **Endpoints:** Preprod `https://midnight-preprod.blockfrost.io/api/v0` and `/ws`, with
   `?project_id=` (tokens are per network); Preview `https://indexer.preview.midnight.network/api/v4/graphql`.
 - **Snapshots for brand-new wallets:** midnight-examples `preseed/preprod/` (height 2,779,435, cut
-  2026-09-30 against Blockfrost) and `preseed/preview/`.
+  2026-09-30 against Blockfrost) and `preseed/preview/` (height 1,474,876, cut 2026-10-27 from the
+  Preview chain before its reset). A wallet made after the reset has a birthday far below that
+  height, so fast-sync doesn't seed it from the old bundle and it syncs from genesis. A wallet whose
+  `_BIRTHDAY` `npm run wallets:new` wrote before the reset is above it, so fast-sync would seed it
+  with the old chain's DUST and Zswap event cursor (from `isSeedable()` in
+  `packages/fast-sync/src/preseed.ts`; not run). After the reset, delete those `_BIRTHDAY` lines from
+  `.env.preview`, or run `wallets:new` again.
 
 ## Diagnose (no wallet keys)
 
@@ -397,8 +405,10 @@ Expect 1.2.0, 4.2.0 and 1.2.3. Anything else: install `@midnight-ntwrk/wallet-sd
 - **[midnight-wallet#742](https://github.com/midnightntwrk/midnight-wallet/issues/742)** and
   **[midnight-wallet#743](https://github.com/midnightntwrk/midnight-wallet/issues/743)** (both open):
   the uncapped retry backoff, the silent end of a cleanly completed subscription, and the latched
-  `isConnected`. Fixed in the wallet SDK 2.0 line; drop Remediation 5 once 2.x is in the support
-  matrix.
+  `isConnected`. Fixed in the wallet SDK 2.0 line, which the support matrix lists for Mainnet and
+  Preview; Preprod still lists 1.2.0, so Remediation 5 stays until Preprod moves.
+- **midnight-examples `preseed/preview/`** (to raise): it was cut from the Preview chain before the
+  reset, so it should be cut again from the new chain or removed.
 - **A stream that goes quiet on an open socket:**
   [servicedesk#251](https://github.com/midnightntwrk/servicedesk/issues/251) (open), with a relay
   that reproduces it. Seen only through Blockfrost, and it isn't known yet whether the wallet,
