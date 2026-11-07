@@ -58,7 +58,7 @@ Triage shortcut: search the issue body or logs for these exact strings (a grep i
 | `Failed to configure constructor context with coin public key` | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
 | `expected instance of ContractMaintenanceAuthority` | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
 | `does not provide an export named 'Clock'` | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
-| `EraMismatchError` (`ledger8-deploy-on-ledger9-network`, `ledger9-artifact-on-ledger8-network`, `unknown-artifact-runtime-version`) | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
+| `EraMismatchError` (`ledger8-deploy-on-ledger9-network`, `ledger9-artifact-on-ledger8-network`, `unknown-artifact-runtime-version`, `ledger8-artifacts-in-ledger9-container`) | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
 | `no ZK artifact manifest (compiler/contract-manifest.json) was found` | [Toolchain mismatch](toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md) |
 | `No matching version found for @midnight-ntwrk/` (from `npm install`) | [AI-written SDK code](sdk-ai-generated-code-errors-runbook/sdk-ai-generated-code-errors-runbook.md) |
 | `has no exported member` on a `@midnight-ntwrk/` import (from `tsc`) | [AI-written SDK code](sdk-ai-generated-code-errors-runbook/sdk-ai-generated-code-errors-runbook.md) |

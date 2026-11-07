@@ -59,7 +59,9 @@ submitted. Know which network you deploy to first; the right versions depend on 
   EraMismatchError: These artifacts declare a compact-runtime this version of midnight-js places on no ledger era, … The artifacts declare compact-runtime 0.20.0.
   ```
 
-  Reason `unknown-artifact-runtime-version`: a contract from compilers 0.33 to 0.35.
+  Reason `unknown-artifact-runtime-version`: a contract from compilers 0.33 to 0.35. Reason
+  `ledger8-artifacts-in-ledger9-container`: a 0.31.1 build wrapped in `CompiledContract.make`; pass
+  `new Contract(witnesses)` for a ledger 8 build instead (Remediation 6).
 - **midnight-js 5 refuses a 0.31.1 build's artifacts** (→ Remediation 6):
 
   ```text
@@ -147,7 +149,7 @@ fails on Preprod; a project built before the fork can't deploy on Mainnet or Pre
 a contract can't serve both: compile it once with 0.31.1 for Preprod and once with 0.36.0 for
 Mainnet and Preview.
 
-Five couplings turn that drift into the errors above:
+Five couplings turn the drift into errors:
 
 1. **The compiled contract pins its runtime.** The compiler writes
    `checkRuntimeVersion('<version>')` into `contract/index.js`. While the runtime is `0.x`, it
@@ -204,13 +206,14 @@ source disagrees with a row, the source is right.
   0.35.0 and 0.36.0 also write `compiler/contract-manifest.json`; 0.31.1 doesn't.
   `<out>/zkir/*.bzkir` starts with `midnight:ir-source[v2]`; with `--feature-zkir-v3` it is
   `[v3]` (0.31.1) or `[v3-generic]` (0.34, 0.35). 0.36.0 always writes `[v3-generic]`.
-- **Toolchain:** `compact --version` (devtools), `compact compile --version` (default compiler),
-  `compact compile +<version> …` (one build with a specific compiler), `compact list`.
-- **Proof server:** `GET /version` (plain text, e.g. `8.1.0`), `GET /proof-versions`,
-  `GET /health`; midnight-js calls `POST /check` and `POST /prove`.
+- **Toolchain:** `compact compile --version` (default compiler), `compact compile +<version> …`
+  (one build with a specific compiler), `compact list`.
+- **Proof server:** `GET /version` (plain text, e.g. `9.0.0`); midnight-js calls `POST /check`
+  and `POST /prove`.
 - **Node RPC (JSON-RPC):** `midnight_ledgerVersion` (`=8.1.2` on Preprod; on Mainnet and Preview
   `1.0.1 (tag: crate-ledger-9.1.0.1, …)`, where the ledger is the `crate-ledger-` part) and
-  `system_version` (`1.0.400-c338b9ac` on Preprod, `2.1.101-913ec011` on Mainnet and Preview).
+  `system_version` (`1.0.400-c338b9ac` on Preprod's public endpoint, `2.1.101-913ec011` on Mainnet
+  and Preview). Blockfrost's Preprod RPC reports `2.1.101-913ec011` and ledger `8.1.3`.
   midnight-js 5 reads the ledger from the indexer's `protocolVersion` (2001100 on ledger 9). For
   official endpoints and Blockfrost, see the
   [Blockfrost migration runbook](../indexer-blockfrost-migration-runbook/indexer-blockfrost-migration-runbook.md).
@@ -294,8 +297,8 @@ source disagrees with a row, the source is right.
    `coinPublicKey` error comes back as `Version mismatch`.
 
    *Trade-off:* upgrades become deliberate; re-run the check whenever the matrix moves. A DApp for
-   both Preprod and Mainnet needs midnight-js 5.0.0 (paths for both ledgers, though the matrix tests
-   4.1.1 on Preprod) and a contract build per ledger.
+   both Preprod and Mainnet needs midnight-js 5.0.0 (the matrix tests 4.1.1 on Preprod) and a
+   contract build per ledger; on Preprod the check then reports midnight-js 5's own 0.21.0 as `WARN`.
 2. **Recompile with your network's compiler.** `compact compile +0.36.0 <src> <out>` for Mainnet
    and Preview, `compact compile +0.31.1 <src> <out>` for Preprod. Install them side by side with
    `compact update <version> --no-set-default`; a bare `compact update` makes the newest release
@@ -319,7 +322,8 @@ source disagrees with a row, the source is right.
    `@midnightntwrk/`. For the `Clock` error (wallet SDK 1.2.0 set), update `wallet-sdk-utilities`
    to 1.2.1 or later and drop any pin holding it at 1.2.0.
 
-5. **Match the proof server to the ZKIR the compiler writes.** On Preprod, compile with 0.31.1
+5. **Match the proof server to the ZKIR the compiler writes.** With `--proof-server`, the check
+   reports ZKIR v3 circuits with a proof server before 9.0.0 as `MISMATCH`. On Preprod, compile with 0.31.1
    without `--feature-zkir-v3` (ZKIR v2) and run `midnightntwrk/proof-server:8.1.3`. On Mainnet and
    Preview, 0.36.0 writes ZKIR v3 only and rejects the flag; run `midnightntwrk/proof-server:9.0.0`.
 
@@ -329,10 +333,13 @@ source disagrees with a row, the source is right.
    can still be called with its 0.31.1 build; a new deploy or a maintenance update needs a 0.36.0
    build. Calling it from midnight-js 5 needs `NodeZkConfigProvider(dir, { verify:
    'require-if-present' })`, since 0.31.1 writes no `contract-manifest.json` (reproduced), and
-   runtime 0.16.0 resolvable from the 0.31.1 contract module next to the framework's 0.21.0. The
-   midnight-js 5.0.0 migration guide ("Dependencies of a ledger 8 contract") has no official recipe
-   yet, only its test setup. With that the check reports the build as `WARN` (calls
-   only) and exits 0. A pre-fork call wasn't reproduced.
+   runtime 0.16.0 for the 0.31.1 module, on the same `onchain-runtime-v3` copy as midnight-js 5's
+   ledger 8 runtime. Use the layout in the midnight-js 5.0.0 migration guide ("Dependencies of a
+   ledger 8 contract"): the contract in a workspace package depending on
+   `@midnight-ntwrk/compact-runtime@0.16.0`, with `onchain-runtime-v3` pinned to 3.1.2. A contract
+   package with its own `node_modules` gets its own copy and fails the check's on-chain runtime row.
+   Pass `new Contract(witnesses)`, not a `CompiledContract`. With that the check reports the build
+   as `WARN` (calls only) and exits 0. A pre-fork call wasn't reproduced.
 
    *Trade-off:* the contract keeps its ledger 8 keys until a 0.36.0 build and a maintenance update.
 
@@ -344,10 +351,7 @@ source disagrees with a row, the source is right.
 - [midnight-docs#1494](https://github.com/midnightntwrk/midnight-docs/issues/1494): support-matrix
   `tag`, `github` and `container` fields that don't resolve.
 - [midnight-wallet#791](https://github.com/midnightntwrk/midnight-wallet/issues/791): `latest` on
-  the `@midnight-ntwrk` wallet SDK packages pointed at the 1.1.0 line while the matrix listed 1.2.0.
-  At the last check it pointed at 2.0.0 under both scopes, which is now the Mainnet and Preview
-  set; Preprod's is still 1.2.0.
-- `servicedesk#88`: the `Clock` export, fixed by `wallet-sdk-utilities` 1.2.1.
+  the wallet SDK packages isn't the matrix version (now 2.0.0, the Mainnet and Preview set).
 
 ## Reference material
 
@@ -355,19 +359,13 @@ source disagrees with a row, the source is right.
   reproduction, the script's test runs, and what was not reproduced.
 - **Worked cases:** `servicedesk#105` (two runtime copies), `#88` (`Clock`), `#54` (`Custom
   error: 168`, not reproduced), `#81` (`bad input`), `#130` (compiler crash).
-- **Context:** the internal AI Dev Friction Report, Issue 1 "Version drift".
 - **Source:**
   - `@midnight-ntwrk/compact-runtime` 0.16.0 `dist/version.js` (`checkRuntimeVersion`), and its
     `package.json` (`onchain-runtime-v3`) vs 0.19.0, 0.20.0 and 0.21.0 (`onchain-runtime-v4`)
   - midnight-js `v4.1.1`: `packages/contracts` (`createUnprovenDeployTxFromVerifierKeys`),
     `packages/http-client-proof-provider` (`Failed Proof Server response`)
-  - midnight-js `v5.0.0`: `packages/contracts/src/errors.ts` (`EraMismatchReason`, the messages),
-    `packages/contracts/src/internal/era.ts` (`RUNTIME_VERSION_TO_ERA`, `readHeadEra`,
-    `assertEraCompatible`), `packages/protocol/package.json` (`compact-runtime-ledger8`),
-    `docs/releases/v5.0.0/migration-guide.md`
-  - midnight-ledger `ledger-8.1.0`: `proof-server/src/endpoints.rs` (`/version`, `/k`, `/check`,
-    `/prove`; IR errors become `WorkError::BadInput`), `proof-server/src/worker_pool.rs`
-    (`bad input`), `proof-server/src/lib.rs` (`/health`)
+  - midnight-js `v5.0.0`: `packages/contracts/src/errors.ts`, `internal/era.ts`,
+    `packages/protocol/package.json`, `docs/releases/v5.0.0/migration-guide.md`
+  - midnight-ledger `ledger-8.1.0`: `proof-server/src/endpoints.rs` and `worker_pool.rs` (`bad input`)
   - midnight-docs PR #1032 ("remove ledger from compat")
-- **Support matrix:** its version numbers are what this runbook relies on; its `tag`, `github` and
-  `container` fields mostly don't resolve yet (midnight-docs#1494). Use the versions, not the tags.
+- **Support matrix:** use its versions, not its `tag` fields (midnight-docs#1494).

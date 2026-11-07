@@ -10,9 +10,9 @@ script was tested. **The user runs it** against their own DApp repo.
 |---|---|---|
 | Compact devtools | `compact --version` | never (`DIFFERS` only) |
 | Compact compiler (default) | `compact compile --version` | never: `WARN`, because a build can pin `+<version>`; the compiled-contract rows decide |
-| Compact runtime | every physical copy, plus the copies the project root, the contract and midnight-js resolve | a **loaded** copy fails the runtime's own version rule against the matrix runtime; other copies are `WARN` |
-| On-chain runtime (v3) | every copy of `@midnight-ntwrk/onchain-runtime-v3` | never: two copies are normal with the matrix set |
-| On-chain runtime (v4) | every copy of `@midnightntwrk/onchain-runtime-v4` | never: `WARN`, it comes with runtime 0.19+ |
+| Compact runtime | every physical copy, plus the copies the project root, the contract and midnight-js resolve | a **loaded** copy fails the runtime's own version rule against the matrix runtime; other copies are `WARN`. Not counted: midnight-js 5's `compact-runtime-ledger8` copy, a ledger 8 contract's own 0.16 on a ledger 9 network (the pre-fork call setup), and midnight-js 5's own 0.21 on a ledger 8 network (`WARN`) |
+| On-chain runtime (v3 on ledger 8, v4 on ledger 9) | every copy of the package the matrix names for the network (`versions.<network>.npmPackage`); v4 under both scopes | never: `DIFFERS` if not the matrix version |
+| On-chain runtime (the other one) | v3 on a ledger 9 network, v4 on a ledger 8 network | never: `INFO` on ledger 9 (midnight-js 5 carries v3), `WARN` on ledger 8 |
 | Compact JS, Platform JS, Midnight.js, testkit-js, DApp Connector API, Wallet SDK | every physical copy | never (`DIFFERS` only) |
 | Wallet SDK via testkit-js | testkit-js installed with wallet-sdk 1.1.0 | never: `INFO` |
 | midnight-js-* packages, Wallet SDK scopes | all copies | never: `WARN` |
@@ -21,9 +21,9 @@ script was tested. **The user runs it** against their own DApp repo.
 | Compiled contract wants runtime | `checkRuntimeVersion(…)` in `<out>/contract/index.js` (any quote style) | the matrix runtime wouldn't satisfy it |
 | Runtime the contract loads | the copy Node resolves from `<out>/contract` | none, or one that fails the runtime's rule |
 | Contract and midnight-js share the on-chain runtime | the on-chain runtime each side's `compact-runtime` depends on, resolved from it | different directories (different copies or different packages) |
-| ZKIR format | header of `<out>/zkir/*.bzkir` | `ir-source[v3…]`; `SKIP` when there's no `.bzkir` (a `--skip-zk` build) |
-| Proof server | `GET <url>/version` | never (`DIFFERS` only) |
-| Node build, Node ledger | RPC `system_version`, `midnight_ledgerVersion` | never: `INFO`; `WARN` if a ledger copy differs in minor version |
+| ZKIR format | header of `<out>/zkir/*.bzkir` | `ir-source[v3…]` on a ledger 8 network; on a ledger 9 network v3 is expected and v2 is `DIFFERS`; `SKIP` when there's no `.bzkir` (a `--skip-zk` build) |
+| Proof server | `GET <url>/version` | the circuits are ZKIR v3 and the proof server is before 9.0.0; otherwise `DIFFERS` if not the matrix version |
+| Node build, Node ledger | RPC `system_version`, `midnight_ledgerVersion` (both formats, `=8.1.2` and `crate-ledger-9.1.0.1`) | never: `WARN` if the node's ledger era isn't the `--network` set's, or a ledger-v8 copy differs in minor version |
 
 The runtime's own version rule is copied from `compact-runtime` `dist/version.js`: same major;
 while the major is 0, the same minor; a patch at least as new; prerelease suffixes ignored.
@@ -205,13 +205,13 @@ the reproductions above were re-run on 5.0.0.
 - Which runtime each compiler pins (`checkRuntimeVersion` in the compiled `contract/index.js`),
   and which on-chain runtime package each `compact-runtime` depends on.
 - What midnight-js pins: `compact-runtime`, `compact-js`, `onchain-runtime-v3`, `ledger-v8`
-  (`npm view @midnight-ntwrk/midnight-js-protocol@<v> dependencies`). When midnight-js 5.0.0
-  (today's `rc`, on runtime 0.20.0, `onchain-runtime-v4` and the ledger-9 line) ships and a
-  network moves to it, the runtime and on-chain runtime expectations here change with it.
+  (`npm view @midnight-ntwrk/midnight-js-protocol@<v> dependencies`). midnight-js 5.0.0 is the
+  Mainnet and Preview set; its runtime-to-era table (`RUNTIME_VERSION_TO_ERA`, 0.16 and 0.21) is
+  copied into the script as `RUNTIME_ERA`, so a new runtime minor needs an entry there.
 - `wallet-sdk-facade` / `wallet-sdk-utilities` pairing, which scope's `latest` is current, and
   what testkit-js pins.
-- The proof server's ZKIR support (`POST /k` with a `.bzkir` from the new compiler) and the
-  `ZKIR format` row's hard-coded v2.
+- The proof server's ZKIR support (`POST /k` with a `.bzkir` from the new compiler), and the 9.0.0
+  floor the `Proof server` row uses for ZKIR v3.
 - The upstream issues linked in the runbook.
 
 ## Ledger 9 fork rework (2026-11-07)
@@ -277,3 +277,20 @@ earlier case gives the same exit code.
 
 Not reproduced: `ledger8-maintenance-on-ledger9-network`, and a call to a ledger 8 contract
 deployed before the fork (needs one on Mainnet, or a network that forks).
+
+**After Norman's review on #288** (2026-11-07):
+
+- `--network mainnet --proof-server` with a stand-in answering `/version` as `8.1.3`, on the
+  0.36.0 build: `Proof server … MISMATCH can't read the ZKIR v3 circuits`, exit 2 (his run against a
+  real 8.1.3 got `Unsupported ZKIR version` on `/k`). With `9.0.0`: `OK`. The 0.31.1 build on Preprod
+  with `8.1.3`: `OK`.
+- The midnight-js 5.0.0 project with the 0.31.1 contract on its own 0.16.0, `--network preprod`:
+  `Compact runtime … WARN 0.21.0 is midnight-js 5's own, for ledger 9 contracts`, midnight-js and
+  compact-js `DIFFERS`, exit 0 (before: `MISMATCH`, exit 2).
+- `deployContract` with the 0.31.1 build wrapped in `CompiledContract.make` (provider with
+  `require-if-present`), Preview: `EraMismatchError`, reason `ledger8-artifacts-in-ledger9-container`,
+  "… pass the contract instance the ledger 8 toolchain generated instead of a CompiledContract
+  container. The artifacts declare compact-runtime 0.16.0."
+- Preprod through Blockfrost: `system_version` `2.1.101-913ec011`, `midnight_ledgerVersion` `8.1.3`,
+  `specVersion` 1000300.
+- Every earlier case gives the same exit code, including the pnpm install.
