@@ -49,7 +49,7 @@ const USAGE = `usage: node check-zkir-crash.mjs [--log <file> | --error '<text>'
 // ---------- facts this check relies on (the runbook's Key identifiers) ----------
 // zkir needs the public parameters bls_midnight_2p<k> for a circuit of up to 2^k rows. It downloads
 // each file once, checks its SHA-256 and keeps it in the cache. This table, k = 0 to 25, is the same in
-// every zkir and zkir-v3 binary from compiler 0.28.0 to 0.35.0; k = 0 to 19 also match files downloaded
+// every zkir and zkir-v3 binary from compiler 0.28.0 to 0.36.0; k = 0 to 19 also match files downloaded
 // on 2026-10-17 (k = 0 to 12 from both hosts).
 const PARAM_SHA256 = [
   '59b30b3114a34ccbbfb599376e178fb8d9b3366cae2174c2f1da20e75847f823', 'bbe04fe3c70d0c138447cb086b4baddc30cb8bb2a004114bc02e6f739516280e',  // k = 0, 1
@@ -90,15 +90,18 @@ const PEAK_MB = [
 // compactc itself (not zkir) peaked at 228 MB on the same contracts.
 const COMPACTC_MB = 228;
 
-// zkir panics that have an issue. Each was reproduced on 2026-10-17 with the versions named.
+// zkir panics that have an issue. Each was reproduced on 2026-10-17 with the versions named, and
+// again on 0.36.0 on 2026-11-07. 0.36.0 ships only zkir-v3 and rejects --feature-zkir-v3, so "build
+// with the other backend" is no fix there.
+const v3Only = (v) => v !== undefined && vless(v, '0.36.0') === false;
 const PANICS = [
   {
     id: 'jubjub-scalar-equality',
     match: /Unsupported test_eq: JubjubScalar == JubjubScalar/,
     issue: 'LFDT-Minokawa/compact#757',
-    what: () => 'zkir-v3 has no equality test for JubjubScalar values, and compiler 0.34.0 passes `==` and `!=` on JubjubScalar through to it (with --feature-zkir-v3 only).',
-    fix: [
-      'Upgrade to compiler 0.35.0: it builds keys for the same code, with and without --feature-zkir-v3.',
+    what: () => 'zkir-v3 has no equality test for JubjubScalar values, and compiler 0.34.0 passes `==` and `!=` on JubjubScalar through to it (with --feature-zkir-v3 only). 0.35.0 and 0.36.0 build keys for the same code.',
+    fix: () => [
+      'Upgrade to compiler 0.35.0 or later: 0.35.0 builds keys for the same code with and without --feature-zkir-v3, and so does 0.36.0.',
       'Or, on 0.34.0, compare the values as Field: `assert((r as Field) != (0 as Field), "zero")` builds keys with --feature-zkir-v3.',
       'Or build without --feature-zkir-v3.',
     ],
@@ -107,18 +110,20 @@ const PANICS = [
     id: 'zkir-v3-jubjub-arch',
     match: /ZkStdLibArch must enable jubjub/,
     issue: 'LFDT-Minokawa/compact#616',
-    what: () => 'with --feature-zkir-v3, zkir sets up a circuit without the Jubjub gadgets the circuit needs. Seen with Secp256k1Point, and with a circuit that returns ecMulGenerator(…). Open on 0.34.0 and 0.35.0.',
-    fix: [
-      'Build without --feature-zkir-v3: the default backend builds keys for the ecMulGenerator case on 0.34.0 and 0.35.0.',
-      'Secp256k1Point exists only with --feature-zkir-v3 (0.34.0 and 0.35.0), so a circuit that uses it has no workaround until the issue is fixed.',
+    what: (m, v) => `${v3Only(v) ? 'zkir-v3' : 'with --feature-zkir-v3, zkir'} sets up a circuit without the Jubjub gadgets the circuit needs. What triggers it is a cast to JubjubScalar (\`x as JubjubScalar\`, \`0 as JubjubScalar\`), as in the issue's \`keccak256<JubjubScalar>(0 as JubjubScalar)\`; Secp256k1Point on its own builds keys. Open on 0.34.0 to 0.36.0.`,
+    fix: (v) => [
+      'Don\'t cast to JubjubScalar: take the scalar as a JubjubScalar circuit argument or witness, and use default<JubjubScalar> for a zero. With that change the issue\'s own contract builds keys on 0.36.0, and on 0.35.0 with --feature-zkir-v3.',
+      ...(v3Only(v)
+        ? ['0.36.0 has only the ZKIR v3 backend and rejects --feature-zkir-v3, so building with the other backend is no longer an option.']
+        : ['Or build without --feature-zkir-v3: the default backend builds keys for the ecMulGenerator case on 0.34.0 and 0.35.0.']),
     ],
   },
   {
     id: 'constant-out-of-range',
     match: /Trying to convert Fq\((0x[0-9a-fA-F]+)\) to an AssignedBounded less than 2\^(\d+)!/,
     issue: 'LFDT-Minokawa/compact#299',
-    what: (m) => `the circuit casts a value that is fixed at compile time, ${BigInt(m[1])}, to an unsigned type of ${m[2]} bits, and it doesn't fit, so no proof of this circuit could ever be made. zkir stops on it instead of the compiler reporting it. Same on 0.31.1 to 0.35.0, both backends.`,
-    fix: [
+    what: (m) => `the circuit casts a value that is fixed at compile time, ${BigInt(m[1])}, to an unsigned type of ${m[2]} bits, and it doesn't fit, so no proof of this circuit could ever be made. zkir stops on it instead of the compiler reporting it. Same on 0.31.1 to 0.36.0, on every backend.`,
+    fix: () => [
       'Find the `as Uint<…>` cast of a constant expression, often a wrap-around such as `((255 as Uint<8>) + (1 as Uint<8>)) as Uint<8>`, and keep the wider type or change the constant. The same cast on a value from an argument or witness compiles, and is checked when proving.',
       'A cast to a smaller Uint doesn\'t wrap around: it fails when the value doesn\'t fit. If the code meant to wrap, the wrap-around has to be written out another way. The panic doesn\'t name the circuit.',
     ],
@@ -128,7 +133,7 @@ const PANICS = [
     match: /cannot convert JubjubPoint to \\?"Native\\?"/,
     issue: 'LFDT-Minokawa/compact#280',
     what: () => 'zkir-v3 in compilers 0.30.0 and 0.31.1 can\'t compare JubjubPoint values. Fixed from 0.34.0.',
-    fix: [
+    fix: () => [
       'On 0.31.1, build without --feature-zkir-v3: the default backend builds keys for the same code.',
       'Or use 0.34.0 or later if you need --feature-zkir-v3.',
     ],
@@ -162,6 +167,7 @@ for (let i = 0; i < argv.length; i++) {
 if ([opts.log, opts.error, opts.compile].filter((x) => x !== undefined).length > 1) fail(`use one of --log, --error and --compile\n${USAGE}`);
 if (opts.machine && (opts.log ?? opts.error ?? opts.compile) !== undefined) fail(`--machine takes no compile output\n${USAGE}`);
 if (opts.zkirV3 && opts.compile === undefined) fail('--zkir-v3 goes with --compile');
+if (opts.zkirV3 && opts.compiler !== undefined && (([maj, min]) => maj > 0 || min >= 36)(opts.compiler.split('.').map(Number))) fail('--zkir-v3 is for compilers before 0.36.0: 0.36.0 always builds ZKIR v3 and rejects --feature-zkir-v3');
 if (!(opts.timeout > 0)) fail('--timeout takes a number of seconds');
 if (opts.compiler !== undefined && !/^\d+\.\d+\.\d+(?:-[\w.]+)?$/.test(opts.compiler)) fail('--compiler takes a version such as 0.31.1');
 
@@ -619,14 +625,16 @@ function decide(inp, m) {
       const mm = p && known.match.exec(p.message);
       if (!mm) continue;
       d.known = true;
-      d.summary = `zkir panicked: ${known.what(mm)}`;
-      d.fix.push(...known.fix);
+      d.summary = `zkir panicked: ${known.what(mm, version)}`;
+      d.fix.push(...known.fix(version));
       d.refs.push(known.issue);
       return d;
     }
     d.summary = p ? `zkir panicked at ${p.at}: ${p.message}. That isn't a known panic.` : 'zkir panicked (exit status 101), and the output doesn\'t include the panic message.';
     d.fix.push(
-      'Try the other backend (with or without --feature-zkir-v3): three of the four known panics happen only with --feature-zkir-v3.',
+      v3Only(version)
+        ? '0.36.0 has only the ZKIR v3 backend, so there\'s no other backend to try.'
+        : 'Try the other backend (with or without --feature-zkir-v3): three of the four known panics happen only with --feature-zkir-v3.',
       'Open an issue at LFDT-Minokawa/compact with the contract (or the smallest one that does it), the compiler version and the panic lines.',
     );
     return d;

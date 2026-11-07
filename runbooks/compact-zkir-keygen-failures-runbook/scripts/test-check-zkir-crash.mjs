@@ -51,6 +51,21 @@ called \`Result::unwrap()\` on an \`Err\` value: Synthesis("cannot convert Jubju
 note: run with \`RUST_BACKTRACE=1\` environment variable to display a backtrace
 Exception: zkir returned a non-zero exit status 101
 `,
+  // Recorded on 0.36.0 (ZKIR v3 only), 2026-11-07.
+  panic616v036: `Compiling 1 circuits:
+
+thread 'main' (13844242) panicked at /nix/var/nix/builds/nix-5711-1260811134/cargo-vendor-dir/midnight-zk-stdlib-2.4.0/src/lib.rs:753:35:
+ZkStdLibArch must enable jubjub
+note: run with \`RUST_BACKTRACE=1\` environment variable to display a backtrace
+Exception: zkir returned a non-zero exit status 101
+`,
+  panic299v036: `Compiling 1 circuits:
+
+thread 'main' (13843943) panicked at /nix/var/nix/builds/nix-5711-1260811134/cargo-vendor-dir/midnight-circuits-7.3.0/src/field/native/native_gadget.rs:179:13:
+Trying to convert Fq(0x0000000000000000000000000000000000000000000000000000000000000100) to an AssignedBounded less than 2^8!
+note: run with \`RUST_BACKTRACE=1\` environment variable to display a backtrace
+Exception: zkir returned a non-zero exit status 101
+`,
   hash: (file) => `Compiling 1 circuits:
 Error: Hash mismatch in data stored at ${file}. Found hash 900bdfd597f96e59c0b4aebdfc3f3f26e4379a55dc8ae5a50865acd96e732510, but expected 0a1c9229f315fc1868ff25f668fb83aec4d09f4f23a706b5197c692c619d72c6. Please try removing this file to force a re-fetch. If that does not work, you may be subject to an attack.
 Exception: zkir returned a non-zero exit status 1
@@ -252,7 +267,10 @@ function run(args, { input, env = {} } = {}) {
 const cases = [
   // panics with an issue
   { name: 'panic #757, 0.34.0 zkir-v3', args: ['--compiler', '0.34.0', '--offline'], input: LOG.panic757, exit: 0, has: ['exit status 101 (a Rust panic)', 'after "Compiling 1 circuits:"', 'JubjubScalar', 'Upgrade to compiler 0.35.0', '(r as Field) != (0 as Field)', 'LFDT-Minokawa/compact#757'] },
-  { name: 'panic #616, 0.35.0 zkir-v3', args: ['--compiler', '0.35.0', '--offline'], input: LOG.panic616, exit: 0, has: ['Jubjub gadgets', 'Build without --feature-zkir-v3', '(0.34.0 and 0.35.0)', 'LFDT-Minokawa/compact#616'] },
+  { name: 'panic #616, 0.35.0 zkir-v3', args: ['--compiler', '0.35.0', '--offline'], input: LOG.panic616, exit: 0, has: ['Jubjub gadgets', 'cast to JubjubScalar', 'default<JubjubScalar>', 'Or build without --feature-zkir-v3', 'on 0.34.0 and 0.35.0', 'LFDT-Minokawa/compact#616'], not: ['no workaround'] },
+  { name: 'panic #616, 0.36.0 (v3 only)', args: ['--compiler', '0.36.0', '--offline'], input: LOG.panic616v036, exit: 0, has: ['`x as JubjubScalar`', 'Secp256k1Point on its own builds keys', 'Open on 0.34.0 to 0.36.0', 'no longer an option', 'JubjubScalar circuit argument or witness', 'default<JubjubScalar>', 'LFDT-Minokawa/compact#616'], not: ['Build without --feature-zkir-v3', 'no workaround'] },
+  { name: 'panic #299, 0.36.0', args: ['--compiler', '0.36.0', '--offline'], input: LOG.panic299v036, exit: 0, has: ['fixed at compile time, 256,', '0.31.1 to 0.36.0', 'LFDT-Minokawa/compact#299'] },
+  { name: 'unknown panic, 0.36.0', args: ['--compiler', '0.36.0', '--offline'], input: LOG.panic616v036.replace('ZkStdLibArch must enable jubjub', 'index out of bounds: the len is 3 but the index is 7'), exit: 2, has: ["isn't a known panic", "no other backend to try"], not: ['Try the other backend'] },
   { name: 'panic #299, constant out of range', args: ['--compiler', '0.31.1', '--offline'], input: LOG.panic299, exit: 0, has: ['fixed at compile time, 256,', 'type of 8 bits', 'LFDT-Minokawa/compact#299'] },
   { name: 'panic #280, 0.31.1 zkir-v3', args: ['--compiler', '0.31.1', '--offline'], input: LOG.panic280, exit: 0, has: ["can't compare JubjubPoint", 'LFDT-Minokawa/compact#280'] },
   { name: 'unknown panic', args: ['--offline'], input: LOG.panic616.replace('ZkStdLibArch must enable jubjub', 'index out of bounds: the len is 3 but the index is 7'), exit: 2, has: ["isn't a known panic", 'index out of bounds', 'Try the other backend'] },
@@ -341,6 +359,7 @@ const cases = [
   { name: 'unknown argument', args: ['--nope'], exit: 1, err: ['unknown argument --nope'] },
   { name: 'two inputs', args: ['--log', 'a', '--error', 'b'], exit: 1, err: ['use one of --log, --error and --compile'] },
   { name: 'bad --compiler', args: ['--compiler', 'latest'], exit: 1, err: ['--compiler takes a version'] },
+  { name: '--zkir-v3 with 0.36.0', args: ['--compile', 'x.compact', '--compiler', '0.36.0', '--zkir-v3'], exit: 1, err: ['--zkir-v3 is for compilers before 0.36.0'] },
 ];
 
 // Four at a time; results print in order.

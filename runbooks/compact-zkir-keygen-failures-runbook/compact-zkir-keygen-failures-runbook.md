@@ -12,13 +12,15 @@ machine for the others.
 _Compiled 2026-10-17. Each cause below was reproduced that day on at least one of compilers 0.31.1,
 0.34.0 and 0.35.0 (each section names the versions), on x86_64 macOS and x86_64 Linux in Docker, with
 QEMU for the CPU models. The checker was run on the real output of each, and the page was reviewed by
-an independent fact-check and by a fresh agent working through it as an operator. Method and results are in
+an independent fact-check and by a fresh agent working through it as an operator. Updated 2026-11-07
+for 0.36.0, which ships only `zkir-v3` and rejects `--feature-zkir-v3`: the four panics, a missing
+`zkir-v3` and a fresh parameter download were run again on 0.36.0 on x86_64 macOS. Method and results are in
 [`scripts/check-zkir-crash.NOTES.md`](scripts/check-zkir-crash.NOTES.md). Sources, pinned:_
 
 - _[LFDT-Minokawa/compact](https://github.com/LFDT-Minokawa/compact) tag `compactc-v0.31.1`,
   `compiler/passes.ss` lines 120 to 125 and 138 to 172 (how compactc runs zkir, reports it and cleans
   up after it)_
-- _The `zkir` and `zkir-v3` binaries in the 0.28.0 to 0.35.0 toolchains (download hosts, the parameter
+- _The `zkir` and `zkir-v3` binaries in the 0.28.0 to 0.36.0 toolchains (download hosts, the parameter
   hashes, the ADX instructions)_
 - _The parameter hosts `srs.midnight.network` and
   `midnight-s3-fileshare-dev-eu-west-1.s3.eu-west-1.amazonaws.com`, files k = 0 to 25_
@@ -91,7 +93,7 @@ After its own passes succeed, compactc runs zkir once for the whole contract
 (`compiler/passes.ss`, `compactc-v0.31.1`, lines 154 to 169):
 
 ```text
-zkir compile-many '<out>/zkir' '<out>/keys'          # zkir-v3 with --feature-zkir-v3
+zkir compile-many '<out>/zkir' '<out>/keys'          # zkir-v3 with --feature-zkir-v3, and always from 0.36.0
 ```
 
 For each circuit, zkir fetches the public parameters for the circuit's size, `bls_midnight_2p<k>` for
@@ -155,7 +157,7 @@ SIGKILL can also come from outside: a CI step's time limit, or `kill -9`.
 
 Each `bls_midnight_2p<k>` is downloaded once and kept in a cache. Before using a file, zkir checks its
 SHA-256 against a table built into it; the table is the same in every `zkir` and `zkir-v3` from
-0.28.0 to 0.35.0.
+0.28.0 to 0.36.0.
 
 - **Where they come from.** With `MIDNIGHT_PARAM_SOURCE` unset, 0.28.0 to 0.31.1 download from the
   S3 host `https://midnight-s3-fileshare-dev-eu-west-1.s3.eu-west-1.amazonaws.com/`, and 0.34.0 and
@@ -175,7 +177,8 @@ SHA-256 against a table built into it; the table is the same in every `zkir` and
 - **Proxies.** zkir uses `HTTPS_PROXY`: through a logging proxy, 0.31.1 connected to the S3 host and
   0.35.0 to srs.
 - **srs.midnight.network and 0.31.x.** srs answers HTTP 403 to any request without a `User-Agent`
-  header, and the zkir in 0.31.1 sends none (0.34.0 and 0.35.0 send `Midnight Data Provider`). Setting
+  header, and the zkir in 0.31.1 sends none (0.34.0 and 0.35.0 send `Midnight Data Provider`, and
+  0.36.0 downloads from srs too). Setting
   `MIDNIGHT_PARAM_SOURCE=https://srs.midnight.network/` on 0.31.0 or 0.31.1 fails every time, with or
   without the trailing slash.
 - **Damaged cache.** If the file's hash is wrong, zkir prints `Hash mismatch in data stored at …`,
@@ -184,19 +187,21 @@ SHA-256 against a table built into it; the table is the same in every `zkir` and
 ### 4. Status 101: a zkir panic
 
 A Rust panic in zkir, printed as `thread 'main' (…) panicked at <file>:<line>:<col>:` and a message.
-Four are known; each was reproduced on 2026-10-17:
+Four are known; each was reproduced on 2026-10-17, and run again on 0.36.0 on 2026-11-07:
 
 | Message | Compilers and backend | Issue | Fix |
 |---|---|---|---|
-| `Trying to convert Fq(0x…) to an AssignedBounded less than 2^N!` | 0.31.1 to 0.35.0, both backends | [LFDT-Minokawa/compact#299](https://github.com/LFDT-Minokawa/compact/issues/299) (open) | The circuit casts a value fixed at compile time to a `Uint<…>` it doesn't fit, as in `((255 as Uint<8>) + (1 as Uint<8>)) as Uint<8>`, so no proof could ever be made. A cast to a smaller `Uint` doesn't wrap around: it fails when the value doesn't fit. Keep the wider type or change the constant, and if the code meant to wrap, write that out another way. The same cast on a value from an argument or witness compiles. The panic doesn't name the circuit. |
-| `ZkStdLibArch must enable jubjub` | 0.34.0 and 0.35.0, `--feature-zkir-v3` | [LFDT-Minokawa/compact#616](https://github.com/LFDT-Minokawa/compact/issues/616) (open) | Build without `--feature-zkir-v3`: the default backend builds keys for a circuit that returns `ecMulGenerator(…)`. `Secp256k1Point` exists only with `--feature-zkir-v3` (0.34.0 and 0.35.0), so a circuit that uses it has no workaround yet. |
-| `Unsupported test_eq: JubjubScalar == JubjubScalar` | 0.34.0, `--feature-zkir-v3` | [LFDT-Minokawa/compact#757](https://github.com/LFDT-Minokawa/compact/issues/757) (open) | Upgrade to 0.35.0, which builds keys for the same code on both backends. On 0.34.0, compare as `Field`: `assert((r as Field) != (0 as Field), "zero")`. |
-| `cannot convert JubjubPoint to "Native"` | 0.30.0 and 0.31.1, `--feature-zkir-v3` | [LFDT-Minokawa/compact#280](https://github.com/LFDT-Minokawa/compact/issues/280) (closed) | Build without `--feature-zkir-v3`, or use 0.34.0 or later. The issue was filed on Apple Silicon; it reproduced here on x86_64 macOS. |
+| `Trying to convert Fq(0x…) to an AssignedBounded less than 2^N!` | 0.31.1 to 0.36.0, every backend | [LFDT-Minokawa/compact#299](https://github.com/LFDT-Minokawa/compact/issues/299) (open) | The circuit casts a value fixed at compile time to a `Uint<…>` it doesn't fit, as in `((255 as Uint<8>) + (1 as Uint<8>)) as Uint<8>`, so no proof could ever be made. A cast to a smaller `Uint` doesn't wrap around: it fails when the value doesn't fit. Keep the wider type or change the constant, and if the code meant to wrap, write that out another way. The same cast on a value from an argument or witness compiles. The panic doesn't name the circuit. |
+| `ZkStdLibArch must enable jubjub` | 0.34.0 and 0.35.0 with `--feature-zkir-v3`; 0.36.0 | [LFDT-Minokawa/compact#616](https://github.com/LFDT-Minokawa/compact/issues/616) (open) | The trigger is a cast to `JubjubScalar` (`x as JubjubScalar`, or `0 as JubjubScalar` as in the issue's contract); `Secp256k1Point` on its own builds keys. Take the scalar as a `JubjubScalar` circuit argument or witness, and use `default<JubjubScalar>` for a zero: the issue's contract then builds keys on 0.36.0, and on 0.35.0 with `--feature-zkir-v3`. On 0.34.0 and 0.35.0, building without `--feature-zkir-v3` also works for a circuit that returns `ecMulGenerator(…)`; 0.36.0 has no other backend. |
+| `Unsupported test_eq: JubjubScalar == JubjubScalar` | 0.34.0, `--feature-zkir-v3` | [LFDT-Minokawa/compact#757](https://github.com/LFDT-Minokawa/compact/issues/757) (open) | Upgrade to 0.35.0, which builds keys for the same code on both backends, or 0.36.0, which does too. On 0.34.0, compare as `Field`: `assert((r as Field) != (0 as Field), "zero")`. |
+| `cannot convert JubjubPoint to "Native"` | 0.30.0 and 0.31.1, `--feature-zkir-v3` | [LFDT-Minokawa/compact#280](https://github.com/LFDT-Minokawa/compact/issues/280) (closed) | Build without `--feature-zkir-v3`, or use 0.34.0 or later (0.36.0 builds keys for it too). The issue was filed on Apple Silicon; it reproduced here on x86_64 macOS. |
 
 `JubjubScalar` and `Secp256k1Point` don't exist in 0.31.1 (`unbound identifier`), so #616 and #757
-only reach contracts written for the newer compilers. A new panic is a zkir bug. Three of the four
-known ones happen only with `--feature-zkir-v3`, so the other backend is worth a try while the issue is
-open.
+only reach contracts written for the newer compilers. A new panic is a zkir bug. Before 0.36.0, three
+of the four known ones happen only with `--feature-zkir-v3`, so the other backend is worth a try while
+the issue is open. 0.36.0 builds only ZKIR v3 and rejects `--feature-zkir-v3` (it prints the compiler's
+usage line and exits 1), so there it isn't an option: open an issue with the smallest contract that
+does it.
 
 ### 5. The compiler install is broken
 
@@ -209,6 +214,8 @@ files missing or cut short:
 - **No `zkir`** gives `ZKIR not found`.
 - **No `zkir-v3`** fails only with `--feature-zkir-v3`: compactc checks that `zkir` exists, then runs
   `zkir-v3`, and the shell answers `exec: zkir-v3: not found` (status 127).
+- **0.36.0 has no `zkir` at all**, only `zkir-v3`. Without `zkir-v3`, it prints `Warning: ZKIR not
+  found; skipping final circuit compilation.` and exits 0, with no `keys/` directory.
 
 Running `compact update <version>` again only says `already installed`. One 0.30.0 install was found
 like this on 2026-10-17: its archive was 68 MB instead of about 26 MB, `compactc.bin` was 6.9 MB
@@ -233,7 +240,7 @@ tested.
 ## Key identifiers
 
 - **The zkir step:** `zkir compile-many '<out>/zkir' '<out>/keys'` (`zkir-v3` with
-  `--feature-zkir-v3`), run by compactc after its passes; `--skip-zk` skips it.
+  `--feature-zkir-v3`, and always on 0.36.0), run by compactc after its passes; `--skip-zk` skips it.
 - **Exit status:** zkir's exit code (1 an error, 101 a panic, 127 zkir-v3 not found), or minus the
   signal (-4 SIGILL, -9 SIGKILL). `compact compile` then exits 255.
 - **Parameter files:** `bls_midnight_2p<k>`, k = 0 to 25, 192 × 2^k + 388 bytes. Their SHA-256 table
@@ -277,10 +284,10 @@ tested.
    ```
 
    - **Input:** `--log <file>`, `--error '<text>'`, the output on stdin, or `--compile <file>`, which
-     runs `compact compile` itself (add `--zkir-v3` for `--feature-zkir-v3`).
+     runs `compact compile` itself (add `--zkir-v3` for `--feature-zkir-v3`, before 0.36.0 only).
    - **`--compiler`:** the version the compile used. Give it whenever the compile ran with
      `+<version>`. Without it the checker can only ask `compact` for the default version, and it then
-     can't tell whether the srs User-Agent problem applies.
+     can't tell whether the srs User-Agent problem applies, or which panic fix applies.
    - **`--out`:** the compile's output directory. The checker reports each circuit's keys, and an old
      `contract/index.js` left from an earlier build.
    - **Other options:** `--offline` skips the download test, `--json` prints everything as JSON (its
@@ -401,7 +408,10 @@ tested.
 - zkir 0.31.x sends no `User-Agent`, and srs.midnight.network refuses requests without one (to
   report): `MIDNIGHT_PARAM_SOURCE` can't point the network compiler at the faster host.
 - [LFDT-Minokawa/compact#757](https://github.com/LFDT-Minokawa/compact/issues/757): open, but 0.35.0
-  builds keys for its contract on both backends.
+  builds keys for its contract on both backends, and 0.36.0 does too.
+- [LFDT-Minokawa/compact#616](https://github.com/LFDT-Minokawa/compact/issues/616) (to comment): on
+  0.36.0 there's no backend to fall back on, and a plain `Field` to `JubjubScalar` cast is enough to
+  hit it.
 - After a failed zkir step, compactc leaves 0-byte keys and any older `contract/` in place (to
   report): a later deploy can pick them up.
 
