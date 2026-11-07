@@ -212,10 +212,13 @@ so the circuit reaches zkir.
 | Contract | 0.36.0 |
 |---|---|
 | #299, the contract from the issue | panic (`midnight-circuits-7.3.0`, `native_gadget.rs:179`) |
-| #616, the contract from the issue (`Secp256k1Point`) | panic (`midnight-zk-stdlib-2.4.0`) |
+| #616, the contract from the issue (`Secp256k1Point` plus `keccak256<JubjubScalar>(0 as JubjubScalar)`) | panic (`midnight-zk-stdlib-2.4.0`) |
+| #616, the same contract with `default<JubjubScalar>` in place of `0 as JubjubScalar` | keys (also on 0.35.0 with `--feature-zkir-v3`) |
+| #616, `Secp256k1Point` only (`assert(pt != default<Secp256k1Point>, …)` and a ledger write) | keys (also on 0.35.0 with `--feature-zkir-v3`) |
 | #616, `ecMulGenerator(x as JubjubScalar)` with `x: Field` | panic |
 | #616, `x as JubjubScalar` returned, no `ecMulGenerator` | panic |
 | #616, `ecMulGenerator(x)` with `x: JubjubScalar` (an argument) | keys |
+| #616, `ecMulGenerator(w())` with a witness `w(): JubjubScalar` | keys |
 | #757, the contract from the issue | keys |
 | #280 (`p0 == p1` on `JubjubPoint`) | keys |
 
@@ -228,6 +231,9 @@ so the circuit reaches zkir.
   `bls_midnight_2p11` and built the keys, and so did one with `MIDNIGHT_PARAM_SOURCE` set to srs, so
   0.36.0's zkir sends a User-Agent. All 26 `PARAM_SHA256` values are in the 0.36.0 `zkir-v3` binary as
   raw bytes, as they are in 0.35.0's.
+- The `JubjubScalar` cast is what triggers #616, not `Secp256k1Point` (found in review on #287,
+  re-run 2026-11-07): the issue's contract panics on 0.36.0 and on 0.35.0 with `--feature-zkir-v3`,
+  and builds keys on both once `0 as JubjubScalar` becomes `default<JubjubScalar>`.
 - The test file has the #616 and #299 output from these runs (`panic616v036`, `panic299v036`).
 
 ## Broken installs

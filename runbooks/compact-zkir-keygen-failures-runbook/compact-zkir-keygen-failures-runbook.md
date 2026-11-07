@@ -192,7 +192,7 @@ Four are known; each was reproduced on 2026-10-17, and run again on 0.36.0 on 20
 | Message | Compilers and backend | Issue | Fix |
 |---|---|---|---|
 | `Trying to convert Fq(0x…) to an AssignedBounded less than 2^N!` | 0.31.1 to 0.36.0, every backend | [LFDT-Minokawa/compact#299](https://github.com/LFDT-Minokawa/compact/issues/299) (open) | The circuit casts a value fixed at compile time to a `Uint<…>` it doesn't fit, as in `((255 as Uint<8>) + (1 as Uint<8>)) as Uint<8>`, so no proof could ever be made. A cast to a smaller `Uint` doesn't wrap around: it fails when the value doesn't fit. Keep the wider type or change the constant, and if the code meant to wrap, write that out another way. The same cast on a value from an argument or witness compiles. The panic doesn't name the circuit. |
-| `ZkStdLibArch must enable jubjub` | 0.34.0 and 0.35.0 with `--feature-zkir-v3`; 0.36.0 | [LFDT-Minokawa/compact#616](https://github.com/LFDT-Minokawa/compact/issues/616) (open) | On 0.34.0 and 0.35.0, build without `--feature-zkir-v3`: the default backend builds keys for a circuit that returns `ecMulGenerator(…)`. 0.36.0 has no other backend, and a cast from `Field` to `JubjubScalar` (`x as JubjubScalar`) is enough to hit it there: take the scalar as a `JubjubScalar` circuit argument instead, which builds keys on 0.36.0. A circuit that uses `Secp256k1Point` has no workaround yet. |
+| `ZkStdLibArch must enable jubjub` | 0.34.0 and 0.35.0 with `--feature-zkir-v3`; 0.36.0 | [LFDT-Minokawa/compact#616](https://github.com/LFDT-Minokawa/compact/issues/616) (open) | The trigger is a cast to `JubjubScalar` (`x as JubjubScalar`, or `0 as JubjubScalar` as in the issue's contract); `Secp256k1Point` on its own builds keys. Take the scalar as a `JubjubScalar` circuit argument or witness, and use `default<JubjubScalar>` for a zero: the issue's contract then builds keys on 0.36.0, and on 0.35.0 with `--feature-zkir-v3`. On 0.34.0 and 0.35.0, building without `--feature-zkir-v3` also works for a circuit that returns `ecMulGenerator(…)`; 0.36.0 has no other backend. |
 | `Unsupported test_eq: JubjubScalar == JubjubScalar` | 0.34.0, `--feature-zkir-v3` | [LFDT-Minokawa/compact#757](https://github.com/LFDT-Minokawa/compact/issues/757) (open) | Upgrade to 0.35.0, which builds keys for the same code on both backends, or 0.36.0, which does too. On 0.34.0, compare as `Field`: `assert((r as Field) != (0 as Field), "zero")`. |
 | `cannot convert JubjubPoint to "Native"` | 0.30.0 and 0.31.1, `--feature-zkir-v3` | [LFDT-Minokawa/compact#280](https://github.com/LFDT-Minokawa/compact/issues/280) (closed) | Build without `--feature-zkir-v3`, or use 0.34.0 or later (0.36.0 builds keys for it too). The issue was filed on Apple Silicon; it reproduced here on x86_64 macOS. |
 
@@ -287,7 +287,7 @@ tested.
      runs `compact compile` itself (add `--zkir-v3` for `--feature-zkir-v3`, before 0.36.0 only).
    - **`--compiler`:** the version the compile used. Give it whenever the compile ran with
      `+<version>`. Without it the checker can only ask `compact` for the default version, and it then
-     can't tell whether the srs User-Agent problem applies.
+     can't tell whether the srs User-Agent problem applies, or which panic fix applies.
    - **`--out`:** the compile's output directory. The checker reports each circuit's keys, and an old
      `contract/index.js` left from an earlier build.
    - **Other options:** `--offline` skips the download test, `--json` prints everything as JSON (its

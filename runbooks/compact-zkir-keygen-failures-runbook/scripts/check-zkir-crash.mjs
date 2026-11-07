@@ -110,16 +110,12 @@ const PANICS = [
     id: 'zkir-v3-jubjub-arch',
     match: /ZkStdLibArch must enable jubjub/,
     issue: 'LFDT-Minokawa/compact#616',
-    what: (m, v) => v3Only(v)
-      ? 'zkir-v3 sets up a circuit without the Jubjub gadgets the circuit needs. On 0.36.0 a cast from Field to JubjubScalar (`x as JubjubScalar`) is enough to hit it, and so is Secp256k1Point. Open on 0.34.0 to 0.36.0.'
-      : 'with --feature-zkir-v3, zkir sets up a circuit without the Jubjub gadgets the circuit needs. Seen with Secp256k1Point, and with a circuit that returns ecMulGenerator(…). Open on 0.34.0 to 0.36.0.',
-    fix: (v) => v3Only(v) ? [
-      '0.36.0 has only the ZKIR v3 backend and rejects --feature-zkir-v3, so building with the other backend is no longer an option.',
-      'If the scalar starts as a Field, take it as a JubjubScalar instead: a circuit argument of type JubjubScalar passed to ecMulGenerator builds keys on 0.36.0, where the same value cast from a Field doesn\'t.',
-      'A circuit that uses Secp256k1Point has no workaround until the issue is fixed.',
-    ] : [
-      'Build without --feature-zkir-v3: the default backend builds keys for the ecMulGenerator case on 0.34.0 and 0.35.0.',
-      'Secp256k1Point exists only with --feature-zkir-v3 (0.34.0 and 0.35.0), so a circuit that uses it has no workaround until the issue is fixed.',
+    what: (m, v) => `${v3Only(v) ? 'zkir-v3' : 'with --feature-zkir-v3, zkir'} sets up a circuit without the Jubjub gadgets the circuit needs. What triggers it is a cast to JubjubScalar (\`x as JubjubScalar\`, \`0 as JubjubScalar\`), as in the issue's \`keccak256<JubjubScalar>(0 as JubjubScalar)\`; Secp256k1Point on its own builds keys. Open on 0.34.0 to 0.36.0.`,
+    fix: (v) => [
+      'Don\'t cast to JubjubScalar: take the scalar as a JubjubScalar circuit argument or witness, and use default<JubjubScalar> for a zero. With that change the issue\'s own contract builds keys on 0.36.0, and on 0.35.0 with --feature-zkir-v3.',
+      ...(v3Only(v)
+        ? ['0.36.0 has only the ZKIR v3 backend and rejects --feature-zkir-v3, so building with the other backend is no longer an option.']
+        : ['Or build without --feature-zkir-v3: the default backend builds keys for the ecMulGenerator case on 0.34.0 and 0.35.0.']),
     ],
   },
   {
