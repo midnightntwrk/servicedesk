@@ -65,8 +65,12 @@ have tNIGHT (test NIGHT).
 | pays NIGHT out of the contract: `sendUnshielded(nativeToken(), amount, recipient)` | `Unexpected error submitting scoped transaction '<unnamed>': (FiberFailure) SubmissionError: Transaction submission error`. The code is further down: on the console, `RPC-CORE: submitAndWatchExtrinsic(extrinsic: Extrinsic): ExtrinsicStatus:: 1010: Invalid Transaction: Custom error: 194`, and in the cause chain midnight-js prints into `err.message`, `[cause]: RpcError: 1010: Invalid Transaction: Custom error: 194` | at the node, after proving and balancing (25 to 45 s in) |
 | checks the contract's NIGHT: `unshieldedBalance(nativeToken())`, `unshieldedBalanceGte(nativeToken(), n)` and the other comparisons | no error from the check itself. The balance is 0 (inferred, not run), so the circuit takes its "no NIGHT" branch, often an `assert` with the contract's own message | in the circuit |
 
-These messages are from midnight-js 4.1.1 and wallet SDK 1.2.0, with `submitCallTx`. Mainnet now
-runs midnight-js 5.0.0 and wallet SDK 2.0.0, whose messages weren't checked; the node code is the same.
+These messages are from midnight-js 4.1.1 and wallet SDK 1.2.0, with `submitCallTx`. On midnight-js
+5.0.0, which Mainnet runs now, both arrive as `ProviderFailedError`: `balanceTx rejected the transaction
+(circuit '<name>')…` for a receive and `submitTx rejected the transaction (circuit '<name>')…` for a
+send. The reason is on `err.cause.message`: `InsufficientFundsError: Wallet.InsufficientFunds:
+Insufficient funds`, or two causes down, `RpcError: 1010: Invalid Transaction: Custom error: 194`
+(midnight-js 5.0.0's own wrapper, `atProviderMethod`, run on errors shaped like the wallet SDK's).
 `deployed.callTx.<circuit>()` goes through the same wrapper (see the
 [Node rejection codes](../node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) runbook).
 `(FiberFailure)` is how the wallet SDK labels a failure. With a browser wallet such as Lace or 1AM, the
@@ -80,7 +84,8 @@ What gives it away:
 - **The wallet has DUST.** The user can pay fees and other calls work, but this one reports
   `Insufficient funds`. A NIGHT balance the wallet shows for Cardano (cNIGHT) can't be paid into a
   Midnight contract.
-- **The token type is NIGHT's.** In the DApp's `catch`, print the error's cause. `amount` is a bigint,
+- **The token type is NIGHT's** (midnight-js 4.1.1; on 5.0.0 the cause stringifies to `{}`, so the
+  circuit name in `err.message` decides instead). In the DApp's `catch`, print the error's cause. `amount` is a bigint,
   so plain `JSON.stringify` throws (`Do not know how to serialize a BigInt`); use a replacer:
 
   ```ts
@@ -246,8 +251,14 @@ for a wallet that had NIGHT, and for a contract that held it.
    Runbook: https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md
    ```
 
-3. **Confirm from the error.** In the DApp's `catch`, print the cause with the bigint replacer above.
-   Pass that, or the error text, to `--error`, on stdin so the shell doesn't trip on its quotes, and
+3. **Confirm from the error.** In the DApp's `catch`, print the message and its causes, which works
+   on both midnight-js versions:
+
+   ```ts
+   for (let e: unknown = err; e instanceof Error; e = e.cause) console.log(e.message);
+   ```
+
+   On midnight-js 4.1.1, also print the cause with the bigint replacer above. Pass that, or the error text, to `--error`, on stdin so the shell doesn't trip on its quotes, and
    say the network:
 
    ```sh
@@ -258,7 +269,9 @@ for a wallet that had NIGHT, and for a contract that held it.
    Exit code: 2 = this runbook (a `tokenType` of 64 zeros on Mainnet, not from the shielded wallet); 3 = could be, and the output
    says the one detail that decides it (the `tokenType`, or whether the circuit sends NIGHT); 0 = not
    this runbook, with where to go instead. For a send, the decider is `Custom error: 194` in the
-   `RPC-CORE` console line or lower down in `err.message`, plus the checker finding a NIGHT send.
+   `RPC-CORE` console line or lower down in `err.message`, plus the checker finding a NIGHT send. On
+   midnight-js 5.0.0 the output names the circuit from `err.message`, and the decider is whether step 2
+   lists that circuit as a NIGHT receive or send.
 4. **By hand, without the script:**
 
    ```sh

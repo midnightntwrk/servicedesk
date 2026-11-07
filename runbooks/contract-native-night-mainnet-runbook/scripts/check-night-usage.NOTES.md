@@ -358,3 +358,21 @@ It found, and these are fixed:
   `sendNightTokensToUser` (send, line 41), as on the 0.31.1 source.
 - Not run again on ledger 9: the receive and send failures themselves, so the midnight-js 5.0.0 and
   wallet SDK 2.0.0 messages aren't checked. `test-check-night-usage.mjs`: 77 of 77.
+
+## midnight-js 5.0.0 error shapes (review on #291, 2026-11-07)
+
+midnight-js 5.0.0's `atProviderMethod` (`packages/contracts/src/internal/submit-payload.ts`, bundled
+into `midnight-js-contracts` 5.0.0's `dist/index.js`, not exported) was run from a scratch copy of the
+bundle on two errors shaped like the wallet SDK's: an `InsufficientFundsError` with message
+`Wallet.InsufficientFunds: Insufficient funds` and a NIGHT `tokenType`, and the
+`SubmissionError` → `SubmissionError` → `RpcError: 1010: Invalid Transaction: Custom error: 194` chain.
+
+- `err.name` `ProviderFailedError`; `err.message` `balanceTx rejected the transaction (circuit
+  'receiveNightTokens'). The provider's own failure is on \`cause\`, …` (and `submitTx … 'sendNightTokensToUser'`).
+- `err.cause.message` `InsufficientFundsError: Wallet.InsufficientFunds: Insufficient funds`; for
+  the send, three causes: `SubmissionError: Transaction submission error`, `SubmissionError:
+  Transaction submission failed`, `RpcError: 1010: Invalid Transaction: Custom error: 194`.
+- No own properties on any cause, so `JSON.stringify(err.cause)` is `{}` and `tokenType` is gone.
+
+The checker now matches `(balanceTx|submitTx|proveTx) rejected the transaction (circuit '…')` and
+decides by the circuit name. `test-check-night-usage.mjs`: 85 of 85 (8 new cases).
