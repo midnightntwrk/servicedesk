@@ -274,7 +274,7 @@ const DISPLAY_2_X = {
 
 const TABLES = {
   '1.0': { table: NODE_1_0, display: DISPLAY_1_0, label: 'node 1.0.x', range: '1.0.0 to 1.0.400' },
-  '2.x': { table: NODE_2_X, display: DISPLAY_2_X, label: 'node 2.x', range: '2.0.0-rc.4 to 2.1.0-rc.4, release candidates' },
+  '2.x': { table: NODE_2_X, display: DISPLAY_2_X, label: 'node 2.x', range: '2.0.0-rc.4 to 2.1.0-rc.4, and main on 2026-11-06; ledger 8 and ledger 9 alike' },
 };
 
 // Node 1.0.x codes that node 2.x split into finer ones (same source as the tables).
@@ -312,6 +312,7 @@ const DISMISS_TEXT = '"exceeded the maximum time to dismiss for transaction size
 const BLOCK_TEXT = '"exceeded block limit in transaction fee computation"';
 const HINTS = {
   '1.0': {
+    104: "104 is every transcript rejection: the contract call's on-chain program failed against the state it met, for example because the contract's state changed after the call was built. Build the call again against the current state.",
     168: `Fee check. On node 1.0.x this one code covers two ledger errors, and the node log says which: ${DISMISS_TEXT} (the transaction would take longer to validate than its size allows; servicedesk#100, where a third intent the SDK added tipped a swap over) or ${BLOCK_TEXT} (too big for one block; for a contract deploy, see the contract-batched-deploy runbook).`,
     170: DUST_170,
     182: TTL_182,
@@ -321,13 +322,14 @@ const HINTS = {
     196: DUST_196,
   },
   '2.x': {
+    104: "104 is every transcript rejection: the contract call's on-chain program failed against the state it met, for example because the contract's state changed after the call was built (ReadMismatch). Build the call again against the current state. One case on ledger 9 (mainnet and preview) is a known defect: if the call spends a held shielded coin and writes the change back with writeCoin, and the node log says \"ran out of gas budget\", that's midnight-ledger#839 (open), which has no workaround yet.",
     170: DUST_170,
     194: BALANCE_194,
     196: DUST_196,
     228: `Intent TTL expired. On node 1.0.x this was 182, reproduced there with a TTL 5 minutes in the past. ${TTL_FIX}`,
     229: `Intent TTL too far in the future. On node 1.0.x this was 182, reproduced there with a TTL 30 days ahead. ${TTL_FIX}`,
     230: 'Intent already exists. On node 1.0.x this was 182.',
-    231: `Node log: ${DISMISS_TEXT}. The transaction would take longer to validate than its size allows. servicedesk#117 (node 2.0.0-rc.4): contract calls that use unshielded-token effects. On node 1.0.x this was 168 (servicedesk#100, a swap that gained a third intent).`,
+    231: `Node log: ${DISMISS_TEXT}. The transaction would take longer to validate than its size allows. servicedesk#117 (node 2.0.0-rc.4): contract calls that use unshielded-token effects. On node 1.0.x this was 168 (servicedesk#100, a swap that gained a third intent). On ledger 9 (mainnet and preview), a known defect, midnight-ledger#838 (open): a moderately expensive contract call (about 10 ms to apply) paid with exactly one DUST spend can fail this check because the client overestimates the transaction's size. The wallet SDK has no option to choose how many DUST spends pay a fee, so there's no workaround in a DApp yet.`,
     232: `Node log: ${BLOCK_TEXT}. Too big for one block; for a contract deploy, see the contract-batched-deploy runbook. On node 1.0.x this was 168.`,
     242: `Replay protection, checked against ledger state: intent TTL expired (the well-formedness check, 228, usually catches this first). On node 1.0.x this was 193. ${TTL_FIX}`,
     243: `Replay protection, checked against ledger state: intent TTL too far in the future (the well-formedness check, 229, usually catches this first). On node 1.0.x this was 193. ${TTL_FIX}`,
@@ -645,12 +647,12 @@ async function main() {
     header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). ${rpcOpt} runs ${ver}.`);
     if (key === '1.0' && patch > 400) header.push(`  Caution: ${ver} is newer than 1.0.400, the last 1.0.x release this table was checked against.`);
     if (key === '2.x' && !/^2\.1\.0-rc\.4\b/.test(ver)) {
-      header.push(`  Caution: the 2.x table is node-2.1.0-rc.4's (2.0.0-rc.x lacks only 140); ${ver} itself wasn't checked.`);
+      header.push(`  Caution: the 2.x table is node-2.1.0-rc.4's, unchanged on main on 2026-11-06 (2.0.0-rc.x lacks only 140); ${ver}'s own source wasn't checked.`);
     }
   } else if (nodeOpt) {
     header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}), from --node ${key}.`);
   } else {
-    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}); preview, preprod and mainnet ran 1.0.400 on 2026-10-07.`);
+    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). On 2026-11-07 preprod ran node 1.0.400 (this table); mainnet and preview ran 2.1.101 (--node 2.x).`);
     header.push('  Check the node that rejected the transaction with --rpc <url>, or pass --node 2.x.');
   }
 
