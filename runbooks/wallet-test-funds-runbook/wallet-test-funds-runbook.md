@@ -4,7 +4,7 @@ when_to_use: "A Preview or Preprod faucet request hangs, errors or never arrives
 audience: "developers support-agents"
 owner: "mn-servicedesk"
 compiled: "2026-10-16"
-last_reviewed: "2026-10-16"
+last_reviewed: "2026-11-07"
 error_strings:
   - "Provided address is invalid"
   - "Your transaction is being submitted."
@@ -36,6 +36,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 | `Failed to prove transaction`, `Insufficient funds to move …`, `Services are currently unavailable. Please try again later.` or `Transaction submission error` on the faucet page | Remediation 2 |
 | `You can't resubmit right now, next attempt is allowed at …` or `Token request failed due to timeout` | Remediation 2 |
 | tNIGHT is in the wallet but there is no DUST, so transactions cannot pay fees | Diagnose 3 |
+| tNIGHT, DUST or a DUST registration you had on Preview before the reset is gone | Root cause 4, then Remediation 1 and 3 |
 
 ### Not this runbook
 
@@ -48,6 +49,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 1. **The faucet page only waits.** It submits a request, which the faucet calls a drip, then polls its status about every 10 s for as long as it is `PENDING`, showing `Your transaction is being submitted.` (measured). A faucet whose wallet is stuck, empty or failing to prove leaves it waiting, while its health endpoint can still answer `SERVING` (measured). The faucet's own code fails a stranded drip with `Token request failed due to timeout` and returns the address's daily slot; which version each host runs is not known.
 2. **Each faucet serves one network and keeps a daily limit per address, set by each deployment.** An address for another network, a shielded or DUST address, or a mistyped one gets `Provided address is invalid`, and no drip is created. So the two faucets for a network keep separate limits, and the Nethermind ones served the same address again after a few minutes (reported).
 3. **tNIGHT generates no DUST until it is registered.** The registration is a transaction the wallet submits, and the indexer marks each registered NIGHT output.
+4. **Preview was reset, not upgraded.** On 6 November 2026 Preview became a new ledger 9 chain, and nothing carried over: balances, DUST registrations, contracts and transaction history from before are gone, and the indexer only has the new chain. The endpoints, the faucets and the address format didn't change, so an old address still works: request tNIGHT again and register it again. Its genesis hash didn't change either (measured: `0x3c096de2…` before and after), so a wallet won't notice the reset by itself; resync it from genesis, which is quick on the new chain.
 
 ## Before you start
 
@@ -128,6 +130,7 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | Fact this runbook relies on | Source of truth | Must contain |
 |---|---|---|
 | Each test network's faucet, rate-limited, its indexer endpoints and address prefixes; no mainnet faucet | `github:midnightntwrk/midnight-docs/docs/guides/networks-and-environments.mdx`, published as [Networks and environments](https://docs.midnight.network/guides/networks-and-environments) | `https://midnight-tmnight-preview.nethermind.dev/` `https://midnight-tmnight-preprod.nethermind.dev/` `both faucets are rate limited` `https://indexer.preview.midnight.network/api/v4/graphql` `wss://indexer.preview.midnight.network/api/v4/graphql/ws` `https://midnight-preprod.blockfrost.io/api/v0?project_id=<token>` `wss://midnight-preprod.blockfrost.io/api/v0/ws?project_id=<token>` `mn_addr_preview` `mn_addr_preprod` `there is no faucet` |
+| Preview was reset as a new chain, and nothing carried over | `github:midnightntwrk/midnight-docs/docs/relnotes/ledger-9.mdx`, published as [Ledger 9 network upgrade](https://docs.midnight.network/relnotes/ledger-9) | `Preview was reset as a new chain that runs ledger 9` `nothing carries over from the old ledger 8 chain` |
 | The faucet steps, Lace and SDK registration, and troubleshooting rows | `github:midnightntwrk/midnight-docs/docs/guides/acquire-tokens.mdx`, published as [Funding a wallet](https://docs.midnight.network/guides/acquire-tokens) | `the faucet rejects shielded and DUST addresses` `Generate tDUST` `to submit the registration` `up to a cap set by how much NIGHT you registered` `registerNightUtxosForDustGeneration` `Provided address is invalid` `Balance stays zero after the faucet confirms` `DUST stays zero after registration` |
 | The second faucet for each network | `github:midnightntwrk/midnight-faucet-ui/src/constants/networks.ts` | `preview: "https://faucet.preview.midnight.network/"` `preprod: "https://faucet.preprod.midnight.network/"` |
 | The indexer streams an address's transactions, finds one by identifier, and marks registered NIGHT | `github:midnightntwrk/midnight-indexer/indexer-api/graphql/schema-v4.graphql` | `unshieldedTransactions(address: UnshieldedAddress!, transactionId: Int): UnshieldedTransactionsEvent!` `highestTransactionId: Int!` `registeredForDustGeneration: Boolean!` `identifier: HexEncoded` |
