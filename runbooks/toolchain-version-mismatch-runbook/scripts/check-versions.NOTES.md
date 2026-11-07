@@ -265,5 +265,15 @@ any use, so nothing was proved, signed or sent:
 | 0.35.0 (runtime 0.20.0 in its own `node_modules`), Preview, with or without the option | `EraMismatchError`, reason `unknown-artifact-runtime-version`, "The artifacts declare compact-runtime 0.20.0." |
 | 0.35.0 loading the project's runtime 0.21.0 | `CompactError: Version mismatch: compiled code expects 0.20.0, runtime is 0.21.0` on import |
 
+**After the code review** (same day): the compiled-contract fix text now separates a patch
+difference on the same ledger (a fake `checkRuntimeVersion('0.21.1')` on Mainnet: "Same ledger,
+different release"); midnight-js 5's ledger 8 copy is found by resolving `compact-runtime-ledger8`
+from each protocol copy, not by folder name (a pnpm install of the 5.0.0 project gave `WARN an
+unused copy is another version` before, `OK` after, exit 0); and a ledger 8 build on a ledger 9
+network is `WARN` rather than `MISMATCH`, with the on-chain runtime compared against midnight-js 5's
+ledger 8 copy. The 0.31.1 contract with its own runtime 0.16.0 (the pre-fork call setup) exits 0;
+the same build loading the project's 0.21.0 still exits 2 (`Runtime the contract loads`). Every
+earlier case gives the same exit code.
+
 Not reproduced: `ledger8-maintenance-on-ledger9-network`, and a call to a ledger 8 contract
 deployed before the fork (needs one on Mainnet, or a network that forks).

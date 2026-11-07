@@ -349,9 +349,12 @@ async function main() {
   const matrix = await loadMatrix(matrixSrc);
   // Each network entry has `version` (since midnight-docs f0d3fdc, 2026-10-09; `tag` is often null
   // now). Older copies of the matrix only have `tag`, e.g. `toolchain-0.31.1`.
-  const expectedFor = (component) => {
+  const entryFor = (component, network = opts.network) => {
     const c = matrix.components.find((x) => x.component === component);
-    const v = c?.versions?.[opts.network];
+    return { c, v: c?.versions?.[network] };
+  };
+  const expectedFor = (component, network = opts.network) => {
+    const { v } = entryFor(component, network);
     return fullVer(v?.version) ?? fullVer(v?.tag);
   };
   // These two decide MISMATCH rows. If the matrix no longer has them, stop rather than compare
@@ -366,13 +369,13 @@ async function main() {
   const era = eraOfRuntime(expRuntime);
   if (!era) fail(`the support matrix lists Compact runtime ${expRuntime} for ${opts.network}, which this script can't place on a ledger era (it knows 0.16 = ledger 8 and 0.21 = ledger 9). Check for a newer copy of this script.`);
   const npmFor = (component) => {
-    const c = matrix.components.find((x) => x.component === component);
-    return c?.versions?.[opts.network]?.npmPackage ?? c?.npmPackage;
+    const { c, v } = entryFor(component);
+    return v?.npmPackage ?? c?.npmPackage;
   };
+  // Networks whose matrix entry is on the other, known era (an entry without a runtime isn't one).
   const otherEraNets = NETWORKS.filter((n) => {
-    const c = matrix.components.find((x) => x.component === 'Compact runtime');
-    const v = c?.versions?.[n];
-    return n !== opts.network && eraOfRuntime(fullVer(v?.version) ?? fullVer(v?.tag)) !== era;
+    const e = eraOfRuntime(expectedFor('Compact runtime', n));
+    return n !== opts.network && e !== undefined && e !== era;
   });
 
   // 1. Compact devtools and the default compiler.
@@ -423,6 +426,15 @@ async function main() {
     }
   }
 
+  // midnight-js 5's own ledger 8 runtime: resolved under its alias from each protocol copy, so the
+  // real directory is known whatever the linker (pnpm and Yarn store it under another name).
+  const sdkL8Runtimes = [];
+  for (const p of copies(PROTOCOL)) {
+    const cr = resolveFrom(p.dir, RUNTIME_L8_ALIAS);
+    if (cr && !cr.unreadable && !sdkL8Runtimes.some((x) => x.dir === cr.dir)) sdkL8Runtimes.push(cr);
+  }
+  const l8AliasDirs = new Set(sdkL8Runtimes.map((c) => c.dir));
+
   // The copies the contract loads (Node resolves from the importing file's directory).
   const contractFrom = compiledDir ? path.join(compiledDir, 'contract') : undefined;
   const contractRuntime = contractFrom ? resolveFrom(contractFrom, RUNTIME) : undefined;
@@ -440,9 +452,12 @@ async function main() {
     const all = [...copies(RUNTIME)];
     for (const c of loaded) if (!all.some((x) => x.dir === c.dir)) all.push(c);
     const loadedDirs = new Set(loaded.map((c) => c.dir));
-    const badLoaded = loaded.filter((c) => c.version && !runtimeAccepts(expRuntime, c.version));
+    // On a ledger 9 network with midnight-js 5, a ledger 8 contract loading its own 0.16 copy is the
+    // pre-fork call setup (runbook Remediation 6); the compiled-contract rows report it.
+    const preForkCopy = (c) => era === 9 && c === contractRuntime && eraOfRuntime(c.version) === 8 && sdkL8Runtimes.length > 0;
+    const badLoaded = loaded.filter((c) => c.version && !runtimeAccepts(expRuntime, c.version) && !preForkCopy(c));
     // midnight-js 5's own ledger 8 copy, installed under an alias: expected, not a stray.
-    const isL8Alias = (c) => path.basename(c.dir) === RUNTIME_L8_ALIAS;
+    const isL8Alias = (c) => l8AliasDirs.has(c.dir);
     const aliasCopies = all.filter((c) => !loadedDirs.has(c.dir) && isL8Alias(c));
     const others = all.filter((c) => !loadedDirs.has(c.dir) && !isL8Alias(c));
     const shown = all.length > 1 ? `${all.length} copies: ${listVersions(all)}` : all[0]?.version;
@@ -464,7 +479,7 @@ async function main() {
     // for ledger 8 contracts. What has to match is checked below, with --compiled.
     const expOnchain = expectedFor('On-chain runtime');
     const v3 = copies(ONCHAIN);
-    const v4 = [...copies(ONCHAIN_V4), ...copies(ONCHAIN_V4_OLD_SCOPE)];
+    const v4 = [ONCHAIN_V4, ONCHAIN_V4_OLD_SCOPE].flatMap((n) => copies(n).map((c) => ({ ...c, name: n })));
     const [mainOc, mainLabel, otherOc, otherLabel] = era === 9 ? [v4, 'v4', v3, 'v3'] : [v3, 'v3', v4, 'v4'];
     if (mainOc.length === 0) {
       add(`On-chain runtime (${mainLabel})`, 'not installed', expOnchain, 'SKIP', npmFor('On-chain runtime') ?? '');
@@ -476,7 +491,7 @@ async function main() {
         add('On-chain runtime (v3)', listVersions(otherOc), 'ledger 8 only', 'INFO', 'midnight-js 5 carries it for ledger 8 contracts');
       } else {
         add('On-chain runtime (v4)', listVersions(otherOc), `not on ${opts.network}`, 'WARN', 'ledger 9 (compact-runtime 0.19+)');
-        fix(`${ONCHAIN_V4} ${listVersions(otherOc)} is installed (${otherOc.map((c) => rel(c.dir)).join('; ')}). It comes with compact-runtime 0.19 and later (compilers 0.34+) and runs on ledger 9 networks${otherEraNets.length ? ` (${otherEraNets.join(', ')})` : ''}; ${opts.network} runs ledger 8. midnight-js 5 brings it too, which is fine; otherwise recompile with \`compact compile +${expToolchain} …\` and pin ${RUNTIME}@${expRuntime}.`);
+        fix(`${[...new Set(otherOc.map((c) => c.name))].join(' and ')} ${listVersions(otherOc)} is installed (${otherOc.map((c) => rel(c.dir)).join('; ')}). It comes with compact-runtime 0.19 and later (compilers 0.34+) and runs on ledger 9 networks${otherEraNets.length ? ` (${otherEraNets.join(', ')})` : ''}; ${opts.network} runs ledger 8. midnight-js 5 brings it too, which is fine; otherwise recompile with \`compact compile +${expToolchain} …\` and pin ${RUNTIME}@${expRuntime}.`);
       }
     }
 
@@ -505,7 +520,7 @@ async function main() {
 
     // testkit-js 4.1.1 pins wallet-sdk 1.1.0 while the matrix says 1.2.0: expected, say so.
     const tk = copies('@midnight-ntwrk/testkit-js');
-    if (tk.length && copies('@midnight-ntwrk/wallet-sdk').some((c) => c.version === '1.1.0')) {
+    if (era === 8 && tk.some((c) => c.version === '4.1.1') && copies('@midnight-ntwrk/wallet-sdk').some((c) => c.version === '1.1.0')) {
       add('Wallet SDK via testkit-js', '1.1.0', expectedFor('Wallet SDK'), 'INFO', 'testkit-js 4.1.1 pins wallet-sdk 1.1.0');
     }
 
@@ -558,15 +573,20 @@ async function main() {
     if (src && !wants) add('Compiled contract wants runtime', 'no runtime pin found', expRuntime, 'WARN', 'unexpected compiler output');
     if (wants) {
       const supported = runtimeAccepts(wants, expRuntime);
-      add('Compiled contract wants runtime', wants, expRuntime, supported ? 'OK' : 'MISMATCH', supported ? '' : 'built by an unsupported compiler');
+      const wantsEra = eraOfRuntime(wants);
+      // A ledger 8 build on a ledger 9 network: midnight-js 5 refuses to deploy it, but calls to a
+      // contract deployed before the fork still use it, so it can't be called broken outright.
+      const preFork = !supported && era === 9 && wantsEra === 8;
+      add('Compiled contract wants runtime', wants, expRuntime, supported ? 'OK' : preFork ? 'WARN' : 'MISMATCH', supported ? '' : preFork ? 'ledger 8 build: calls to pre-fork contracts only' : 'built by an unsupported compiler');
       if (!supported) {
-        const wantsEra = eraOfRuntime(wants);
-        const why = !wantsEra
+        const why = wantsEra === era
+          ? `Same ledger, different release: the network's runtime ${expRuntime} doesn't accept a contract built for ${wants} ("Version mismatch: compiled code expects ${wants}, runtime is ${expRuntime}").`
+          : !wantsEra
           ? `midnight-js 5 places runtime ${wants} on no ledger era and refuses it before proving (EraMismatchError, reason 'unknown-artifact-runtime-version'); midnight-js 4.1.1 fails with "Failed to configure constructor context with coin public key".`
           : wantsEra === 8
             ? `That is a ledger 8 build, and ${opts.network} runs ledger 9: midnight-js 5 refuses to deploy it (EraMismatchError, reason 'ledger8-deploy-on-ledger9-network') or run a maintenance update with it. A contract deployed before the ledger 9 fork can still be called with the build it was deployed with.`
             : `That is a ledger 9 build, and ${opts.network} runs ledger 8: midnight-js 5 refuses it (EraMismatchError, reason 'ledger9-artifact-on-ledger8-network'), and midnight-js 4.1.1 fails with "Failed to configure constructor context with coin public key".`;
-        fix(`The contract in ${rel(compiledDir)} was compiled for runtime ${wants}, but ${opts.network}'s stack uses ${expRuntime}. ${why} Installing runtime ${wants} won't help. For a new deploy, recompile with \`compact compile +${expToolchain} …\` and keep ${RUNTIME} at ${expRuntime}.`);
+        fix(`The contract in ${rel(compiledDir)} was compiled for runtime ${wants}, but ${opts.network}'s stack uses ${expRuntime}. ${why} ${preFork ? `If this build is only for calling a contract deployed before the fork, keep it, and see the runbook's Remediation 6. ` : ''}${wantsEra === era ? '' : `Installing runtime ${wants} won't help. `}For a new deploy, recompile with \`compact compile +${expToolchain} …\` and keep ${RUNTIME} at ${expRuntime}.`);
       }
     }
     if (!pnpRoot) {
@@ -587,7 +607,10 @@ async function main() {
       // physical copy, or deploys fail with "expected instance of ContractMaintenanceAuthority".
       if (contractRuntime && !contractRuntime.unreadable) {
         const cOn = onchainOf(contractRuntime);
-        const sdkOn = sdkRuntimes.map(onchainOf).filter(Boolean);
+        // A ledger 8 contract under midnight-js 5 goes through its ledger 8 runtime, so that's the
+        // copy it has to share the on-chain runtime with.
+        const viaL8 = eraOfRuntime(contractRuntime.version) === 8 && sdkL8Runtimes.length > 0;
+        const sdkOn = (viaL8 ? sdkL8Runtimes : sdkRuntimes).map(onchainOf).filter(Boolean);
         if (!sdkRuntimes.length) {
           add('Contract and midnight-js share the on-chain runtime', 'midnight-js not found', 'yes', 'SKIP');
         } else if (!sdkOn.length) {
@@ -599,7 +622,9 @@ async function main() {
           const desc = (o) => (o ? `${o.name.split('/')[1]} ${o.version} at ${rel(o.dir)}` : '(none)');
           add('Contract and midnight-js share the on-chain runtime', 'no', 'yes', 'MISMATCH', `${cOn ? `${cOn.name.split('/')[1]} ${cOn.version}` : 'none'} vs ${other.name.split('/')[1]} ${other.version}`);
           if (cOn && cOn.name !== other.name) {
-            fix(`The contract's runtime loads ${desc(cOn)}, midnight-js loads ${desc(other)}: different on-chain runtimes. A compact-runtime 0.19+ copy brings onchain-runtime-v4: an unpinned runtime install, or a contract compiled by 0.34+. See the Compact runtime and compiled-contract rows.`);
+            fix(era === 9
+              ? `The contract's runtime loads ${desc(cOn)}, midnight-js loads ${desc(other)}: different on-chain runtimes. ${opts.network} runs onchain-runtime-v4: a contract on v3 was built for ledger 8, and midnight-js on v3 is 4.1.1, which needs upgrading to 5.0.0. See the Compact runtime, Midnight.js and compiled-contract rows.`
+              : `The contract's runtime loads ${desc(cOn)}, midnight-js loads ${desc(other)}: different on-chain runtimes. A compact-runtime 0.19+ copy brings onchain-runtime-v4, which ${opts.network} doesn't run: an unpinned runtime install, or a contract compiled by 0.34+. See the Compact runtime and compiled-contract rows.`);
           } else {
             fix(`The contract reaches the on-chain runtime at ${desc(cOn)}, midnight-js at ${desc(other)}. Deploys fail with "expected instance of ContractMaintenanceAuthority" even when both are the same version. Install ${RUNTIME}@${expRuntime} once where both resolve it (usually the workspace root), not inside the contract package, then reinstall.`);
           }

@@ -247,11 +247,11 @@ source disagrees with a row, the source is right.
    …
    Midnight.js                                          5.0.0                     5.0.0          OK
    …
-   Compiled contract wants runtime                      0.16.0                    0.21.0         MISMATCH  built by an unsupported compiler
+   Compiled contract wants runtime                      0.16.0                    0.21.0         WARN      ledger 8 build: calls to pre-fork contracts only
    Runtime the contract loads                           0.21.0                    0.16.0         MISMATCH
    ZKIR format                                          v2                        v3             DIFFERS   built by a compiler before 0.36
    …
-   RESULT: 2 mismatch(es). See the runbook for the matching error text.
+   RESULT: 1 mismatch(es). See the runbook for the matching error text.
    ```
 
    Its fix names `ledger8-deploy-on-ledger9-network` and says to recompile with 0.36.0.
@@ -330,9 +330,9 @@ source disagrees with a row, the source is right.
    build. Calling it from midnight-js 5 needs `NodeZkConfigProvider(dir, { verify:
    'require-if-present' })`, since 0.31.1 writes no `contract-manifest.json` (reproduced), and
    runtime 0.16.0 resolvable from the 0.31.1 contract module next to the framework's 0.21.0. The
-   midnight-js 5.0.0 migration guide, "Dependencies of a ledger 8 contract", says there's no
-   official recipe yet and describes its own test setup (an isolated linker such as pnpm's, the
-   contract in its own package). A call to a pre-fork contract wasn't reproduced here.
+   midnight-js 5.0.0 migration guide ("Dependencies of a ledger 8 contract") has no official recipe
+   yet, only its test setup. With that the check reports the build as `WARN` (calls
+   only) and exits 0. A pre-fork call wasn't reproduced.
 
    *Trade-off:* the contract keeps its ledger 8 keys until a 0.36.0 build and a maintenance update.
 
