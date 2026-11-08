@@ -13,11 +13,18 @@ The contract isn't wrong. DUST is what pays transaction fees, and NIGHT generate
 NIGHT is held on Cardano as cNIGHT, and registering cNIGHT generates DUST on Midnight. A wallet funded
 that way has DUST but no NIGHT on Midnight to pay into a contract, and a contract no one has paid NIGHT
 holds none. As of 2026-10-19 the docs say native mNIGHT hasn't launched, and no NIGHT moved in the
-Mainnet transactions sampled for this page. The checker below lists the circuits in a contract that
+Mainnet transactions sampled for this page. The ledger 9 upgrade on 6 November 2026 didn't change
+this: the docs say it doesn't turn on the cNIGHT-to-mNIGHT bridge on Mainnet, which is a separate
+governance action. The checker below lists the circuits in a contract that
 move NIGHT, and tells whether an error a user pasted is this one.
 
 _Compiled 2026-10-19. Both failures were reproduced that day on a local network, on node 1.0.0 and on
-node 1.0.400 (the version Preview, Preprod and Mainnet run), with a wallet that had DUST and no NIGHT.
+node 1.0.400 (the version Preview, Preprod and Mainnet ran then), with a wallet that had DUST and no NIGHT.
+Re-checked 2026-11-07 after the ledger 9 upgrade (Mainnet on node 2.1.101): the
+[ledger 9 upgrade notes](https://docs.midnight.network/relnotes/ledger-9) say the bridge stays off, 194
+is still `Invalid.BalanceCheckOutOfBounds` in the node 2.x code table, and the checker finds both NIGHT
+circuits in midnight-examples' 0.36.0 `token-transfers`. The failures weren't run again on ledger 9,
+so the midnight-js 5 and wallet SDK 2 messages weren't checked.
 Control calls on the same contract succeeded once NIGHT was there. Two windows of Mainnet blocks between
 2026-09-20 and 2026-10-19 were sampled for NIGHT. The checker was run on midnight-examples' contracts, source and
 compiled, and on contracts written to break it. The page was reviewed by an independent fact-check and by
@@ -58,7 +65,12 @@ have tNIGHT (test NIGHT).
 | pays NIGHT out of the contract: `sendUnshielded(nativeToken(), amount, recipient)` | `Unexpected error submitting scoped transaction '<unnamed>': (FiberFailure) SubmissionError: Transaction submission error`. The code is further down: on the console, `RPC-CORE: submitAndWatchExtrinsic(extrinsic: Extrinsic): ExtrinsicStatus:: 1010: Invalid Transaction: Custom error: 194`, and in the cause chain midnight-js prints into `err.message`, `[cause]: RpcError: 1010: Invalid Transaction: Custom error: 194` | at the node, after proving and balancing (25 to 45 s in) |
 | checks the contract's NIGHT: `unshieldedBalance(nativeToken())`, `unshieldedBalanceGte(nativeToken(), n)` and the other comparisons | no error from the check itself. The balance is 0 (inferred, not run), so the circuit takes its "no NIGHT" branch, often an `assert` with the contract's own message | in the circuit |
 
-These messages are from midnight-js 4.1.1 and wallet SDK 1.2.0, with `submitCallTx`.
+These messages are from midnight-js 4.1.1 and wallet SDK 1.2.0, with `submitCallTx`. On midnight-js
+5.0.0, which Mainnet runs now, both arrive as `ProviderFailedError`: `balanceTx rejected the transaction
+(circuit '<name>')…` for a receive and `submitTx rejected the transaction (circuit '<name>')…` for a
+send. The reason is on `err.cause.message`: `InsufficientFundsError: Wallet.InsufficientFunds:
+Insufficient funds`, or two causes down, `RpcError: 1010: Invalid Transaction: Custom error: 194`
+(midnight-js 5.0.0's own wrapper, `atProviderMethod`, run on errors shaped like the wallet SDK's).
 `deployed.callTx.<circuit>()` goes through the same wrapper (see the
 [Node rejection codes](../node-1010-custom-error-runbook/node-1010-custom-error-runbook.md) runbook).
 `(FiberFailure)` is how the wallet SDK labels a failure. With a browser wallet such as Lace or 1AM, the
@@ -72,7 +84,8 @@ What gives it away:
 - **The wallet has DUST.** The user can pay fees and other calls work, but this one reports
   `Insufficient funds`. A NIGHT balance the wallet shows for Cardano (cNIGHT) can't be paid into a
   Midnight contract.
-- **The token type is NIGHT's.** In the DApp's `catch`, print the error's cause. `amount` is a bigint,
+- **The token type is NIGHT's** (midnight-js 4.1.1; on 5.0.0 the cause stringifies to `{}`, so the
+  circuit name in `err.message` decides instead). In the DApp's `catch`, print the error's cause. `amount` is a bigint,
   so plain `JSON.stringify` throws (`Do not know how to serialize a BigInt`); use a replacer:
 
   ```ts
@@ -152,7 +165,7 @@ So, on Mainnet:
 2. **A NIGHT send is rejected by the node.** When the node applies the contract call, it subtracts
    each token the call pays out from the contract's balance, and fails if that goes below zero
    (`ledger/src/semantics.rs`, `ledger-8.1.3`, lines 1310 to 1338). The contract holds no NIGHT, so it
-   fails with `Invalid.BalanceCheckOutOfBounds`, code 194 on node 1.0.x. It doesn't matter who calls:
+   fails with `Invalid.BalanceCheckOutOfBounds`, code 194 on node 1.0.x and 2.x. It doesn't matter who calls:
    it was reproduced with a caller who had NIGHT, because the contract's balance is what's checked.
 3. **A NIGHT balance check reads 0.** It reads the contract's NIGHT balance, and the compiled
    `unshieldedBalanceLt` treats a token the contract doesn't hold as 0. This one wasn't run: it follows
@@ -176,9 +189,11 @@ for a wallet that had NIGHT, and for a contract that held it.
   - unshielded: `Insufficient funds`;
   - shielded: `Insufficient funds`, or `Insufficient funds for fallible segment N`;
   - DUST: `Insufficient Funds: could not balance dust`.
-- **Node code:** `Custom error: 194`, `Invalid.BalanceCheckOutOfBounds` on node 1.0.x (decoded by
+- **Node code:** `Custom error: 194`, `Invalid.BalanceCheckOutOfBounds` on node 1.0.x and 2.x (decoded by
   [`decode-1010.mjs`](../node-1010-custom-error-runbook/scripts/decode-1010.mjs), which needs Node 20).
-- **Network ID:** `mainnet` (`getNetworkId()` from `@midnight-ntwrk/midnight-js-network-id`).
+- **Network ID:** `mainnet`: the `networkId` the DApp passes in `providers.config` (midnight-js
+  5.0.0, which removed `@midnight-ntwrk/midnight-js-network-id`), or `getNetworkId()` from that
+  package on midnight-js 4.1.1.
 - **Examples that move NIGHT** (midnight-examples at `7c8c0a0`):
   - `token-transfers`: `receiveNightTokens`, `sendNightTokensToUser`;
   - `private-party`: `checkIn`, `claimFees`;
@@ -229,15 +244,21 @@ for a wallet that had NIGHT, and for a contract that held it.
      sendNightTokensToUser: send
        sendUnshielded(default<Bytes<32>>) at line 41
 
-   On Mainnet (as of 2026-10-19), a wallet funded through cNIGHT has DUST but no NIGHT on Midnight, and a contract no one has paid NIGHT holds none, so a circuit that moves NIGHT fails there. It works on Preview, Preprod and a local network:
+   On Mainnet (as of 2026-11-07, after the ledger 9 upgrade, which left the bridge off), a wallet funded through cNIGHT has DUST but no NIGHT on Midnight, and a contract no one has paid NIGHT holds none, so a circuit that moves NIGHT fails there. It works on Preview, Preprod and a local network:
      - a NIGHT receive fails in the wallet after proving, before anything is submitted: Wallet.InsufficientFunds: Insufficient funds. A wallet funded through cNIGHT has DUST but no NIGHT on Midnight to pay with.
      - a NIGHT send is rejected by the node after proving: 1010: Invalid Transaction: Custom error: 194 (BalanceCheckOutOfBounds), shown as SubmissionError: Transaction submission error. The contract holds no NIGHT.
    Fix: hide these circuits on Mainnet in the DApp, or leave them out of the Mainnet build. If a circuit only needs some token to move, a token the contract mints itself (mintUnshieldedToken) does move on Mainnet.
    Runbook: https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md
    ```
 
-3. **Confirm from the error.** In the DApp's `catch`, print the cause with the bigint replacer above.
-   Pass that, or the error text, to `--error`, on stdin so the shell doesn't trip on its quotes, and
+3. **Confirm from the error.** In the DApp's `catch`, print the message and its causes, which works
+   on both midnight-js versions:
+
+   ```ts
+   for (let e: unknown = err; e instanceof Error; e = e.cause) console.log(e.message);
+   ```
+
+   On midnight-js 4.1.1, also print the cause with the bigint replacer above. Pass that, or the error text, to `--error`, on stdin so the shell doesn't trip on its quotes, and
    say the network:
 
    ```sh
@@ -248,7 +269,9 @@ for a wallet that had NIGHT, and for a contract that held it.
    Exit code: 2 = this runbook (a `tokenType` of 64 zeros on Mainnet, not from the shielded wallet); 3 = could be, and the output
    says the one detail that decides it (the `tokenType`, or whether the circuit sends NIGHT); 0 = not
    this runbook, with where to go instead. For a send, the decider is `Custom error: 194` in the
-   `RPC-CORE` console line or lower down in `err.message`, plus the checker finding a NIGHT send.
+   `RPC-CORE` console line or lower down in `err.message`, plus the checker finding a NIGHT send. On
+   midnight-js 5.0.0 the output names the circuit from `err.message`, and the decider is whether step 2
+   lists that circuit as a NIGHT receive or send.
 4. **By hand, without the script:**
 
    ```sh
@@ -266,10 +289,12 @@ for a wallet that had NIGHT, and for a contract that held it.
    that says why, and keep them on Preview and Preprod:
 
    ```ts
-   import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-
-   const nightPaymentsWork = getNetworkId() !== 'mainnet'; // after the DApp's own setNetworkId(...)
+   // midnight-js 5.0.0: the same networkId the DApp passes in providers.config
+   const nightPaymentsWork = config.networkId !== 'mainnet';
    ```
+
+   On midnight-js 4.1.1 (Preprod's set), read it with `getNetworkId()` from
+   `@midnight-ntwrk/midnight-js-network-id` instead; midnight-js 5.0.0 removed that package.
 
    - Pro: no contract change.
    - Con: the feature is missing on Mainnet. Nothing published says whether a contract deployed now

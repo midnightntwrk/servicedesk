@@ -30,7 +30,9 @@ import { fileURLToPath } from 'node:url';
 const RUNBOOK = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md';
 const DUST_RUNBOOK = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/cnight-dust-duplicate-registration-runbook/cnight-dust-duplicate-registration-runbook.md';
 const LOOKUP = 'https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/README.md#error-string-lookup';
-const AS_OF = '2026-10-19';
+// Re-checked after the ledger 9 upgrade, which didn't turn on the cNIGHT-to-mNIGHT bridge
+// (midnight-docs relnotes/ledger-9.mdx).
+const AS_OF = '2026-11-07, after the ledger 9 upgrade, which left the bridge off';
 
 const USAGE = `usage: node check-night-usage.mjs <file.compact | directory | compiled contract dir | contract/index.js>... [--json]
        node check-night-usage.mjs --error '<error text>' | --error - [--network mainnet|preprod|preview|local] [--json]`;
@@ -502,6 +504,24 @@ export function explainError(text, network) {
     return { verdict: null, tokenType: 'dust', summary: 'The wallet is short of DUST to pay the fee, not of NIGHT, so this isn\'t the NIGHT problem. Wait for its DUST to grow; if the DUST balance stopped growing, see the cNIGHT to DUST duplicate registrations runbook.', next: DUST_RUNBOOK };
   }
   const insufficient = /InsufficientFunds|Insufficient funds/.test(t);
+  // midnight-js 5.0.0 wraps a provider's failure as ProviderFailedError, "<method> rejected the
+  // transaction (circuit '<name>')", and rebuilds the cause as a plain Error with only its class name
+  // and message (packages/contracts/src/errors.ts, internal/submit-payload.ts). err.cause then
+  // stringifies to {}, so the token type is gone and the circuit name is what decides.
+  const provider = /\b(balanceTx|submitTx|proveTx) rejected the transaction \(circuit '([^']+)'\)/.exec(t);
+  if (provider) {
+    const [, method, circuit] = provider;
+    const has194 = /Custom error:\s*194\b|Invalid\.BalanceCheckOutOfBounds/.test(t);
+    const scan = `run this checker on the contract: if it lists '${circuit}' as a NIGHT ${method === 'balanceTx' ? 'receive' : 'send'}, this is the runbook.`;
+    if (method === 'proveTx') return { verdict: null, circuit, summary: `Proving failed for circuit '${circuit}', before the wallet or the node saw the transaction, so this isn't the NIGHT problem. See the proof server runbook.`, next: LOOKUP };
+    if (testnet) return { verdict: null, circuit, summary: `On ${network} this isn't the Mainnet problem. If circuit '${circuit}' moves NIGHT, the wallet or the contract has too little tNIGHT: send tNIGHT to the paying wallet's unshielded address (the faucet does this).` };
+    if ((method === 'balanceTx' && insufficient) || (method === 'submitTx' && has194)) {
+      return { verdict: 'maybe', circuit, summary: `midnight-js 5 reports ${method === 'balanceTx' ? 'the wallet short of a token' : 'the node rejecting the call with 194 (Invalid.BalanceCheckOutOfBounds)'} for circuit '${circuit}'. Its error no longer carries the token type, so the circuit decides: ${scan}` };
+    }
+    if (method === 'balanceTx' || method === 'submitTx') {
+      return { verdict: 'maybe', circuit, summary: `midnight-js 5 wraps the ${method === 'balanceTx' ? 'wallet' : 'node'}'s failure for circuit '${circuit}', and the reason is on err.cause. Print err.cause.message and its own causes (for (let e = err.cause; e; e = e.cause) console.log(e.message)) and pass that here too. ${method === 'balanceTx' ? 'Wallet.InsufficientFunds' : 'Custom error: 194'} there, on Mainnet, with '${circuit}' moving NIGHT, is this runbook: ${scan}` };
+    }
+  }
   // A stack from the shielded wallet (wallet-sdk-shielded/...): a shielded token, whatever its type.
   if (insufficient && /wallet-sdk-shielded\/|Insufficient funds for fallible segment/.test(t)) {
     return { verdict: null, summary: 'The shielded wallet is short of a shielded token, so this isn\'t the NIGHT problem (NIGHT is unshielded): the paying wallet needs more of that shielded token.' };
@@ -515,7 +535,7 @@ export function explainError(text, network) {
   }
   if (insufficient) {
     if (testnet) return { verdict: null, summary: `On ${network} this isn't the Mainnet problem: a wallet is short of some token. If the circuit takes NIGHT, send tNIGHT to the paying wallet's unshielded address (the faucet does this). The tokenType in err.cause shows which token.` };
-    return { verdict: 'maybe', summary: 'A wallet couldn\'t find enough of some token: NIGHT, a contract\'s own unshielded token, or a shielded token (the shielded wallet uses the same words). It is this runbook if the circuit takes NIGHT and this is Mainnet. To be sure, log JSON.stringify(err.cause, (_k, v) => typeof v === \'bigint\' ? v.toString() : v) and pass that to --error: a tokenType of 64 zeros is NIGHT.' };
+    return { verdict: 'maybe', summary: 'A wallet couldn\'t find enough of some token: NIGHT, a contract\'s own unshielded token, or a shielded token (the shielded wallet uses the same words). It is this runbook if the circuit takes NIGHT and this is Mainnet. To be sure, on midnight-js 4.1.1 log JSON.stringify(err.cause, (_k, v) => typeof v === \'bigint\' ? v.toString() : v) and pass that to --error: a tokenType of 64 zeros is NIGHT. On midnight-js 5 that prints {}; pass err.message instead, which names the circuit.' };
   }
   if (/Custom error:\s*194\b|Invalid\.BalanceCheckOutOfBounds/.test(t)) {
     if (testnet) return { verdict: null, summary: `On ${network} this isn't the Mainnet problem: 194 (Invalid.BalanceCheckOutOfBounds) means the contract holds too little of the token the circuit sends, tNIGHT or its own. Nothing was charged.` };
