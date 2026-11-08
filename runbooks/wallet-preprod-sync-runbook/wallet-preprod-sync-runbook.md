@@ -57,7 +57,7 @@ _Event counts, rates and snapshot ages change daily. Re-check them before quotin
    - **It isn't the indexer.** Blockfrost streamed DUST events at 3,000 to 14,000 a second in our
      tests, many times what a wallet applies. The wallet's own work is the limit.
    - **Preview is much faster**, because its tree is smaller: moth-wallet measured 103 s on the
-     Preview chain before its reset. Preview was reset as a new chain on 6 November 2026, so its
+     Preview chain before its reset. Preview relaunched as a new chain on 7 November 2026, so its
      tree starts over and a fresh sync should be shorter still (inferred, not measured).
 2. **Nothing is kept between runs unless the app saves it.** Each sub-wallet can write its position
    and state with `serializeState()` (or `state.serialize()`) and continue from there with
