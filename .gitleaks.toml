@@ -1,0 +1,7 @@
+# gitleaks config for the scan workflow (midnightntwrk/upload-sarif-github-action).
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated SDK export-name index: identifiers such as signatureVerifyingKey, not credentials"
+paths = ['''runbooks/sdk-ai-generated-code-errors-runbook/scripts/sdk-index\.json$''']

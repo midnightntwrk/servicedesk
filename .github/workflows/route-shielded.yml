@@ -4,8 +4,7 @@ on:
   issues:
     types: [labeled]
 
-permissions:
-  issues: write
+permissions: {}
 
 jobs:
   mirror:
@@ -19,6 +18,8 @@ jobs:
     concurrency:
       group: route-shielded-${{ github.event.issue.number }}
       cancel-in-progress: false
+    permissions:
+      issues: write
     steps:
       - name: Mint installation token for mnf-stl-support + this repo
         id: app-token
@@ -29,6 +30,8 @@ jobs:
           owner: shieldedtech
           repositories: |
             mnf-stl-support
+          # Scope the token: only issues, labels and comments on mnf-stl-support.
+          permission-issues: write
 
       - name: Mirror issue to mnf-stl-support, comment back, and stamp routed marker
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

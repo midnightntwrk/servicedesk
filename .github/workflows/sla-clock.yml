@@ -5,8 +5,7 @@ on:
     - cron: '0 * * * *'   # hourly
   workflow_dispatch: {}
 
-permissions:
-  issues: write
+permissions: {}
 
 concurrency:
   group: sla-clock
@@ -15,6 +14,8 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    permissions:
+      issues: write
     steps:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
