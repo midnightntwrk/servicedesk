@@ -172,3 +172,26 @@ On Node 20.19.1, macOS, unless noted; 47 cases, all as expected.
   budget) come from the ledger 9.1.0.0 release notes' known defects and the issues themselves (both
   open on 2026-11-07); neither was reproduced here. #838's triage comment expects the fix as a
   client package upgrade.
+
+
+## Codes node 2.x dropped or split (kept from the old page)
+
+The runbook page moved to the lean template in #292. The page as it was before that is in git
+history at `2e0b50f` (`runbooks/node-1010-custom-error-runbook/node-1010-custom-error-runbook.md`),
+with its pinned sources. This table is the one part of it the page points to. From midnight-node
+`node-1.0.400` (`ledger/src/versions/common/types.rs`) and `main` (`ledger/src/ledger_9/types.rs`):
+
+| 1.0.x | Name on 1.0.x | On node 2.x |
+|---|---|---|
+| 168 | `Malformed.FeeCalculation` | gone: 231 `OutsideTimeToDismiss`, 232 `BlockLimitExceeded` |
+| 182 | `Malformed.TransactionApplicationError` | gone: 228 `IntentTtlExpired`, 229 `IntentTtlTooFarInFuture`, 230 `IntentAlreadyExists` |
+| 186 | `Malformed.EffectsCheckFailure` | gone: 212 to 218 |
+| 187 | `Malformed.DisjointCheckFailure` | gone: 225 to 227 |
+| 188 | `Malformed.SequencingCheckFailure` | gone: 219 to 224 |
+| 193 | `Invalid.ReplayProtectionViolation` | gone: 242 TTL expired, 243 TTL too far ahead, 244 intent already exists |
+| 205 | `SystemTransaction.ReplayProtectionFailure` | gone: 245 to 247 |
+| 103 | `Invalid.Zswap` | stays as `Invalid.Zswap.Unknown`; adds 239 to 241 and 250 |
+| 127 | `Malformed.Zswap` | stays as `Malformed.Zswap.Unknown`; adds 235 to 238 |
+| 174 | `Malformed.MalformedContractDeploy` | stays as `….Unknown`; adds 233 and 234 |
+
+140, 156, 157, 248 and 249 are new on node 2.x.

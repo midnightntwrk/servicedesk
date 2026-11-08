@@ -370,10 +370,10 @@ const NO_CODE = [
   [/Transaction got usurped/, 'TransactionUsurpedError: another transaction replaced this one in the pool.'],
   [
     /(?:submitAndWatchExtrinsic\([^)]*\): ExtrinsicStatus:: |\[cause\]: Error: )disconnected from wss?:\/\/\S+: 1000:: Normal Closure/,
-    'The connection to the node closed before it answered, so there is no node verdict. Seen once, resubmitting straight after a rejection; the node never logged the second submission. Retry after a few seconds.',
+    'The connection to the node closed before it answered, so there is no node verdict. Seen once, resubmitting straight after a rejection; the node never logged the second submission. Check whether the transaction landed before retrying.',
   ],
 ];
-const WRAPPER_RE = /Transaction submission (error|failed)|SubmissionError|Unexpected error submitting scoped transaction/;
+const WRAPPER_RE = /Transaction submission (error|failed)|SubmissionError|Unexpected error submitting scoped transaction|(submitTx|balanceTx|proveTx) rejected the transaction/;
 
 // Node log lines (node 1.0.400 ledger/src/versions/common/mod.rs). Mempool validation prints the
 // node's error (`Transaction Error: Malformed(TransactionApplicationError)`, or a text such as
@@ -739,7 +739,7 @@ async function main() {
     if (WRAPPER_RE.test(text)) {
       console.log(
         wrap(
-          "The text has the wallet SDK's wrapper but not the node's code: err.message, err.stack and JSON.stringify(err) drop it. Print String(err) or console.error(err) instead, or find the console line that starts with \"RPC-CORE: submitAndWatchExtrinsic\", and run this script on that.",
+          "The text has the wallet SDK's or midnight-js's wrapper but not the node's code: err.message, err.stack and JSON.stringify(err) drop it. Print the cause chain (for (let e = err; e; e = e.cause) console.log(e.message)) or String(err), or find the console line that starts with \"RPC-CORE: submitAndWatchExtrinsic\", and run this script on that.",
         ),
       );
     }
