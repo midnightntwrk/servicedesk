@@ -52,7 +52,7 @@ const GLOBAL_TTL_S = 1209600;
 const DUST_GRACE_S = 10800; // the DUST validity window, if the error doesn't give it
 const RUNTIME_1_0_300 = 1000300; // from this spec version on, every transaction is checked at block time
 // Timestamp::Now in storage: twox128("Timestamp") ++ twox128("Now"), a u64 of milliseconds.
-const TIMESTAMP_NOW_KEY = '0xf0c365c3cf59d671eb72da0e7a4113c49f1f0515f462cdcf84e0f1d6045dfcbb';
+const TIMESTAMP_NOW_KEY = '0xf0c365c3cf59d671eb72da0e7a4113c49f1f0515f462cdcf84e0f1d6045dfcbb'; // gitleaks:allow - a public storage key, not a secret
 const NETWORKS = {
   preview: { chain: 'Midnight Preview', indexer: 'https://indexer.preview.midnight.network/api/v4/graphql', rpc: 'https://rpc.preview.midnight.network' },
   preprod: { chain: 'Midnight Preprod', indexer: 'https://midnight-preprod.blockfrost.io/api/v0', rpc: 'https://rpc.midnight-preprod.blockfrost.io', blockfrost: true },

@@ -14,9 +14,7 @@ on:
   issues:
     types: [labeled]
 
-permissions:
-  contents: read
-  issues: write
+permissions: {}
 
 concurrency:
   group: stl-closed-${{ github.event.issue.number }}
@@ -27,6 +25,9 @@ jobs:
     name: Label + move board to In review
     if: github.event.label.name == 'route:stl-closed'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Apply status:in-review label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0

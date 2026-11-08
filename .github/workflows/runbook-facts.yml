@@ -11,9 +11,7 @@ on:
     - cron: '30 6 * * *'   # daily 06:30 UTC. One issue per changed source, so a daily run adds no noise.
   workflow_dispatch: {}
 
-permissions:
-  issues: write
-  contents: read
+permissions: {}
 
 concurrency:
   group: runbook-facts
@@ -22,6 +20,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
