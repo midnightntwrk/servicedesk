@@ -7,15 +7,19 @@ was started: it's still downloading keys, it exited, its flags were silently dro
 published on a port it doesn't listen on. The rest are a wrong URL, a request the server rejects
 without saying why, a full job queue, a timeout, or memory. Use this runbook to match the error
 to the cause, confirm it with one read-only script, and start the proof server so it stays up and
-logs its errors.
+logs its errors. Since the ledger 9 upgrade, every network is tested with proof server 9.0.0
+(Preprod since 2026-11-09): 8.x can't read the ZKIR v3 circuits Compact 0.36.0 writes.
 
-_Compiled 2026-10-10 from local reproductions (method and results in
+_Compiled 2026-10-10 from local reproductions; re-checked 2026-11-08 and 2026-11-09 for ledger 9 against
+proof servers 9.0.0 and 8.1.3 run side by side, midnight-ledger `proof-server-9.0.0`
+(`31c90b8bac8c`), and midnight-js 5.0.0's proof provider (method and results in
 [`scripts/check-proof-server.NOTES.md`](scripts/check-proof-server.NOTES.md)). Sources, pinned:_
 
 - _support matrix: `midnight-docs` `docs/relnotes/support-matrix.json` at
   `5263f4045dfbfb3ec9c62fa07a8f806134ac272e` (2026-10-09): proof server 8.1.3 on preview,
-  preprod and mainnet_
-- _midnight-ledger `proof-server-8.1.3` (`c85535d0ff8e799f629df127c21fa251199b4332`)_
+  preprod and mainnet; at `c28b72b` (2026-11-09, after midnight-docs#1669): 9.0.0 on all three_
+- _midnight-ledger `proof-server-8.1.3` (`c85535d0ff8e799f629df127c21fa251199b4332`) and
+  `proof-server-9.0.0` (`31c90b8bac8c`)_
 - _midnight-js `v4.1.1` (`5f8a5d14247cb238b52187f33ed31695a5fde85d`); wallet SDK 1.2.0 with
   `@midnight-ntwrk/wallet-sdk-prover-client` 1.2.3_
 - _Docker images `midnightntwrk/proof-server` 8.1.3, 8.1.0 and 8.0.3 on Docker Desktop 28.0.4
@@ -31,7 +35,17 @@ _Versions and download sizes move with every release: re-check them before asser
 Two clients talk to the proof server, and they report the same failure differently. Every error
 below was reproduced unless marked otherwise.
 
-**midnight-js** (`httpClientProofProvider`, which proves the contract's circuits). The message
+**midnight-js 5.0.0** (Mainnet and Preview). A server that answers with an error gives
+`ProofServerError: Failed Proof Server response: url="…", code="400"` (or 404, 429, and 500 after
+retries) directly. One that never answers gives, after about 7 s of retries,
+`ProviderFailedError: proveTx rejected the transaction (circuit '…')`, with the reason three
+causes down: `ProofServerError: Proof Server request failed: url="…"`, then `TypeError: fetch
+failed`, then `connect ECONNREFUSED …`, `getaddrinfo ENOTFOUND …`, `… wrong version number`
+(`https://` to plain HTTP) or `TimeoutError: The operation was aborted due to timeout` (5.0.0's
+request code, run against a stand-in server). The codes and reasons map to the same causes as
+the table below.
+
+**midnight-js 4.1.1** (`httpClientProofProvider`, which proves the contract's circuits). The message
 starts `Unexpected error submitting scoped transaction '<unnamed>': Error: 'check' returned an
 error:` (or `'prove' returned an error:`) and ends with one of these:
 
@@ -43,7 +57,7 @@ error:` (or `'prove' returned an error:`) and ends with one of these:
 | `… failed, reason: getaddrinfo ENOTFOUND <host>` | The host name doesn't resolve (→ 3) |
 | `… failed, reason: write EPROTO … wrong version number` | `https://` to a server that speaks plain HTTP (→ 3) |
 | `Error: Failed Proof Server response: url="http://127.0.0.1:6300/api/check", code="404", status="Not Found"` | The URL has a path (→ 3) |
-| `Error: Failed Proof Server response: url="…/check", code="400", status="Bad Request"` | The server rejected the request; the reason is only in its log (→ 4) |
+| `Error: Failed Proof Server response: url="…/check", code="400", status="Bad Request"` | The server rejected the request; on 8.x the reason is only in its log, and from 9.0.0 the body says why (→ 4) |
 | `Error: Failed Proof Server response: url="…", code="429", status="Too Many Requests"` | The job queue is full (→ 5) |
 | `Error: Failed Proof Server response: url="…", code="500", status="Internal Server Error"` (after 7 s of retries) | A job ran past its timeout, or the server failed (→ 5) |
 | `'prove' returned an error: AbortError: The user aborted a request.` | The client's timeout (300 s by default) ran out. Nobody aborted anything (→ 5) |
@@ -155,15 +169,18 @@ wallet are configured separately and can point at different proof servers.
      command, `MIDNIGHT_PROOF_SERVER_PORT` is overridden by `--port $PORT`. With a replaced
      command it's honoured, so the server listens on a port the `-p` mapping doesn't target, and
      clients get `ECONNRESET`.
-4. **The request is rejected (400).** The body is only `bad input`, and the reason is logged at
-   DEBUG level, so only with verbose logging (`proof-server/src/worker_pool.rs:39`,
-   `main.rs` `init_logging`). Seen causes:
+4. **The request is rejected (400).** On 8.x the body is only `bad input`, and the reason is
+   logged at DEBUG level, so only with verbose logging (`proof-server/src/worker_pool.rs:39`,
+   `main.rs` `init_logging`). From 9.0.0 the body carries it: `bad input: \`<reason>\``. Seen causes:
    - **The circuit's ZKIR isn't readable (reproduced).** midnight-js 4.1.1 swallows any
      zk-config error for the circuit ([midnight-js#781](https://github.com/midnightntwrk/midnight-js/issues/781)) and sends `/check` without the IR. The
      server logs `couldn't find built-in key <circuit>`. Typical reasons: the provider points at
      the wrong directory, a web server doesn't serve `zkir/*.bzkir`, or the files weren't copied.
      A wrong directory usually fails earlier, with the `ENOENT … .verifier` error above.
-   - **ZKIR v3 from `--feature-zkir-v3`:** see the
+   - **The ZKIR version doesn't match the server (reproduced on `/k`).** 8.x answers
+     `Unsupported ZKIR version` for any ZKIR v3, including every 0.36.0 build: run 9.0.0. 9.0.0
+     reads ZKIR v2 and 0.36.0's v3, and answers `Unsupported ZKIR tag: 'ir-source[v3]'` for a
+     0.31.1 build made with `--feature-zkir-v3`: rebuild without the flag, or with 0.36.0. See the
      [toolchain runbook](../toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md),
      Remediation 5.
    - **The DUST secret key doesn't own the coins being spent** (a wrong seed:
@@ -175,8 +192,9 @@ wallet are configured separately and can point at different proof servers.
    `expected header tag 'midnight:(proof-preimage-versioned,…)', got …` or, for the old
    `midnightnetwork/proof-server:4.0.0`, `Unknown discriminant 109` ([midnight-ledger#391](https://github.com/midnightntwrk/midnight-ledger/issues/391)).
 5. **Capacity and time.**
-   - **Queue full (429).** `--job-capacity` (0, unlimited, by default in 8.x) caps the waiting
-     jobs, and extra requests get 429 `Job Queue full` immediately. midnight-js retries only
+   - **Queue full (429).** `--job-capacity` caps the waiting jobs, and extra requests get 429
+     `Job Queue full` immediately. It's unlimited (0) by default on 8.x and 10 from 9.0.0: 14
+     proofs sent at once to 9.0.0 got two 429s, and none on 8.1.3 (reproduced). midnight-js retries only
      500 and 503, so a 429 fails the call.
    - **Job timeout (500).** `--job-timeout` defaults to 600 s. A job that runs past it finishes
      anyway, then the client gets 500 `internal error`, and the log says only `failed to complete
@@ -188,7 +206,9 @@ wallet are configured separately and can point at different proof servers.
 6. **Memory.** A DUST proof peaked at about 85 MB, and under a 48 MB limit the container was
    OOM-killed mid-proof (exit 137).
    - **Real circuits need far more.** [servicedesk#203](https://github.com/midnightntwrk/servicedesk/issues/203) reports prover keys of about 90 to 570 MB and
-     server peaks of 11.4 GB.
+     server peaks of 11.4 GB. On Preview with 9.0.0 and 0.36.0 (measured, Nov 7–8), signature
+     checks and `sha512` took prover keys of 170 to 230 MB and peaks of 3.3 to 6.2 GB, which is
+     close to the limit of an 8 GB Docker.
    - **What clients see.** The request in flight gets `socket hang up` (midnight-js) or
      `Transport error` (wallet). Later requests get `ECONNREFUSED`, because the container stays
      down unless it has a restart policy.
@@ -199,9 +219,11 @@ wallet are configured separately and can point at different proof servers.
    ([servicedesk#38](https://github.com/midnightntwrk/servicedesk/issues/38), [midnight-wallet#456](https://github.com/midnightntwrk/midnight-wallet/pull/456); not reproduced here). The proof-server log shows no
    `/prove` at all.
 
-**Version is rarely the cause on its own.** The networks are tested with 8.1.3. Proof servers
-8.0.3, 8.1.0 and 8.1.3 all proved midnight-js 4.1.1's requests, both through the checker's test
-proof and in an end-to-end deploy and call. Upgrade for hygiene. Do switch, though, if the server
+**Within a ledger, version is rarely the cause on its own.** Every network is tested with 9.0.0.
+Proof servers 8.0.3, 8.1.0 and 8.1.3 all proved midnight-js 4.1.1's
+requests, both through the checker's test proof and in an end-to-end deploy and call, and 9.0.0
+proves the same ledger 8 test request. The one hard line is ZKIR v3: a 0.36.0 build needs 9.0.0
+(cause 4). Do switch, though, if the server
 is from another generation (the 400 above), or from the old `midnightnetwork/proof-server`
 repository, whose `latest` is a 7.0.0 release candidate.
 
@@ -220,20 +242,20 @@ repository, whose `latest` is a 7.0.0 release candidate.
 
 ## Key identifiers
 
-- **Image:** `docker.io/midnightntwrk/proof-server:<tag>`. The matrix tag is 8.1.3, which is also
-  `latest` today. Every tag from 7.0.0 on is published for amd64 and arm64. The old
+- **Image:** `docker.io/midnightntwrk/proof-server:<tag>`. The matrix tag is 9.0.0 on every
+  network (8.1.3 before ledger 9). Every tag from 7.0.0 on is published for amd64 and arm64. The old
   `docker.io/midnightnetwork/proof-server` is stale.
 - **Port 6300**, set inside the image by `PORT`. On the host, change only the `-p` side.
 - **Endpoints:**
   - `GET /health` returns `{"status":"ok",…}`.
-  - `GET /version` returns plain text, e.g. `8.1.3`.
-  - `GET /proof-versions` returns `["V2"]`.
+  - `GET /version` returns plain text, e.g. `9.0.0`.
+  - `GET /proof-versions` returns `["V2", "V3"]` on 9.0.0 and `["V2"]` on 8.x.
   - `GET /ready` returns `jobsProcessing`, `jobsPending` and `jobCapacity`, with 503 when busy.
   - `POST /check` and `POST /prove` are what midnight-js and the wallet call.
   - `POST /prove-tx` and `POST /k` are the other routes.
 - **Settings** (environment variables, because flags are dropped, see cause 3):
   - `MIDNIGHT_PROOF_SERVER_VERBOSE`
-  - `MIDNIGHT_PROOF_SERVER_JOB_CAPACITY` (0)
+  - `MIDNIGHT_PROOF_SERVER_JOB_CAPACITY` (10 on 9.0.0; 0, unlimited, on 8.x)
   - `MIDNIGHT_PROOF_SERVER_NUM_WORKERS` (2)
   - `MIDNIGHT_PROOF_SERVER_JOB_TIMEOUT` (600 s)
   - `MIDNIGHT_PROOF_SERVER_NO_FETCH_PARAMS`
@@ -290,26 +312,30 @@ repository, whose `latest` is a 7.0.0 release candidate.
    It starts, stops and submits nothing. Exit code 0 means no `FAIL`, 2 means at least one, and 1
    means it couldn't run.
 
-   On a healthy 8.1.3 container started exactly as in Remediation 1 (one `INFO` line for another,
-   stopped proof-server container left out):
+   On a healthy 9.0.0 container started as in Remediation 1, on host port 16300 (2026-11-09,
+   `--network preprod`; other proof-server containers on the machine left out):
 
    ```text
-   check                             found                                         expected  status  note
-   URL                               http://127.0.0.1:6300/                                  OK
-   GET /health                       200 in 54 ms                                  200       OK
-   Version                           8.1.3                                         8.1.3     OK
-   GET /proof-versions               ["V2"]                                                  INFO
-   GET /ready                        processing 0, pending 0, capacity unlimited             OK
-   Test /check                       200 in 19 ms                                  200       OK
-   Test /prove                       200 in 0.9 s                                  200       OK
-   Container proof-server image      midnightntwrk/proof-server:8.1.3              8.1.3     OK      publishes :6300
-   Container proof-server state      running, listening                            running   OK
-   Container proof-server ports      6300->6300; listens on 6300                             OK
-   Container proof-server logging    verbose                                                 OK
-   Container proof-server key cache  /.cache/midnight                                        OK
+   check                             found                                         expected      status  note
+   URL                               http://127.0.0.1:16300/                                     OK
+   GET /health                       200 in 31 ms                                  200           OK
+   Version                           9.0.0                                         9.0.0         OK
+   GET /proof-versions               ["V2", "V3"]                                                INFO
+   GET /ready                        processing 0, pending 0, capacity 10                        OK
+   Job capacity                      10                                            10 (default)  INFO    requests beyond it get 429 Job Queue full
+   Test /check                       200 in 58 ms                                  200           OK
+   Test /prove                       200 in 2.3 s                                  200           OK
+   Container ps-runbook-9 image      midnightntwrk/proof-server:9.0.0              9.0.0         OK      publishes :16300
+   Container ps-runbook-9 state      running, listening                            running       OK
+   Container ps-runbook-9 ports      16300->6300; listens on 6300                                OK
+   Container ps-runbook-9 logging    verbose                                                     OK
+   Container ps-runbook-9 key cache  /.cache/midnight                                            OK
 
    RESULT: this proof server can prove. If the app still fails, the cause is on the client side (URL, zk config files, timeout, wallet); see the runbook.
    ```
+
+   A 9.0.0 container on a key volume filled by 8.x still downloads keys on first start (under a
+   minute here); until then the checker reports `read ECONNRESET` and "downloading keys".
 
    If the test proof passes and the app still fails, look at the client:
    - the URL each client actually uses;
@@ -318,7 +344,7 @@ repository, whose `latest` is a 7.0.0 release candidate.
    - the wallet's own proving URL.
 3. **Without Node,** the same checks by hand:
    - `curl -sS http://127.0.0.1:6300/health` and `curl -sS http://127.0.0.1:6300/version`
-   - `docker ps -a --filter ancestor=midnightntwrk/proof-server:8.1.3`, or list all containers
+   - `docker ps -a --filter ancestor=midnightntwrk/proof-server:9.0.0`, or list all containers
      and look for `proof-server`
    - `docker logs --tail 50 <name>`: look for `listening on`, `Fetching`, `Giving up` and
      `Error in response`
@@ -334,7 +360,7 @@ repository, whose `latest` is a 7.0.0 release candidate.
      -e MIDNIGHT_PROOF_SERVER_VERBOSE=true \
      -v midnight-zk-params:/.cache/midnight \
      --restart unless-stopped \
-     midnightntwrk/proof-server:8.1.3
+     midnightntwrk/proof-server:9.0.0
    ```
 
    With Compose:
@@ -342,7 +368,7 @@ repository, whose `latest` is a 7.0.0 release candidate.
    ```yaml
    services:
      proof-server:
-       image: 'midnightntwrk/proof-server:8.1.3'
+       image: 'midnightntwrk/proof-server:9.0.0'
        ports: ['127.0.0.1:6300:6300']
        environment:
          MIDNIGHT_PROOF_SERVER_VERBOSE: 'true'
@@ -396,8 +422,9 @@ repository, whose `latest` is a 7.0.0 release candidate.
      directory, the one with `keys/` and `zkir/`. A browser app's `FetchZkConfigProvider` base
      URL must serve both folders and return 404, not an HTML fallback page, for anything missing
      ([midnight-js#603](https://github.com/midnightntwrk/midnight-js/issues/603)).
-   - **`Unsupported ZKIR version`:** the circuit was compiled with `--feature-zkir-v3`; see the
-     toolchain runbook, Remediation 5.
+   - **`Unsupported ZKIR version`:** the server is 8.x and the circuit is ZKIR v3 (every 0.36.0
+     build): run 9.0.0. **`Unsupported ZKIR tag: 'ir-source[v3]'`** from 9.0.0 means a 0.31.1 build
+     made with `--feature-zkir-v3`: rebuild with 0.36.0. See the toolchain runbook, Remediation 5.
    - **`bad input` on `midnight/dust/spend` from the wallet:** check that the wallet seed owns
      the DUST it spends ([midnight-ledger#733](https://github.com/midnightntwrk/midnight-ledger/issues/733)).
    - **`Inputs did not match alignment` or `Public transcript input mismatch`:** the open issues
@@ -406,21 +433,24 @@ repository, whose `latest` is a 7.0.0 release candidate.
    - **`expected header tag …` or `Unknown discriminant`:** use the matrix version of the proof
      server.
 5. **Make room for the load.**
-   - **For 429, send fewer proofs at once,** or raise `MIDNIGHT_PROOF_SERVER_JOB_CAPACITY` (0 is
-     unlimited) and `MIDNIGHT_PROOF_SERVER_NUM_WORKERS`.
+   - **For 429, send fewer proofs at once,** or raise `MIDNIGHT_PROOF_SERVER_JOB_CAPACITY` (10 by
+     default on 9.0.0; 0 is unlimited) and `MIDNIGHT_PROOF_SERVER_NUM_WORKERS`.
    - **For 500 with `failed to complete job`,** raise `MIDNIGHT_PROOF_SERVER_JOB_TIMEOUT` or give
      the server more CPU.
-   - **For `AbortError: The user aborted a request.`,** raise the client timeout:
-     `httpClientProofProvider(url, zkConfigProvider, { timeout: 900_000 })`.
+   - **For `AbortError: The user aborted a request.` or `TimeoutError`,** raise the client
+     timeout: `httpClientProofProvider({ url, zkConfigProvider, timeout: 900_000 })` on
+     midnight-js 5.0.0, or `httpClientProofProvider(url, zkConfigProvider, { timeout: 900_000 })`
+     on 4.1.1.
 
    *Trade-off:* more workers prove in parallel but each needs its own memory (Remediation 6).
 6. **Give proving enough memory.** If `docker inspect` shows `"OOMKilled": true`, raise Docker
    Desktop's memory limit (Settings → Resources) and remove any `--memory` limit on the
    container. Then start it again; the restart policy in Remediation 1 does that for you. Large
-   circuits need several GB ([servicedesk#203](https://github.com/midnightntwrk/servicedesk/issues/203)).
+   circuits need several GB ([servicedesk#203](https://github.com/midnightntwrk/servicedesk/issues/203)); on 9.0.0, signature and `sha512` circuits peaked at 3.3 to 6.2 GB, close to
+   the limit of an 8 GB Docker.
 7. **Fix the wallet's transport.** If the proof-server log shows no `/prove` while the wallet
-   reports `Transport error`, install wallet SDK 1.2.0, which brings `wallet-sdk-prover-client`
-   1.2.3. Then check with `npm ls @midnight-ntwrk/wallet-sdk-prover-client` that no older copy is
+   reports `Transport error`, install the matrix wallet SDK: 2.0.0, which brings
+   `@midnightntwrk/wallet-sdk-prover-client` 2.0.0 (on the ledger 8 set, 1.2.0 with 1.2.3). Then check with `npm ls @midnightntwrk/wallet-sdk-prover-client` (`@midnight-ntwrk/…` on 1.2.0) that no older copy is
    left ([servicedesk#38](https://github.com/midnightntwrk/servicedesk/issues/38)).
 
 ## Upstream follow-ups
