@@ -24,7 +24,8 @@
  *   node decode-1010.mjs app.log --rpc https://rpc.midnight-mainnet.blockfrost.io
  *
  *   --node  code table: 1.0 (node 1.0.0 to 1.0.400) or 2.x (node 2.x release candidates).
- *           Default 1.0: preview, preprod and mainnet ran node 1.0.400 on 2026-10-07.
+ *           Default 2.x: mainnet, preview and preprod run node 2.1.101 since 2026-11-09
+ *           (preprod ran 1.0.400 until then).
  *   --rpc   node RPC URL (http(s), or the ws(s) URL the wallet uses); reads system_version and
  *           picks the table from it. Use one of --node and --rpc, not both.
  *   -       read stdin as well as the other arguments.
@@ -635,7 +636,7 @@ async function main() {
   const text = texts.join('\n');
 
   // Which table.
-  let key = nodeOpt ?? '1.0';
+  let key = nodeOpt ?? '2.x';
   const header = [];
   if (rpcOpt) {
     const ver = await systemVersion(rpcOpt);
@@ -652,8 +653,8 @@ async function main() {
   } else if (nodeOpt) {
     header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}), from --node ${key}.`);
   } else {
-    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). On 2026-11-07 preprod ran node 1.0.400 (this table); mainnet and preview ran 2.1.101 (--node 2.x).`);
-    header.push('  Check the node that rejected the transaction with --rpc <url>, or pass --node 2.x.');
+    header.push(`Code table: ${TABLES[key].label} (${TABLES[key].range}). Since 2026-11-09 mainnet, preview and preprod run node 2.1.101 (this table); a log from before ledger 9 needs --node 1.0.`);
+    header.push('  Check the node that rejected the transaction with --rpc <url>, or pass --node 1.0.');
   }
 
   const custom = new Set();

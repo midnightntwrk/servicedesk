@@ -4,7 +4,7 @@ when_to_use: "Submission fails with `1010: Invalid Transaction: Custom error: N`
 audience: "developers support-agents"
 owner: "mn-servicedesk"
 compiled: "2026-10-07"
-last_reviewed: "2026-11-07"
+last_reviewed: "2026-11-09"
 error_strings:
   - "1010: Invalid Transaction: Custom error:"
   - "Invalid Transaction"
@@ -23,7 +23,7 @@ review_when:
 
 # Runbook: Node rejects a transaction (1010, Custom error: N)
 
-The node rejects a transaction at submission with a number, `Custom error: N`, naming the ledger's reason. The SDKs bury it a cause or two down, and it means different things on node 1.0.x (Preprod) and 2.x (Mainnet, Preview). Find it, decode it for the node that rejected it, and match it to a fix.
+The node rejects a transaction at submission with a number, `Custom error: N`, naming the ledger's reason. The SDKs bury it a cause or two down, and it means different things on node 1.0.x (every network before ledger 9) and 2.x (Mainnet, Preview, and Preprod since 9 November 2026). Find it, decode it for the node that rejected it, and match it to a fix.
 
 Each fact is in Key identifiers with its source. A claim marked **measured**, **reported**, **inferred** or **not tested** has none, so trust it less.
 
@@ -80,7 +80,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
    node /tmp/decode-1010/decode-1010.mjs app.log --rpc <the node URL the DApp uses>
    ```
 
-   `--rpc` picks the table from the node's `system_version` (`--node 1.0` or `--node 2.x` by hand; neither assumes 1.0.x and says so). It prints the name, category and fix for every code, pool error, code-less wallet error and node log line it finds. Exit 0: it explained one or more; 2: nothing it could explain; 1: it couldn't run.
+   `--rpc` picks the table from the node's `system_version` (`--node 1.0` or `--node 2.x` by hand; neither assumes 2.x and says so). It prints the name, category and fix for every code, pool error, code-less wallet error and node log line it finds. Exit 0: it explained one or more; 2: nothing it could explain; 1: it couldn't run.
 
    By hand: check `system_version`, then look 1.0.x codes up on [Node error codes](https://docs.midnight.network/nodes/error-codes) and 2.x codes in midnight-node's `ledger/src/ledger_9/types.rs`.
 
