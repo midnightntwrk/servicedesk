@@ -2,7 +2,7 @@
 
 A self-hosted Midnight indexer, or a node syncing from genesis, stops at a block the rest of the
 network accepted, with `Intent TTL has expired` or `dust is outside of its validity window`. It stops
-at the same block after every restart, and pulling `latest` doesn't help. Nothing is wrong with the
+at the same block after every restart. Nothing is wrong with the
 chain or the setup: the block's first transaction is valid at its block's own time, at its parent's
 time + 12 s, or at both, and the software checks it at a time the transaction isn't valid at. Run
 the checker below. It finds the block, works out which time the transaction is valid at, and names
@@ -24,6 +24,10 @@ runbook on three halts. Method and results are in
   parameters_
 - _The public Preview indexer and RPC, Blockfrost's Preprod indexer and RPC, and
   `rpc.mainnet.midnight.network` (retired, still answering on 2026-10-15) for the block data_
+
+_Updated 2026-11-09 for ledger 9: every network now runs node 2.1.101 and needs indexer 4.4.101, which
+both have the fix (`check-sync-halt.mjs --versions`, and the
+[v4.4.101 release notes](https://github.com/midnightntwrk/midnight-indexer/releases/tag/v4.4.101))._
 
 _Releases move: run `check-sync-halt.mjs --versions` before quoting a version from this page._
 
@@ -151,17 +155,17 @@ like it can appear on any network at any time.
     and on `release/node-2.1.0` as
     [#2218](https://github.com/midnightntwrk/midnight-node/pull/2218) (`7955f18e`, in
     `node-2.1.0-rc.4`).
-- **Releases on 2026-10-15** (re-check with `--versions`):
-  - **Indexer:** only `v4.3.800-rc.2` has the fix. It's a release candidate and its GitHub release is
-    a draft, but its images are on Docker Hub: `indexer-standalone`, `chain-indexer`, `indexer-api`
-    and `wallet-indexer`, all `:4.3.800-rc.2` under `midnightntwrk/`. Docker `latest` for
-    `indexer-standalone` and `chain-indexer` is 4.3.7, without the fix. GitHub's "Latest" indexer
-    release is v4.3.3; v4.3.7 is marked a pre-release. No 4.4 tag has the fix.
-  - **Node:** `node-1.0.400`, GitHub's "Latest" release, image `midnightntwrk/midnight-node:1.0.400`.
-    The image has no `latest` tag (only `latest-main`). `node-2.1.0-rc.4` also has the fix, but it's a
-    Ledger 9 pre-release that Preview, Preprod and Mainnet don't run.
-- **Compatibility:** indexer 4.3.800-rc.2 supports node 1.0.400, whose metadata is byte-identical to
-  node 1.0.300's. Its changelog says it doesn't support node 1.0.2.
+- **Releases on 2026-11-09** (re-check with `--versions`):
+  - **Indexer:** `v4.4.101`, GitHub's "Latest" release, has the fix, and so do `v4.4.0-rc.6`,
+    `v4.3.800` and `v4.3.800-rc.2`. Docker `latest` for `indexer-standalone` and `chain-indexer` is
+    4.4.101, for amd64 and arm64. It's the release for ledger 9: it reads ledger 8 blocks and the
+    ledger 9 ones after each network's upgrade.
+  - **Node:** `node-2.1.101`, image `midnightntwrk/midnight-node:2.1.101`, has the fix, as do
+    `node-2.1.0-rc.4` and `node-1.0.400`. The image has no `latest` tag. Mainnet, Preview and Preprod
+    all run 2.1.101; a 1.0.400 node stops at the ledger 9 upgrade block.
+- **Compatibility:** indexer 4.4.101 supports node 2.1.101 and 1.0.400 (its release notes). A database
+  from any 4.3 release, or from 4.4.0-rc.3 or earlier, can't be upgraded in place: re-index from
+  genesis.
 
 ## Diagnose (no API key on Preview)
 
@@ -227,72 +231,34 @@ like it can appear on any network at any time.
 
 ## Remediation
 
-1. **Indexer 4.3.7 or 4.3.800-rc.1: upgrade in place to 4.3.800-rc.2.** It's the only release that
-   checks the right times. Its changelog says there's no re-index, and the new version carries on from
-   the halted database. Pull it by tag, because `latest` is still 4.3.7.
-   1. **Stop the indexer and back up its database.** `indexer-standalone` keeps it in SQLite under
-      `/data` (`indexer.sqlite` and `ledger-db.sqlite`); the separate images use Postgres (`pg_dump`).
-   2. **Move the node to 1.0.400 first** (Remediation 3): rc.2's changelog lists 1.0.400 as supported.
-   3. **Change the config.** If you mount your own `config.yaml` (indexer-standalone shown; the
-      `ledger_db` change applies to chain-indexer, wallet-indexer and indexer-api too, and the
-      `progress_cache` block to indexer-api):
+1. **Indexer: run 4.4.101.** It checks the right times, and since the ledger 9 upgrade it's the
+   indexer every network needs. What it takes depends on the version you run (its release notes):
+   - **4.4.0-rc.6:** swap the images, nothing else.
+   - **4.4.0-rc.5:** swap the images, unless it already indexed a ledger 8 to 9 upgrade; then as below.
+   - **Any 4.3 release, or 4.4.0-rc.3 or earlier:** stop the indexer, wipe the indexer database and the
+     ledger DB together (`indexer-standalone` keeps both in SQLite under `/data`; the separate images
+     use Postgres), and start 4.4.101 (`midnightntwrk/indexer-standalone:4.4.101`, or
+     `chain-indexer`, `indexer-api`, `wallet-indexer` and `spo-indexer` at the same tag) to re-index
+     from genesis. If you mount your own `config.yaml`, compare it with the one in the `v4.4.101` tag
+     first.
+   - **Check** that the height keeps rising to the tip:
 
-      ```yaml
-      infra:
-        ledger_db:
-          cache_max_nodes: 100000   # replaces cache_size: "1kiB"; a plain node count now
-        api:
-          subscription:
-            progress_cache:          # new, required
-              max_capacity: 10000
-              time_to_live: "5s"
-      ```
+     ```sh
+     curl -s -X POST -H 'content-type: application/json' \
+       -d '{"query":"{ block { height } }"}' http://<indexer host>:8088/api/v4/graphql
+     ```
 
-      If you configure with environment variables instead, rename
-      `APP__INFRA__LEDGER_DB__CACHE_SIZE` to `APP__INFRA__LEDGER_DB__CACHE_MAX_NODES`.
-   4. **Start `4.3.800-rc.2`** (`midnightntwrk/indexer-standalone:4.3.800-rc.2`, or
-      `chain-indexer`, `indexer-api` and `wallet-indexer` at the same tag). Index-only migrations run at
-      startup: SQLite `005` and `009` for indexer-standalone, Postgres `007` for the separate images.
-      The Postgres index isn't built `CONCURRENTLY`, so writes to `unshielded_utxos` wait while it
-      builds. On Mainnet, restore your backup into a spare Postgres and start rc.2 against it first to
-      see how long that takes.
-   5. **Check** that the log moves past the block, and that the height keeps rising:
-
-      ```sh
-      curl -s -X POST -H 'content-type: application/json' \
-        -d '{"query":"{ block { height } }"}' http://<indexer host>:8088/api/v4/graphql
-      ```
-
-   - **Rolling back:** older builds refuse a database with migrations they don't know. Before starting
-     4.3.7 again, run `DELETE FROM _sqlx_migrations WHERE version IN (5, 9);` on SQLite
-     (`indexer.sqlite`) or `DELETE FROM _sqlx_migrations WHERE version = 7;` on Postgres, and put
-     `cache_size` back in the config. The indexes can stay.
-
-   *Trade-off:* it's a release candidate. It's also a security release candidate for the ledger 8
-   Mainnet line, and its changelog says a replay of Mainnet and Preprod from genesis indexed every
-   block to the tip. That replay came before Mainnet 2998112 existed. Before the tag was cut, the
-   indexer team's QA ran a pre-release build (`4.3.800-rc.2-7add670a`) on the databases that had
-   halted at Preprod 164460, and from a checkpoint at 164459 it indexed 164460 within seconds, with
-   ledger roots that match the node's
-   ([midnight-indexer#1630](https://github.com/midnightntwrk/midnight-indexer/issues/1630)).
-2. **Indexer on any other version.**
-   - **4.3.4, 4.3.5 or 4.4.0-rc.x: no in-place path.** These databases carry migrations from the 4.4
-     line (Postgres 004 to 006, and 008 and 009 on 4.4.0-rc.5; SQLite 006 to 008, and 010 and 011)
-     that 4.3.800-rc.2 doesn't have, and its migrator refuses a database with applied migrations it
-     doesn't know. Re-index from genesis on 4.3.800-rc.2, or wait for a 4.4 release with
-     [#1613](https://github.com/midnightntwrk/midnight-indexer/pull/1613).
-   - **4.3.3 or older:** rc.2's notes cover in-place upgrades only from 4.3.7 and 4.3.800-rc.1. Read
-     each release's notes on the way, or re-index from genesis on 4.3.800-rc.2.
-   - **A `main` build:** build a newer `main` (it has [#1610](https://github.com/midnightntwrk/midnight-indexer/pull/1610) and [#1537](https://github.com/midnightntwrk/midnight-indexer/pull/1537)), or move to 4.3.800-rc.2 by
-     re-indexing.
-3. **Node: run node 1.0.400.** It's binary-only: the on-chain runtime stays 1.0.300 (`spec_version`
-   1_000_300), and nothing needs a reset. Swap the image (`midnightntwrk/midnight-node:1.0.400`) and
-   keep the same data directory, chain spec and flags. Its release notes say it fixes the Mainnet sync
-   halt after #1788979, and they ask validators and block producers to move to it together for its
-   ledger 8.1.3 security fix. Don't use `2.1.0-rc.4` on these networks: it's a Ledger 9 pre-release.
-   - **Check:** the node imports #1788980 and later, and its best and finalized heights keep rising.
-     A sync of 1.0.400 from genesis wasn't run for this runbook; if it stops again, run the checker on
-     the new error.
+   *Trade-off:* a re-index takes the indexer's time to reach the tip, and the API serves incomplete data
+   until then. Keep the old database until the new one is at the tip.
+2. **A `main` build:** move to 4.4.101 as above.
+3. **Node: run node 2.1.101.** Mainnet, Preview and Preprod all need it since the ledger 9 upgrade.
+   Upgrade directly from 1.0.400 or 2.1.100; the 2.1.0 release candidates aren't a supported step.
+   Snapshot the data directory first: once 2.1.101 opens it, 1.0.400 can't start on it again. Keep the
+   default `separate` storage layout: a node set to `storage_separation=unified` on a 1.0.400 data
+   directory stops importing blocks (the docs' [ledger 9 upgrade page](https://docs.midnight.network/relnotes/ledger-9)
+   and [full node guide](https://docs.midnight.network/nodes/full-node)).
+   - **Check:** its best and finalized heights keep rising. If it stops again, run the checker on the
+     new error.
 4. **If you can't upgrade yet:**
    - **A node:** keep a node that is already past the block, and sync any new node from it. Blocks
      from runtime 1.0.300 on are checked at block time, which node 1.0.300 does too, so a node past
@@ -300,7 +266,8 @@ like it can appear on any network at any time.
    - **An indexer on v4.3.3 or older:** this halt only happens at old blocks, so a database restored
      from a backup past the block won't meet it again. Whether that version still supports your
      network's current runtime is a separate question: check its release notes.
-   - **An indexer on v4.3.4 to v4.3.800-rc.1, or v4.4.0-rc.2 to rc.5:** there's no safe workaround. It
+   - **An indexer on v4.3.4 to v4.3.800-rc.1, or v4.4.0-rc.2 to rc.5:** there's no safe workaround, and
+     since the ledger 9 upgrade no 4.3 release can follow these networks anyway. It
      checks new blocks at the wrong time too, so it can stop again on any new block whose first
      transaction has a short TTL. A backup past the block only delays that. Upgrade.
 5. **Not a known pattern, or a new block.** Exit 3 means the checker couldn't find or confirm the
@@ -313,10 +280,8 @@ like it can appear on any network at any time.
 
 ## Upstream follow-ups
 
-- midnight-indexer (to request): publish 4.3.800 as a release and move Docker `latest` off 4.3.7.
-  Until then, an indexer that pulls `latest` stops on a fresh sync at Preprod 164460 and Mainnet
-  1788980, and, on any network, at any new block whose first transaction has a short TTL. No 4.4 tag
-  has the fix either.
+- midnight-indexer: published `v4.4.101` with the fix, and Docker `latest` is 4.4.101 (2026-11-08), so
+  the earlier request to move `latest` off 4.3.7 is done.
 - [midnight-indexer#1630](https://github.com/midnightntwrk/midnight-indexer/issues/1630) (to add):
   Mainnet 2998112, transaction `d9fd8f7f…`, to the known blocks.
 - [midnight-node#2229](https://github.com/midnightntwrk/midnight-node/issues/2229): still open,

@@ -309,3 +309,17 @@ interpolated ones in between. Node 20.19.1, macOS: 24 of 24 cases pass in about 
 - **Ledger parameters:** if the networks change `global_ttl` or `dust_grace_period`, decode them as
   above and update `GLOBAL_TTL_S` and `DUST_GRACE_S`.
 - **Ledger 9:** check the constants and the error texts when the networks move.
+
+## Ledger 9 (2026-11-09)
+
+`check-sync-halt.mjs --versions`, unchanged script, 2026-11-09: indexer tags with the fix `v4.4.101`,
+`v4.4.0-rc.6`, `v4.3.800`, `v4.3.800-rc.2`; `indexer-standalone` and `chain-indexer` `latest` is 4.4.101,
+with the fix. Node tags with the fix `node-2.1.101`, `node-2.1.0-rc.4`, `node-1.0.400`; the image has
+no `latest`. Docker Hub has `indexer-standalone`, `indexer-api` and `spo-indexer` at `4.4.101` (amd64
+and arm64). `24 of 24` test cases passed.
+
+The page's Remediation now points at indexer 4.4.101 and node 2.1.101, which every network needs since
+the ledger 9 upgrade (Preprod on 2026-11-09). The v4.4.101 release notes: no reset from 4.4.0-rc.6;
+from any 4.3 release or 4.4.0-rc.3 and earlier, wipe the indexer database and the ledger DB together
+and re-index from genesis; "This release changes no configuration" (relative to rc.6). The 4.3.800-rc.2
+in-place steps were removed, since no 4.3 release can follow a ledger 9 network.
