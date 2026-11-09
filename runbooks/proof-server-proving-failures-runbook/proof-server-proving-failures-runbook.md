@@ -12,14 +12,14 @@ logs its errors. Since the ledger 9 upgrade, every network is tested with proof 
 
 _Compiled 2026-10-10 from local reproductions; re-checked 2026-11-08 and 2026-11-09 for ledger 9 against
 proof servers 9.0.0 and 8.1.3 run side by side, midnight-ledger `proof-server-9.0.0`
-(`31c90b8bac8c`), and midnight-js 5.0.0's proof provider (method and results in
+(`31c90b8bac8cc841bf94a741f0ec410511f85e32`), and midnight-js 5.0.0's proof provider (method and results in
 [`scripts/check-proof-server.NOTES.md`](scripts/check-proof-server.NOTES.md)). Sources, pinned:_
 
 - _support matrix: `midnight-docs` `docs/relnotes/support-matrix.json` at
   `5263f4045dfbfb3ec9c62fa07a8f806134ac272e` (2026-10-09): proof server 8.1.3 on preview,
-  preprod and mainnet; at `c28b72b` (2026-11-09, after midnight-docs#1669): 9.0.0 on all three_
+  preprod and mainnet; at `c28b72b050b9f825541721406ab734bee6e1a937` (2026-11-09, after [midnight-docs#1669](https://github.com/midnightntwrk/midnight-docs/pull/1669)): 9.0.0 on all three_
 - _midnight-ledger `proof-server-8.1.3` (`c85535d0ff8e799f629df127c21fa251199b4332`) and
-  `proof-server-9.0.0` (`31c90b8bac8c`)_
+  `proof-server-9.0.0` (`31c90b8bac8cc841bf94a741f0ec410511f85e32`)_
 - _midnight-js `v4.1.1` (`5f8a5d14247cb238b52187f33ed31695a5fde85d`); wallet SDK 1.2.0 with
   `@midnight-ntwrk/wallet-sdk-prover-client` 1.2.3_
 - _Docker images `midnightntwrk/proof-server` 8.1.3, 8.1.0 and 8.0.3 on Docker Desktop 28.0.4
@@ -35,7 +35,7 @@ _Versions and download sizes move with every release: re-check them before asser
 Two clients talk to the proof server, and they report the same failure differently. Every error
 below was reproduced unless marked otherwise.
 
-**midnight-js 5.0.0** (Mainnet and Preview). A server that answers with an error gives
+**midnight-js 5.0.0** (the ledger 9 set, on every network). A server that answers with an error gives
 `ProofServerError: Failed Proof Server response: url="…", code="400"` (or 404, 429, and 500 after
 retries) directly. One that never answers gives, after about 7 s of retries,
 `ProviderFailedError: proveTx rejected the transaction (circuit '…')`, with the reason three
@@ -45,7 +45,7 @@ failed`, then `connect ECONNREFUSED …`, `getaddrinfo ENOTFOUND …`, `… wron
 request code, run against a stand-in server). The codes and reasons map to the same causes as
 the table below.
 
-**midnight-js 4.1.1** (`httpClientProofProvider`, which proves the contract's circuits). The message
+**midnight-js 4.1.1** (the ledger 8 set; `httpClientProofProvider`, which proves the contract's circuits). The message
 starts `Unexpected error submitting scoped transaction '<unnamed>': Error: 'check' returned an
 error:` (or `'prove' returned an error:`) and ends with one of these:
 

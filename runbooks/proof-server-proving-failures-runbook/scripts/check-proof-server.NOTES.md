@@ -162,7 +162,7 @@ there), Podman, and a remote proof server behind TLS.
 
 ## Ledger 9: proof server 9.0.0 (2026-11-08 and 2026-11-09)
 
-Source compared at midnight-ledger `proof-server-9.0.0` (`31c90b8bac8c`) and `proof-server-8.1.3`
+Source compared at midnight-ledger `proof-server-9.0.0` (`31c90b8bac8cc841bf94a741f0ec410511f85e32`) and `proof-server-8.1.3`
 (`c85535d0ff8e`), then both images run side by side on Docker Desktop (8 GB), ports 16300 and 16301.
 
 | What | 8.1.3 | 9.0.0 |
@@ -177,6 +177,9 @@ Source compared at midnight-ledger `proof-server-9.0.0` (`31c90b8bac8c`) and `pr
 | `/k` with a 0.31.1 `--feature-zkir-v3` build (tag `ir-source[v3]`) | `400 Unsupported ZKIR version` | ``400 Unsupported ZKIR tag: 'ir-source[v3]'`` |
 | unreadable payload | `400 expected header tag …` | same |
 | the checker's ledger 8 `/check` and `/prove` fixture (midnight-js 4.1.1) | 200 | 200 |
+
+The wallet SDK 2.0.0 prover client is published as `@midnightntwrk/wallet-sdk-prover-client`
+2.0.0 (installed with `@midnightntwrk/wallet-sdk` 2.0.0, Nov 7); 1.2.x was `@midnight-ntwrk/…`.
 
 Unchanged: port 6300, 2 workers, job timeout 600 s, `no_fetch_params`.
 
@@ -202,6 +205,7 @@ On 2026-11-09 a fresh 9.0.0 container on the `midnight-zk-params` volume that 8.
 downloaded keys (`zswap/10/output.prover` …) before listening; the checker reported `read
 ECONNRESET` and "downloading keys" until it did, under a minute.
 
-Memory on Preview (Nov 7–8, 9.0.0, Compact 0.36.0; `~/Desktop/l9-preview` results): prover keys
+Memory on Preview (Nov 7–8, proof server 9.0.0 in Docker Desktop with 8 GB, Compact 0.36.0 builds of
+test contracts, peaks from `docker stats` while each circuit proved): prover keys
 secp256k1 222 MB, P256 172 MB, Ed25519 227 MB, a `sha512` circuit 180 MB; proof server peaks 3.3 to
 6.17 GB on an 8 GB Docker.
