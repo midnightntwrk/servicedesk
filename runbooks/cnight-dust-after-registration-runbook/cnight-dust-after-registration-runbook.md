@@ -4,7 +4,7 @@ when_to_use: 'cNIGHT was registered for DUST in the cNgD DApp and no DUST has ar
 audience: "developers support-agents"
 owner: "mn-servicedesk"
 compiled: "2026-10-22"
-last_reviewed: "2026-10-26"
+last_reviewed: "2026-11-09"
 error_strings:
   - "Registration Syncing"
   - "NO REGISTRATION FOUND"
@@ -13,7 +13,7 @@ error_strings:
 review_when:
   - "NIGHT can be held on Midnight Mainnet itself: NIGHT held there registers with a Midnight transaction, which this runbook does not cover"
   - "The indexer's dustGenerationStatus starts counting every UTXO that generates for a DUST address: drop Root cause 6, Diagnose 4's DApp step and the script's DAPP note"
-  - "A network's runtime specVersion reaches 2000000 (midnight-node#2123): CHANGE ADDRESS then counts the cNIGHT it moves, so Remediation 2 can use it again"
+  - "CHANGE ADDRESS is measured on a ledger 9 network: drop the not-measured notes in Root cause 5 and Remediation 2"
 ---
 
 # Runbook: DUST doesn't arrive after registering cNIGHT
@@ -32,6 +32,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured** or 
 | The DApp shows `NO REGISTRATION FOUND` for a wallet that registered | Diagnose 1 |
 | The DApp stops with `No cNIGHT tokens found in wallet` | Remediation 3 |
 | A DUST balance of 0 hours or days after registering, or after **CHANGE ADDRESS** | Diagnose 1 |
+| DUST showed 0 on Mainnet after the ledger 9 upgrade (6 November 2026) | Root cause 7, Remediation 4 |
 | The indexer answers `"registered": false` for the wallet's reward address | Diagnose 1 |
 | The DApp, the wallet and the indexer show different DUST figures | Diagnose 1, then Diagnose 4 |
 
@@ -47,8 +48,9 @@ Each fact is in Key identifiers with its source. A claim marked **measured** or 
 2. **The DApp can show a registration that is gone.** It shows `Registration Syncing` whenever it holds a registration and the indexer says `registered: false`.
 3. **The DApp finds a registration through the connected Midnight wallet**, so one made with another Midnight wallet shows `NO REGISTRATION FOUND`. With none connected, it shows the Cardano wallet's registration.
 4. **Midnight counts one registration per stake key**, and none when there are two. DUST goes to the DUST address in the registration, which may be another wallet's. Midnight counts NIGHT per DUST address, so keys registered to one address share one figure.
-5. **Midnight counts a cNIGHT UTXO only if its key has exactly one registration when the UTXO is created.** The DApp's register transaction moves the wallet's cNIGHT so it counts (**measured**). cNIGHT it didn't move, cNIGHT received while the key had two registrations, and cNIGHT moved by **CHANGE ADDRESS** never count until moved again. The last is [midnight-node#2121](https://github.com/midnightntwrk/midnight-node/issues/2121), fixed only from runtime specVersion 2000000; every network ran 1000300 on 2026-10-26 (**measured**).
+5. **Midnight counts a cNIGHT UTXO only if its key has exactly one registration when the UTXO is created.** The DApp's register transaction moves the wallet's cNIGHT so it counts (**measured**). cNIGHT it didn't move, cNIGHT received while the key had two registrations, and cNIGHT moved by **CHANGE ADDRESS** never count until moved again. The last is [midnight-node#2121](https://github.com/midnightntwrk/midnight-node/issues/2121), fixed from runtime specVersion 2000000. Every network runs 2001100 since the ledger 9 upgrade (Preprod last, on 2026-11-09), so CHANGE ADDRESS now counts the cNIGHT it moves (from the fix; not measured on ledger 9). cNIGHT that a CHANGE ADDRESS moved before the upgrade may still not count.
 6. **The DApp's figures can count only part of the NIGHT.** Its Generation Rate, and its DUST Balance with no Midnight wallet connected, read only the newest UTXO generating for the DUST address (`dustGenerationStatus`) (**measured**).
+7. **DUST was reset once at the ledger 9 upgrade.** On Mainnet the network replays every live registration, all backed by cNIGHT, straight to its full cap at the same DUST address, and a wallet shows the refilled balance only on wallet SDK 2.0.0 against an indexer on 4.4.101. Preprod's upgrade kept cNIGHT-backed registrations and cleared the rest; Preview relaunched and kept cNIGHT-backed ones (the docs' ledger 9 page).
 
 ## Before you start
 
@@ -98,13 +100,14 @@ Every DApp action needs cNIGHT in the connected Cardano wallet. Without it, the 
 
    *Trade-off:* no DUST until the wait passes, and a Cardano transaction fee.
 
-2. **Send future DUST to another address.** Don't use **CHANGE ADDRESS**: the cNIGHT it moves is never counted (Root cause 5). With only the Cardano wallet connected, so the DApp shows the registration (Root cause 3), use **STOP GENERATION**. When Diagnose 1 shows no registration, Remediation 1 with the new wallet (**inferred**). If the DApp shows `NO REGISTRATION FOUND` while Diagnose 1 shows one ([midnight-cnight-to-dust-dapp#249](https://github.com/midnightntwrk/midnight-cnight-to-dust-dapp/issues/249)), the duplicates runbook's scripts remove it, run by the user. After a CHANGE ADDRESS, Remediation 3.
+2. **Send future DUST to another address.** On ledger 9, which every network runs now, **CHANGE ADDRESS** counts the cNIGHT it moves (Root cause 5; not measured). Or, without it: With only the Cardano wallet connected, so the DApp shows the registration (Root cause 3), use **STOP GENERATION**. When Diagnose 1 shows no registration, Remediation 1 with the new wallet (**inferred**). If the DApp shows `NO REGISTRATION FOUND` while Diagnose 1 shows one ([midnight-cnight-to-dust-dapp#249](https://github.com/midnightntwrk/midnight-cnight-to-dust-dapp/issues/249)), the duplicates runbook's scripts remove it, run by the user. After a CHANGE ADDRESS made before the ledger 9 upgrade, if Diagnose 1 shows that cNIGHT not counted, Remediation 3.
 
    *Trade-off:* two Cardano transactions, and the new address waits like a new registration.
 
 3. **Move the cNIGHT so Midnight counts it.** While the key has one registration, send the cNIGHT, in a transaction of its own, to an address of the registered wallet: the script's `ADDRESS ok` line for it must show the registered stake key (an `addr1v` address has none). Or register the wallet that holds it, with Remediation 1.
 
    *Trade-off:* a Cardano fee, and the moved cNIGHT waits before it counts (**inferred**).
+4. **DUST at 0 on Mainnet since the ledger 9 upgrade.** Nothing to register again. Move the app or wallet to wallet SDK 2.0.0 with an indexer on 4.4.101 (Mainnet's is Blockfrost); the replayed balance shows after it syncs. If Diagnose 1 shows the registration and DUST generating and the wallet still shows 0, Stop and escalate.
 
 ## Confirm fixed
 
@@ -139,6 +142,8 @@ Each row names a public source, a repo file (`github:`) or an issue's state (`is
 | The DApp's buttons, and its DUST Balance without a wallet | `github:midnightntwrk/midnight-cnight-to-dust-dapp/src/components/dashboard/MidnightWalletCard.tsx` | `'CHANGE ADDRESS'` `'STOP GENERATION'` `'NO REGISTRATION FOUND'` `specksToTDust(generationStatus.currentCapacity)` |
 | CHANGE ADDRESS replaces the registration; register and CHANGE ADDRESS move all the wallet's cNIGHT; every action needs cNIGHT | `github:midnightntwrk/midnight-cnight-to-dust-dapp/src/lib/dustTransactionsUtils.ts` | `private static async buildUpdateTransaction(lucid: LucidEvolution, newDustPKH: string, registrationUtxo: UTxO)` `txBuilder.collectFrom([registrationUtxo], spendRedeemer);` `txBuilder.collectFrom(cnightUtxos);` `No cNIGHT tokens found in wallet. You need cNIGHT to register.` `You need cNIGHT to update.` |
 | The DApp's Generation Rate | `github:midnightntwrk/midnight-cnight-to-dust-dapp/src/components/dashboard/GenerationRateCard.tsx` | `BigInt(generationStatus.generationRate) * 3600n` |
+| The ledger 9 DUST reset: replayed to the cap on Mainnet, shown on wallet SDK 2.0.0 and indexer 4.4.101; Preprod cleared registrations not backed by cNIGHT | `github:midnightntwrk/midnight-docs/docs/relnotes/ledger-9.mdx` | `replays every live registration automatically` `wallet SDK 2.0.0 against an indexer on 4.4.101` `cleared DUST registrations that aren't backed by cNIGHT` |
+| The CHANGE ADDRESS issue is closed (fixed in the node) | `issue:midnightntwrk/midnight-node#2121` | `closed` |
 | The DApp's lookup by DUST address is still open | `issue:midnightntwrk/midnight-cnight-to-dust-dapp#249` | `open` |
 | The indexer's queries and the fields the script reads | `github:midnightntwrk/midnight-indexer/indexer-api/graphql/schema-v4.graphql` | `dustGenerationStatus(cardanoRewardAddresses: [CardanoRewardAddress!]!)` `dustGenerations(cardanoRewardAddresses: [CardanoRewardAddress!]!)` `registered: Boolean!` `valid: Boolean!` `utxoTxHash: HexEncoded` |
 | `dustGenerationStatus` reads the newest generating UTXO | `github:midnightntwrk/midnight-indexer/indexer-api/src/infra/storage/dust.rs` | `ORDER BY ctime DESC` |
