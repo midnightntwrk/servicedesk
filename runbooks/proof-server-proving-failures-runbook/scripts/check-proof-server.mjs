@@ -38,8 +38,9 @@ import { spawnSync } from 'node:child_process';
 
 const MATRIX_URL =
   'https://raw.githubusercontent.com/midnightntwrk/midnight-docs/main/docs/relnotes/support-matrix.json';
-// Used only when the matrix can't be read. Point-in-time: midnight-docs main, 2026-10-09.
-const MATRIX_FALLBACK = '8.1.3';
+// Used only when the matrix can't be read. Point-in-time: midnight-docs main, 2026-11-09
+// (9.0.0 on preview, preprod and mainnet since midnight-docs#1669).
+const MATRIX_FALLBACK = '9.0.0';
 const NETWORKS = ['preview', 'preprod', 'mainnet'];
 const USAGE =
   'usage: node check-proof-server.mjs [url] [--network <preview|preprod|mainnet>] [--no-prove] [--no-docker] [--timeout <s>] [--matrix <file|url>]';
@@ -189,18 +190,23 @@ async function main() {
     add('GET /health', seen, '200', 'FAIL', meaning);
     fix(meaning + (local && opts.docker ? ' The container checks below say which.' : ''));
   }
+  const major = (s) => Number(String(s).split('.')[0]);
   if (reachable) {
     const v = await request(at('/version')).catch(() => undefined);
     served = v?.status === 200 ? v.body.toString().trim() : undefined;
     if (!served) add('GET /version', v ? `HTTP ${v.status}` : 'no answer', expected, 'WARN', 'not a proof server version');
     else if (served === expected) add('Version', served, expected, 'OK');
     else {
-      const major = (s) => s.split('.')[0];
-      add('Version', served, expected, major(served) === major(expected) ? 'WARN' : 'FAIL', `${opts.network} is tested with ${expected}`);
+      // 9.x reads ledger 8 requests and ZKIR v2 (the test proof below is one), so a newer major is
+      // a WARN; an older one can't read the ZKIR v3 circuits that ledger 9 networks use.
+      const older = major(served) < major(expected);
+      add('Version', served, expected, major(served) === major(expected) || !older ? 'WARN' : 'FAIL', `${opts.network} is tested with ${expected}`);
       fix(
         major(served) === major(expected)
           ? `This is proof server ${served}; ${opts.network} is tested with ${expected}. Same major version, so it should read the same requests (the test proof shows whether it does). Move to midnightntwrk/proof-server:${expected}.`
-          : `This is proof server ${served}, a different major version from the ${expected} that ${opts.network} is tested with. Its request format differs from what midnight-js 4.x sends. Run midnightntwrk/proof-server:${expected}.`,
+          : older
+            ? `This is proof server ${served}, older than the ${expected} that ${opts.network} is tested with. It can't read the ZKIR v3 circuits that Compact 0.36.0 writes ("Unsupported ZKIR version"). Run midnightntwrk/proof-server:${expected}.`
+            : `This is proof server ${served}, newer than the ${expected} that ${opts.network} is tested with. It reads ledger 8 requests and ZKIR v2 (the test proof below shows it), but ${opts.network} isn't tested with it. Run midnightntwrk/proof-server:${expected}.`,
       );
     }
     const pv = await request(at('/proof-versions')).catch(() => undefined);
@@ -219,7 +225,9 @@ async function main() {
         add('GET /ready', `HTTP ${ready.status}: ${detail}`, '200', 'WARN', 'busy');
         fix('The proof server reports itself busy. New requests may get 429 `Job Queue full`. Wait, lower the load, or raise MIDNIGHT_PROOF_SERVER_JOB_CAPACITY / MIDNIGHT_PROOF_SERVER_NUM_WORKERS.');
       }
-      if (j.jobCapacity > 0) add('Job capacity', String(j.jobCapacity), 'unlimited (0)', 'INFO', 'requests beyond it get 429 Job Queue full');
+      // The default --job-capacity is 0 (unlimited) on 8.x and 10 from 9.0.0 (proof-server/src/main.rs).
+      const defaultCap = served && major(served) >= 9 ? 10 : 0;
+      if (j.jobCapacity > 0) add('Job capacity', String(j.jobCapacity), defaultCap ? `${defaultCap} (default)` : 'unlimited (0)', 'INFO', 'requests beyond it get 429 Job Queue full');
     }
   }
 
@@ -248,10 +256,10 @@ async function testProof(at) {
       fix(`The server can't read the ledger-8 request format midnight-js 4.x sends ("${shown}"). Run midnightntwrk/proof-server at the matrix version.`);
     } else if (r.status === 400) {
       add(`Test ${step}`, `400: ${shown}`, `200 ${okPrefix}`, 'FAIL', 'rejected a known-good circuit');
-      fix('The server rejected a circuit that proves on a healthy 8.1.x server. On 8.x the reason is only in its log, and only with MIDNIGHT_PROOF_SERVER_VERBOSE=true.');
+      fix('The server rejected a circuit that proves on a healthy 8.1.x and 9.0.0 server. From 9.0.0 the reason is in the 400 body (`bad input: …`); on 8.x it is only in the log, and only with MIDNIGHT_PROOF_SERVER_VERBOSE=true.');
     } else if (r.status === 429) {
       add(`Test ${step}`, `429: ${shown}`, `200 ${okPrefix}`, 'FAIL', 'queue full');
-      fix('`Job Queue full`: more requests are waiting than MIDNIGHT_PROOF_SERVER_JOB_CAPACITY allows. midnight-js does not retry 429. Raise the capacity (0 = unlimited) or send fewer proofs at once.');
+      fix('`Job Queue full`: more requests are waiting than MIDNIGHT_PROOF_SERVER_JOB_CAPACITY allows (10 by default from 9.0.0; unlimited on 8.x). midnight-js does not retry 429. Raise the capacity (0 = unlimited) or send fewer proofs at once.');
     } else if (r.status === 500) {
       add(`Test ${step}`, `500: ${shown}`, `200 ${okPrefix}`, 'FAIL', 'internal error');
       fix('`internal error` (500). On 8.x a proof that runs past --job-timeout (MIDNIGHT_PROOF_SERVER_JOB_TIMEOUT, default 600 s) ends like this, and the log says only `failed to complete job`. midnight-js retries a 500 three times, so a slow proof is done four times before it fails.');
