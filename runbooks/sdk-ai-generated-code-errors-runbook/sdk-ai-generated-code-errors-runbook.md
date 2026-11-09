@@ -186,7 +186,9 @@ tasks and across models, which is what makes them worth a runbook. They fall int
 
 ## Key identifiers
 
-- **The network set** (support matrix, for preview, preprod and mainnet): compiler 0.31.1,
+- **The ledger 8 set** (the support matrix's set for every network until the ledger 9 upgrade; since
+  2026-11-09 Mainnet, Preview and Preprod all use compiler 0.36.0, midnight-js 5.0.0, wallet SDK
+  2.0.0 and proof server 9.0.0, which this page and its script don't cover yet): compiler 0.31.1,
   `compact-runtime` 0.16.0, `compact-js` 2.5.1, every `midnight-js-*` 4.1.1, `wallet-sdk` 1.2.0,
   `dapp-connector-api` 4.0.1, `testkit-js` 4.1.1, proof server 8.1.3.
 - **Scopes.** Every package is published as `@midnight-ntwrk/…` on public npm. The wallet SDK,

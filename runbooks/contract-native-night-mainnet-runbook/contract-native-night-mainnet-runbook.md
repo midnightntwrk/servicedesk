@@ -293,7 +293,7 @@ for a wallet that had NIGHT, and for a contract that held it.
    const nightPaymentsWork = config.networkId !== 'mainnet';
    ```
 
-   On midnight-js 4.1.1 (Preprod's set), read it with `getNetworkId()` from
+   On midnight-js 4.1.1 (the ledger 8 set), read it with `getNetworkId()` from
    `@midnight-ntwrk/midnight-js-network-id` instead; midnight-js 5.0.0 removed that package.
 
    - Pro: no contract change.
