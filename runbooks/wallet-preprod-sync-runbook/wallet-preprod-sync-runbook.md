@@ -403,8 +403,9 @@ Expect 1.2.0, 4.2.0 and 1.2.3. Anything else: install `@midnight-ntwrk/wallet-sd
 - **[midnight-wallet#742](https://github.com/midnightntwrk/midnight-wallet/issues/742)** and
   **[midnight-wallet#743](https://github.com/midnightntwrk/midnight-wallet/issues/743)** (both open):
   the uncapped retry backoff, the silent end of a cleanly completed subscription, and the latched
-  `isConnected`. Fixed in the wallet SDK 2.0 line, which the support matrix lists for Mainnet and
-  Preview; Preprod still lists 1.2.0, so Remediation 5 stays until Preprod moves.
+  `isConnected`. Fixed in the wallet SDK 2.0 line, which the support matrix lists for every network
+  since Preprod moved to ledger 9 on 2026-11-09. Remediation 5 now only applies to an app still on
+  1.2.0, which no public network supports.
 - **midnight-examples `preseed/preview/`**
   ([midnightntwrk/midnight-examples#91](https://github.com/midnightntwrk/midnight-examples/issues/91)): it was cut from the Preview chain before the
   reset, so fast-sync no longer uses it; a new cut from the reset chain would bring fast-sync back.
