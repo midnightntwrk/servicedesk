@@ -4,9 +4,10 @@
  * versions match what the target network supports, and do the contract and midnight-js load
  * the same on-chain runtime?
  *
- * The networks don't run one set: since the ledger 9 fork, Mainnet and Preview run the ledger 9
- * set (compiler 0.36, runtime 0.21, midnight-js 5) and Preprod the ledger 8 set (0.31.1, 0.16,
- * midnight-js 4.1.1). --network picks the set from the matrix, and the checks follow its era.
+ * Since Preprod's upgrade on 9 November 2026 every network runs the ledger 9 set (compiler 0.36,
+ * runtime 0.21, midnight-js 5); projects built before the fork carry the ledger 8 set (0.31.1,
+ * 0.16, midnight-js 4.1.1). --network picks the set from the matrix, and the checks follow its era,
+ * so a network listed on ledger 8 again would still be checked as one.
  *
  * Run it against the DApp repo (the directory with node_modules). It reads files, runs
  * `compact --version` and `compact compile --version`, and fetches the docs support matrix.
@@ -364,8 +365,8 @@ async function main() {
   for (const [name, v] of [['Compact toolchain', expToolchain], ['Compact runtime', expRuntime]]) {
     if (!v) fail(`the support matrix has no '${name}' version for ${opts.network}: its format may have changed. Pass --matrix <file> with a known-good copy, or check the docs page.`);
   }
-  // The network's ledger era follows from its runtime: 0.16 is ledger 8 (preprod at the last
-  // check), 0.21 ledger 9 (mainnet and preview since the ledger 9 fork).
+  // The network's ledger era follows from its runtime: 0.16 is ledger 8 (no network since
+  // Preprod's upgrade on 9 November 2026), 0.21 ledger 9 (every network at the last check).
   const era = eraOfRuntime(expRuntime);
   if (!era) fail(`the support matrix lists Compact runtime ${expRuntime} for ${opts.network}, which this script can't place on a ledger era (it knows 0.16 = ledger 8 and 0.21 = ledger 9). Check for a newer copy of this script.`);
   const npmFor = (component) => {
