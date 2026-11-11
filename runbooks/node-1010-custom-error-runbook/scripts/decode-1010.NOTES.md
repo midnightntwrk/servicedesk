@@ -171,7 +171,10 @@ On Node 20.19.1, macOS, unless noted; 47 cases, all as expected.
 - #838 (231, `OutsideTimeToDismiss`, one DUST spend) and #839 (104, coin write-back out of gas
   budget) come from the ledger 9.1.0.0 release notes' known defects and the issues themselves (both
   open on 2026-11-07); neither was reproduced here. #838's triage comment expects the fix as a
-  client package upgrade.
+  client package upgrade. #838 closed on 2026-11-10, fixed by midnight-ledger#845 in ledger
+  9.1.0.2-rc.0 (`ledger-v9` 1.0.2-rc.0 on npm, dist-tag `rc`; `latest` still 1.0.1). Its
+  changelog fixes transcript partitioning to size the guaranteed section against the predicted
+  transaction's time-to-dismiss allowance. The fix wasn't tested here; #839 is still open.
 
 
 ## Codes node 2.x dropped or split (kept from the old page)

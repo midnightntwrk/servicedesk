@@ -4,7 +4,7 @@ when_to_use: "Submission fails with `1010: Invalid Transaction: Custom error: N`
 audience: "developers support-agents"
 owner: "mn-servicedesk"
 compiled: "2026-10-07"
-last_reviewed: "2026-11-09"
+last_reviewed: "2026-11-11"
 error_strings:
   - "1010: Invalid Transaction: Custom error:"
   - "Invalid Transaction"
@@ -17,7 +17,8 @@ error_strings:
   - "guaranteed execution would fail"
 review_when:
   - "A network moves to another node version: the decoder picks its table from system_version, so a version it doesn't know needs a new table from gen-tables.mjs"
-  - "midnight-ledger#838 or #839 closes: Remediation 5 and 7 change"
+  - "midnight-ledger#839 closes: Remediation 7 changes"
+  - "ledger-v9 publishes a newer rc or deprecates 1.0.2-rc.0, or midnight-ledger#845 is reverted: Remediation 5 and Stop and escalate change"
   - "The wallet SDK or midnight-js changes how it wraps a submission error: Symptom and Diagnose 1"
 ---
 
@@ -114,12 +115,12 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 3. **DUST already spent (196, or `TransactionInvalidError`).** Run one wallet instance per seed: two instances on one seed picked the same DUST, while one instance submitted back-to-back transfers without a conflict. With several processes, send every submission through the one that holds the wallet.
 
    *Trade-off:* one submitter per seed (separate seeds with their own DUST would allow more; not tested).
-4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate. If only your client fails, compare its ledger package (`npm ls` for `ledger-v8` or `ledger-v9`) with the node's `midnight_ledgerVersion` RPC.
+4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate. If only your client fails, compare its ledger package (`npm ls` for `ledger-v8` or `ledger-v9`) with the node's `midnight_ledgerVersion` RPC (a client on the #838 rc in Remediation 5 is an expected difference).
 
    *Trade-off:* none.
-5. **Fee check (168; 231, 232).** 231 (168 on 1.0.x, with "maximum time to dismiss" in the node log): it would take longer to validate than its size allows. Fewer intents may help (`servicedesk#100`); the limit is a network parameter. 232 (168 with "block limit"): too big for one block; for a deploy, see the batched deploy runbook. Without the node log, treat a deploy as the block limit. On node 2.x a moderately expensive call paid with exactly one DUST spend can also hit 231, a known defect (midnight-ledger#838) with no DApp workaround yet.
+5. **Fee check (168; 231, 232).** 231 (168 on 1.0.x, with "maximum time to dismiss" in the node log): it would take longer to validate than its size allows. Fewer intents may help (`servicedesk#100`); the limit is a network parameter. 232 (168 with "block limit"): too big for one block; for a deploy, see the batched deploy runbook. Without the node log, treat a deploy as the block limit. On a ledger 9 network a moderately expensive call paid with exactly one DUST spend can also hit 231 (midnight-ledger#838). The fix is in the client's transcript partitioner, only in release candidate `ledger-v9` 1.0.2-rc.0 so far; no stable release has it, and midnight-js 5 pins 1.0.0 exactly. Force 1.0.2-rc.0 for both `@midnightntwrk/ledger-v9` and `@midnight-ntwrk/ledger-v9` with npm `overrides` (pnpm `pnpm.overrides`, yarn `resolutions`), setting any direct dependency on it to the same version (else `EOVERRIDE`). Check that `npm ls @midnightntwrk/ledger-v9 @midnight-ntwrk/ledger-v9` shows only 1.0.2-rc.0, then build and prove again. **Not tested** here, including midnight-js 5 on a ledger it doesn't pin.
 
-   *Trade-off:* splitting a transaction gives up atomicity.
+   *Trade-off:* splitting a transaction gives up atomicity; the #838 override runs a release candidate, so drop it once a stable `ledger-v9` carries the fix.
 6. **Effects check (186; 212 to 218).** 186 on 1.0.x was a midnight-js 4.0.4 bug, fixed in 4.1.1 (`servicedesk#37`): use the [support matrix](https://docs.midnight.network/relnotes/support-matrix) version. 212 to 218 on 2.x have no worked case yet: Stop and escalate with the contract.
 
    *Trade-off:* a midnight-js upgrade moves the rest of the stack with it (see the [version mismatch runbook](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md)).
@@ -142,7 +143,7 @@ Open an issue at the [servicedesk front door](https://github.com/midnightntwrk/s
 
 - The decoder doesn't know the code on the node's table, or the node runs a version it has no table for.
 - Every transaction on the network gets the same code, the faucet's included.
-- The matched code's fix doesn't change the result, or a known defect (midnight-ledger#838, #839) blocks the DApp.
+- The matched code's fix doesn't change the result, a one-DUST-spend call still gets 231 with every `ledger-v9` copy on 1.0.2-rc.0 (or the stable release with the fix), or the known defect midnight-ledger#839 blocks the DApp.
 - A source in Key identifiers disagrees with its row and no step covers that.
 
 Include the error and its causes, the decoder's output, the node's `system_version` and any node log lines around `Rejected transaction`. Remove any project id first.
@@ -163,7 +164,9 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | The docs' code page, the node 1.0.x reference | `github:midnightntwrk/midnight-docs/docs/nodes/error-codes.mdx` | `"data": "Custom error: 196"` |
 | The wallet SDK's code-less rejection | `npm:@midnightntwrk/wallet-sdk-node-client/dist/effect/PolkadotNodeClient.js` | `Transaction is invalid and was rejected by the node` |
 | midnight-js 5 wraps a failed submission | `npm:@midnight-ntwrk/midnight-js-contracts/dist/index.js` | `rejected the transaction` |
-| One DUST spend can fail the time-to-dismiss check | `issue:midnightntwrk/midnight-ledger#838` | `open` |
+| The one-DUST-spend time-to-dismiss defect is closed; its fix (midnight-ledger#845) is the rc in the next row | `issue:midnightntwrk/midnight-ledger#838` | `closed` |
+| The fix ships in `ledger-v9` 1.0.2-rc.0, which adds `TransactionShape` with it | `npm:@midnightntwrk/ledger-v9@1.0.2-rc.0/ledger-v9.d.ts` | `export class TransactionShape` |
+| No stable `ledger-v9` has the fix yet: `latest` is 1.0.1 | `npm:@midnightntwrk/ledger-v9/package.json` | `"version": "1.0.1"` |
 | A coin write-back can run out of gas budget | `issue:midnightntwrk/midnight-ledger#839` | `open` |
 
 ## Reference material
