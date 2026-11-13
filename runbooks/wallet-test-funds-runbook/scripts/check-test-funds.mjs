@@ -48,7 +48,8 @@ const INDEXERS = {
 // Address prefixes (Bech32m human-readable parts) from the same page.
 const UNSHIELDED_HRP = { mn_addr_preview: 'preview', mn_addr_preprod: 'preprod', mn_addr: 'mainnet' };
 const OTHER_TYPES = [['mn_shield-addr', 'a shielded address'], ['mn_dust', 'a DUST address']];
-// The faucet's request-status path. Never call the bare API root: see servicedesk#193.
+// The faucet's request-status path. Never call the bare API root: it crashes the faucet
+// (servicedesk#193; the unguarded match is still in midnight-faucet-api's router.ts).
 const DRIP_PATH = '/api/drips/';
 // The unshielded NIGHT token type, nativeToken() in the ledger.
 const NIGHT = '0'.repeat(64);
