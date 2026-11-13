@@ -144,7 +144,7 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | The faucet fails a stranded drip and returns its daily slot | `github:midnightntwrk/midnight-faucet-api/apps/server/src/tasks/task-timeouts.ts` | `fails it, and refunds its rate-limit slot` `IN_PROGRESS_TIMEOUT_MINUTES = 5` `SCHEDULED_TIMEOUT_MINUTES = 60` |
 | | `github:midnightntwrk/midnight-faucet-api/apps/server/src/tasks/task-repository.ts` | `Token request failed due to timeout` |
 | Each deployment sets its own daily limit | `github:midnightntwrk/midnight-faucet-api/apps/server/src/config.ts` | `RATE_LIMITING_MAX_DAILY` |
-| The faucet crashes on its bare API root, so the script calls only the drip path | `issue:midnightntwrk/servicedesk#193` | `open` |
+| The faucet crashes on its bare API root, so the script calls only the drip path | `github:midnightntwrk/midnight-faucet-api/apps/server/src/router.ts` | `BaseApiUrlRegExp.exec(reqCtx.originalUrl)!.groups!.url` |
 
 ## Reference material
 
