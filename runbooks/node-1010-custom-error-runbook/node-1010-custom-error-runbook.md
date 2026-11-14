@@ -17,8 +17,7 @@ error_strings:
   - "guaranteed execution would fail"
 review_when:
   - "A network moves to another node version: the decoder picks its table from system_version, so a version it doesn't know needs a new table from gen-tables.mjs"
-  - "midnight-ledger#839 closes: Remediation 7 changes"
-  - "ledger-v9 publishes a newer rc or deprecates 1.0.2-rc.0, or midnight-ledger#845 is reverted: Remediation 5 and Stop and escalate change"
+  - "ledger-v9 publishes a newer rc or a stable release with the fixes, or deprecates 1.0.2-rc.0, or midnight-ledger#845 or #846 is reverted: Remediations 5 and 7 and Stop and escalate change"
   - "The wallet SDK or midnight-js changes how it wraps a submission error: Symptom and Diagnose 1"
 ---
 
@@ -124,7 +123,7 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 6. **Effects check (186; 212 to 218).** 186 on 1.0.x was a midnight-js 4.0.4 bug, fixed in 4.1.1 (`servicedesk#37`): use the [support matrix](https://docs.midnight.network/relnotes/support-matrix) version. 212 to 218 on 2.x have no worked case yet: Stop and escalate with the contract.
 
    *Trade-off:* a midnight-js upgrade moves the rest of the stack with it (see the [version mismatch runbook](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md)).
-7. **Transcript rejected (104).** The call's on-chain program failed against the state it met, usually because the contract's state changed after the call was built: build it again against the current state. On node 2.x, a call that writes a held coin's change back with `writeCoin`, with `ran out of gas budget` in the node log, is a known defect (midnight-ledger#839) with no workaround yet.
+7. **Transcript rejected (104).** The call's on-chain program failed against the state it met, usually because the contract's state changed after the call was built: build it again against the current state. On node 2.x, a call that writes a held coin's change back with `writeCoin`, with `ran out of gas budget` in the node log, under-declared its written bytes once the commitment tree grew (midnight-ledger#839). The fix, like 231's, is only in `ledger-v9` 1.0.2-rc.0: force it as in Remediation 5. **Not tested** here.
 
    *Trade-off:* under contention a rebuilt call can fail again.
 8. **Anything else.** Read the decoder's name and category, and the code's row on [Node error codes](https://docs.midnight.network/nodes/error-codes). If that doesn't explain it, Stop and escalate.
@@ -143,7 +142,7 @@ Open an issue at the [servicedesk front door](https://github.com/midnightntwrk/s
 
 - The decoder doesn't know the code on the node's table, or the node runs a version it has no table for.
 - Every transaction on the network gets the same code, the faucet's included.
-- The matched code's fix doesn't change the result, a one-DUST-spend call still gets 231 with every `ledger-v9` copy on 1.0.2-rc.0 (or the stable release with the fix), or the known defect midnight-ledger#839 blocks the DApp.
+- The matched code's fix doesn't change the result, a one-DUST-spend call still gets 231 with every `ledger-v9` copy on 1.0.2-rc.0 (or the stable release with the fix), or a `writeCoin` change write-back still gets 104 the same way.
 - A source in Key identifiers disagrees with its row and no step covers that.
 
 Include the error and its causes, the decoder's output, the node's `system_version` and any node log lines around `Rejected transaction`. Remove any project id first.
@@ -167,7 +166,7 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | The one-DUST-spend time-to-dismiss defect is closed; its fix (midnight-ledger#845) is the rc in the next row | `issue:midnightntwrk/midnight-ledger#838` | `closed` |
 | The fix ships in `ledger-v9` 1.0.2-rc.0, which adds `TransactionShape` with it | `npm:@midnightntwrk/ledger-v9@1.0.2-rc.0/ledger-v9.d.ts` | `export class TransactionShape` |
 | No stable `ledger-v9` has the fix yet: `latest` is 1.0.1 | `npm:@midnightntwrk/ledger-v9/package.json` | `"version": "1.0.1"` |
-| A coin write-back can run out of gas budget | `issue:midnightntwrk/midnight-ledger#839` | `open` |
+| The #839 fix rehearses with the widest commitment indices | `github:midnightntwrk/midnight-ledger/ledger/src/construct.rs` | `fn with_widest_commitment_indices(&self) -> Self {` |
 
 ## Reference material
 
