@@ -198,3 +198,13 @@ with its pinned sources. This table is the one part of it the page points to. Fr
 | 174 | `Malformed.MalformedContractDeploy` | stays as `….Unknown`; adds 233 and 234 |
 
 140, 156, 157, 248 and 249 are new on node 2.x.
+
+## 104, 135 and 138 on ledger 9 (2026-11-16)
+
+From the Preview ledger 9 tests (Nov 8, node 2.1.101, midnight-js 5.0.0, Compact 0.36.0), confirmed in part on Preprod (Nov 14):
+
+- **104, `kernel.caller()` with the user's unshielded tokens.** A top-level circuit that does `receiveUnshielded` of the user's NIGHT and reads `kernel.caller()`: rejected `1010: Invalid Transaction: Custom error: 104`, 3 of 3. The same circuit without the caller read, and the caller read without the tokens, both went through. Open as midnightntwrk/midnight-js#1541 and LFDT-Minokawa/compact#871. A top-level user call's `kernel.caller()` returned `none` on Preview and on Preprod (`caller.whoAmI`, Nov 14), so it can't identify the user either way.
+- **135, `InvalidCommitteeSignature`.** `insertVerifierKey` signed by a key outside the maintenance authority: rejected at submit with 135, ~6 s. The owner's insert then went through. In the first run a `findDeployedContract(..., { signingKey })` from another `privateStateStoreName` overwrote the owner's stored key, because `levelPrivateStateProvider`'s `signingKeyStoreName` defaults to one shared store.
+- **138, `BalanceCheckOverspend`, on `removeVerifierKey`.** 6 of 6 removals failed with 138, with the right key and a wrong one; inserts passed. midnightntwrk/midnight-node#2375 is closed (2026-11-12): a maintainer found node 2.1.101 is built on `ledger-v9` 1.0.1, which "prices `VerifierKeyRemove` about 2.25× higher than 1.0.0-rc.7", and it's "Not reproducible on 2.1.101" with the newer ledger. midnight-js 5.0.0's `midnight-js-protocol` pins `@midnightntwrk/ledger-v9` 1.0.0; 5.0.1-rc.1 pins 1.0.2-rc.0 (npm, 2026-11-16). The override fix is **not tested** here.
+
+The decoder's 2.x hint for 104 also said midnight-ledger#839 was open with no workaround; #839 closed on 2026-11-13 and the page already pointed at the 1.0.2-rc.0 fix, so the hint now matches the page.
