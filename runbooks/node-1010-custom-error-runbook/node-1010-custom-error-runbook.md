@@ -96,14 +96,16 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
    | 170 | 170 | The DUST spend proof didn't verify | Remediation 4 |
    | 168 | 231, 232 | Too slow to validate for its size, or too big for a block | Remediation 5 |
    | 186 | 212 to 218 | The effects don't match what the contract calls claim | Remediation 6 |
-   | 104 | 104 | The call's on-chain program failed against the state it met | Remediation 7 |
+   | 104 | 104 | The call's on-chain program failed against the state it met, or a top-level call read `kernel.caller()` and took the user's unshielded tokens | Remediation 7 |
+   | 135 | 135 | A maintenance update isn't signed by the contract's maintenance authority | Remediation 8 |
+   | 138 | 138 | Pays out more than it takes in; on ledger 9, every `removeVerifierKey` from midnight-js 5.0.0 | Remediation 8 |
    | 194 | 194 | A call pays out more of a token than the contract holds | [NIGHT on Mainnet](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/contract-native-night-mainnet-runbook/contract-native-night-mainnet-runbook.md), if the token is NIGHT |
 
-   The 1.0.x codes come from midnight-node `node-1.0.400`, a tag the daily check can't follow (NOTES). On node 1.0.x, 182 and 193 each wrap all three TTL and intent cases (reproduced: TTL as 182, a landed resubmission as 193). A 1.0.x-only code such as 182 from a 2.x network means the log came from a 1.0.x node: check `--rpc` against the node that submitted. Copies of the docs from before midnight-docs#1454 called 182 and 193 retired; node 1.0.x still uses them. Anything else: Remediation 8.
+   The 1.0.x codes come from midnight-node `node-1.0.400`, a tag the daily check can't follow (NOTES). On node 1.0.x, 182 and 193 each wrap all three TTL and intent cases (reproduced: TTL as 182, a landed resubmission as 193). A 1.0.x-only code such as 182 from a 2.x network means the log came from a 1.0.x node: check `--rpc` against the node that submitted. Copies of the docs from before midnight-docs#1454 called 182 and 193 retired; node 1.0.x still uses them. Anything else: Remediation 9.
 
 ## Remediation
 
-1 to 3 were reproduced on node 1.0.400; 4 to 7 come from worked cases and source.
+1 to 3 were reproduced on node 1.0.400; 4 to 6 come from worked cases and source; 7's `kernel.caller()` case and 8 were reproduced on Preview (node 2.1.101).
 
 1. **TTL (182, 193; 228, 229, 242, 243).** Build the transaction again and submit it promptly, with a TTL a little in the future: on node 1.0.400, now + 30 minutes was accepted, and now − 5 minutes and now + 30 days were rejected. The TTL is the `ttl` your code passes, or midnight-js's client clock + 1 hour, so a client clock that's far behind produces expired TTLs (inferred).
 
@@ -125,8 +127,13 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
    *Trade-off:* a midnight-js upgrade moves the rest of the stack with it (see the [version mismatch runbook](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md)).
 7. **Transcript rejected (104).** The call's on-chain program failed against the state it met, usually because the contract's state changed after the call was built: build it again against the current state. On node 2.x, a call that writes a held coin's change back with `writeCoin`, with `ran out of gas budget` in the node log, under-declared its written bytes once the commitment tree grew (midnight-ledger#839). The fix, like 231's, is only in `ledger-v9` 1.0.2-rc.0: force it as in Remediation 5. **Not tested** here.
 
+   A top-level circuit that reads `kernel.caller()` and takes the user's unshielded tokens (`receiveUnshielded`) is rejected with 104 too ([midnight-js#1541](https://github.com/midnightntwrk/midnight-js/issues/1541), open): 3 of 3 on Preview, while the same circuit without the caller read, or the caller read without the tokens, went through. A top-level user call's `kernel.caller()` is `none` anyway (Preview and Preprod), so it can't name the user: take the user's identity another way, or read the caller in a call that takes no tokens from them.
+
    *Trade-off:* under contention a rebuilt call can fail again.
-8. **Anything else.** Read the decoder's name and category, and the code's row on [Node error codes](https://docs.midnight.network/nodes/error-codes). If that doesn't explain it, Stop and escalate.
+8. **Maintenance update rejected (135, 138).** 135: the update (`insertVerifierKey`, `removeVerifierKey`, `replaceAuthority`) isn't signed by the contract's maintenance authority; on Preview, an `insertVerifierKey` signed by a key outside the committee got it. midnight-js keeps the deployer's key in the private state provider's signing key store, which every `privateStateStoreName` shares by default, and `findDeployedContract` with a `signingKey` option overwrites the stored one: sign with the key that deployed. 138 is the balance check. On ledger 9 every `removeVerifierKey` from midnight-js 5.0.0 got it (6 of 6 on Preview, inserts fine): node 2.1.101 runs `ledger-v9` 1.0.1, which prices the removal about 2.25 times what the client's 1.0.0 does ([midnight-node#2375](https://github.com/midnightntwrk/midnight-node/issues/2375), closed as not reproducible on 2.1.101). midnight-js 5.0.1-rc.1 pins `ledger-v9` 1.0.2-rc.0; with 5.0.0, force 1.0.2-rc.0 as in Remediation 5. **Not tested** here.
+
+   *Trade-off:* a lost maintenance key can't be recovered, and the release candidate has the same caveat as Remediation 5.
+9. **Anything else.** Read the decoder's name and category, and the code's row on [Node error codes](https://docs.midnight.network/nodes/error-codes). If that doesn't explain it, Stop and escalate.
 
    *Trade-off:* none.
 
@@ -164,6 +171,10 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | The wallet SDK's code-less rejection | `npm:@midnightntwrk/wallet-sdk-node-client/dist/effect/PolkadotNodeClient.js` | `Transaction is invalid and was rejected by the node` |
 | midnight-js 5 wraps a failed submission | `npm:@midnight-ntwrk/midnight-js-contracts/dist/index.js` | `rejected the transaction` |
 | The one-DUST-spend time-to-dismiss defect is closed; its fix (midnight-ledger#845) is the rc in the next row | `issue:midnightntwrk/midnight-ledger#838` | `closed` |
+| A top-level `kernel.caller()` read with the user's unshielded tokens is rejected (104), still open | `issue:midnightntwrk/midnight-js#1541` | `open` |
+| `removeVerifierKey`'s 138 is closed, not reproducible on node 2.1.101 with the newer ledger | `issue:midnightntwrk/midnight-node#2375` | `closed` |
+| midnight-js 5.0.0 pins `ledger-v9` 1.0.0 | `npm:@midnight-ntwrk/midnight-js-protocol@5.0.0/package.json` | `"@midnightntwrk/ledger-v9": "1.0.0"` |
+| midnight-js 5.0.1-rc.1 pins `ledger-v9` 1.0.2-rc.0 | `npm:@midnight-ntwrk/midnight-js-protocol@5.0.1-rc.1/package.json` | `"@midnightntwrk/ledger-v9": "1.0.2-rc.0"` |
 | The fix ships in `ledger-v9` 1.0.2-rc.0, which adds `TransactionShape` with it | `npm:@midnightntwrk/ledger-v9@1.0.2-rc.0/ledger-v9.d.ts` | `export class TransactionShape` |
 | No stable `ledger-v9` has the fix yet: `latest` is 1.0.1 | `npm:@midnightntwrk/ledger-v9/package.json` | `"version": "1.0.1"` |
 | The #839 fix rehearses with the widest commitment indices | `github:midnightntwrk/midnight-ledger/ledger/src/construct.rs` | `fn with_widest_commitment_indices(&self) -> Self {` |
