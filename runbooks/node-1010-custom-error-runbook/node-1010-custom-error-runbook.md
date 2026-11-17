@@ -4,7 +4,7 @@ when_to_use: "Submission fails with `1010: Invalid Transaction: Custom error: N`
 audience: "developers support-agents"
 owner: "mn-servicedesk"
 compiled: "2026-10-07"
-last_reviewed: "2026-11-11"
+last_reviewed: "2026-11-17"
 error_strings:
   - "1010: Invalid Transaction: Custom error:"
   - "Invalid Transaction"
@@ -17,7 +17,7 @@ error_strings:
   - "guaranteed execution would fail"
 review_when:
   - "A network moves to another node version: the decoder picks its table from system_version, so a version it doesn't know needs a new table from gen-tables.mjs"
-  - "ledger-v9 publishes a newer rc or a stable release with the fixes, or deprecates 1.0.2-rc.0, or midnight-ledger#845 or #846 is reverted: Remediations 5 and 7 and Stop and escalate change"
+  - "A stable midnight-js pins ledger-v9 1.0.2 or later, ledger-v9 deprecates 1.0.2, or midnight-ledger#845 or #846 is reverted: Remediations 5, 7 and 8 and Stop and escalate change"
   - "The wallet SDK or midnight-js changes how it wraps a submission error: Symptom and Diagnose 1"
 ---
 
@@ -116,23 +116,23 @@ Each fact is in Key identifiers with its source. A claim marked **measured**, **
 3. **DUST already spent (196, or `TransactionInvalidError`).** Run one wallet instance per seed: two instances on one seed picked the same DUST, while one instance submitted back-to-back transfers without a conflict. With several processes, send every submission through the one that holds the wallet.
 
    *Trade-off:* one submitter per seed (separate seeds with their own DUST would allow more; not tested).
-4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate. If only your client fails, compare its ledger package (`npm ls` for `ledger-v8` or `ledger-v9`) with the node's `midnight_ledgerVersion` RPC (a client on the #838 rc in Remediation 5 is an expected difference).
+4. **DUST spend proof (170).** Let the wallet finish syncing and build again. If every transaction on the network gets 170, faucet included, it's the network's side (an indexer bug in `servicedesk#150`): Stop and escalate. If only your client fails, compare its ledger package (`npm ls` for `ledger-v8` or `ledger-v9`) with the node's `midnight_ledgerVersion` RPC (a client forced to 1.0.2 in Remediation 5 is an expected difference).
 
    *Trade-off:* none.
-5. **Fee check (168; 231, 232).** 231 (168 on 1.0.x, with "maximum time to dismiss" in the node log): it would take longer to validate than its size allows. Fewer intents may help (`servicedesk#100`); the limit is a network parameter. 232 (168 with "block limit"): too big for one block; for a deploy, see the batched deploy runbook. Without the node log, treat a deploy as the block limit. On a ledger 9 network a moderately expensive call paid with exactly one DUST spend can also hit 231 (midnight-ledger#838). The fix is in the client's transcript partitioner, only in release candidate `ledger-v9` 1.0.2-rc.0 so far; no stable release has it, and midnight-js 5 pins 1.0.0 exactly. Force 1.0.2-rc.0 for both `@midnightntwrk/ledger-v9` and `@midnight-ntwrk/ledger-v9` with npm `overrides` (pnpm `pnpm.overrides`, yarn `resolutions`), setting any direct dependency on it to the same version (else `EOVERRIDE`). Check that `npm ls @midnightntwrk/ledger-v9 @midnight-ntwrk/ledger-v9` shows only 1.0.2-rc.0, then build and prove again. **Not tested** here, including midnight-js 5 on a ledger it doesn't pin.
+5. **Fee check (168; 231, 232).** 231 (168 on 1.0.x, with "maximum time to dismiss" in the node log): it would take longer to validate than its size allows. Fewer intents may help (`servicedesk#100`); the limit is a network parameter. 232 (168 with "block limit"): too big for one block; for a deploy, see the batched deploy runbook. Without the node log, treat a deploy as the block limit. On a ledger 9 network a moderately expensive call paid with exactly one DUST spend can also hit 231 (midnight-ledger#838). The fix is in the client's transcript partitioner, released in `ledger-v9` 1.0.2 (ledger 9.1.0.2); wallet SDK 2.0.1 pins it, but midnight-js 5.0.0 still pins 1.0.0 exactly. Force 1.0.2 for both `@midnightntwrk/ledger-v9` and `@midnight-ntwrk/ledger-v9` with npm `overrides` (pnpm `pnpm.overrides`, yarn `resolutions`), setting any direct dependency on it to the same version (else `EOVERRIDE`). Check that `npm ls @midnightntwrk/ledger-v9 @midnight-ntwrk/ledger-v9` shows only 1.0.2, then build and prove again. **Not tested** here, including midnight-js 5 on a ledger it doesn't pin.
 
-   *Trade-off:* splitting a transaction gives up atomicity; the #838 override runs a release candidate, so drop it once a stable `ledger-v9` carries the fix.
+   *Trade-off:* splitting a transaction gives up atomicity; drop the #838 override once your midnight-js pins 1.0.2 or later itself.
 6. **Effects check (186; 212 to 218).** 186 on 1.0.x was a midnight-js 4.0.4 bug, fixed in 4.1.1 (`servicedesk#37`): use the [support matrix](https://docs.midnight.network/relnotes/support-matrix) version. 212 to 218 on 2.x have no worked case yet: Stop and escalate with the contract.
 
    *Trade-off:* a midnight-js upgrade moves the rest of the stack with it (see the [version mismatch runbook](https://github.com/midnightntwrk/servicedesk/blob/main/runbooks/toolchain-version-mismatch-runbook/toolchain-version-mismatch-runbook.md)).
-7. **Transcript rejected (104).** The call's on-chain program failed against the state it met, usually because the contract's state changed after the call was built: build it again against the current state. On node 2.x, a call that writes a held coin's change back with `writeCoin`, with `ran out of gas budget` in the node log, under-declared its written bytes once the commitment tree grew (midnight-ledger#839). The fix, like 231's, is only in `ledger-v9` 1.0.2-rc.0: force it as in Remediation 5. **Not tested** here.
+7. **Transcript rejected (104).** The call's on-chain program failed against the state it met, usually because the contract's state changed after the call was built: build it again against the current state. On node 2.x, a call that writes a held coin's change back with `writeCoin`, with `ran out of gas budget` in the node log, under-declared its written bytes once the commitment tree grew (midnight-ledger#839). The fix, like 231's, is in `ledger-v9` 1.0.2: force it as in Remediation 5. **Not tested** here.
 
    A top-level circuit that reads `kernel.caller()` and takes the user's unshielded tokens (`receiveUnshielded`) is rejected with 104 too ([midnight-js#1541](https://github.com/midnightntwrk/midnight-js/issues/1541), open): 3 of 3 on Preview, while the same circuit without the caller read, or the caller read without the tokens, went through. A top-level user call's `kernel.caller()` is `none` anyway (Preview and Preprod), so it can't name the user: take the user's identity another way, or read the caller in a call that takes no tokens from them.
 
    *Trade-off:* under contention a rebuilt call can fail again.
-8. **Maintenance update rejected (135, 138).** 135: the update (`insertVerifierKey`, `removeVerifierKey`, `replaceAuthority`) isn't signed by the contract's maintenance authority; on Preview, an `insertVerifierKey` signed by a key outside the committee got it. midnight-js keeps the deployer's key in the private state provider's signing key store, which every `privateStateStoreName` shares by default, and `findDeployedContract` with a `signingKey` option overwrites the stored one: sign with the key that deployed. 138 is the balance check. On ledger 9 every `removeVerifierKey` from midnight-js 5.0.0 got it (6 of 6 on Preview, inserts fine): node 2.1.101 runs `ledger-v9` 1.0.1, which prices the removal about 2.25 times what the client's 1.0.0 does ([midnight-node#2375](https://github.com/midnightntwrk/midnight-node/issues/2375), closed as not reproducible on 2.1.101). midnight-js 5.0.1-rc.1 pins `ledger-v9` 1.0.2-rc.0; with 5.0.0, force 1.0.2-rc.0 as in Remediation 5. **Not tested** here.
+8. **Maintenance update rejected (135, 138).** 135: the update (`insertVerifierKey`, `removeVerifierKey`, `replaceAuthority`) isn't signed by the contract's maintenance authority; on Preview, an `insertVerifierKey` signed by a key outside the committee got it. midnight-js keeps the deployer's key in the private state provider's signing key store, which every `privateStateStoreName` shares by default, and `findDeployedContract` with a `signingKey` option overwrites the stored one: sign with the key that deployed. 138 is the balance check. On ledger 9 every `removeVerifierKey` from midnight-js 5.0.0 got it (6 of 6 on Preview, inserts fine): node 2.1.101 runs `ledger-v9` 1.0.1, which prices the removal about 2.25 times what the client's 1.0.0 does ([midnight-node#2375](https://github.com/midnightntwrk/midnight-node/issues/2375), closed as not reproducible on 2.1.101). midnight-js 5.0.1-rc.1 pins `ledger-v9` 1.0.2-rc.0; with 5.0.0, force 1.0.2 as in Remediation 5. **Not tested** here.
 
-   *Trade-off:* a lost maintenance key can't be recovered, and the release candidate has the same caveat as Remediation 5.
+   *Trade-off:* a lost maintenance key can't be recovered, and the override has the same caveat as Remediation 5.
 9. **Anything else.** Read the decoder's name and category, and the code's row on [Node error codes](https://docs.midnight.network/nodes/error-codes). If that doesn't explain it, Stop and escalate.
 
    *Trade-off:* none.
@@ -149,7 +149,7 @@ Open an issue at the [servicedesk front door](https://github.com/midnightntwrk/s
 
 - The decoder doesn't know the code on the node's table, or the node runs a version it has no table for.
 - Every transaction on the network gets the same code, the faucet's included.
-- The matched code's fix doesn't change the result, a one-DUST-spend call still gets 231 with every `ledger-v9` copy on 1.0.2-rc.0 (or the stable release with the fix), or a `writeCoin` change write-back still gets 104 the same way.
+- The matched code's fix doesn't change the result, a one-DUST-spend call still gets 231 with every `ledger-v9` copy on 1.0.2 or later, or a `writeCoin` change write-back still gets 104 the same way.
 - A source in Key identifiers disagrees with its row and no step covers that.
 
 Include the error and its causes, the decoder's output, the node's `system_version` and any node log lines around `Rejected transaction`. Remove any project id first.
@@ -170,13 +170,13 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | The docs' code page, the node 1.0.x reference | `github:midnightntwrk/midnight-docs/docs/nodes/error-codes.mdx` | `"data": "Custom error: 196"` |
 | The wallet SDK's code-less rejection | `npm:@midnightntwrk/wallet-sdk-node-client/dist/effect/PolkadotNodeClient.js` | `Transaction is invalid and was rejected by the node` |
 | midnight-js 5 wraps a failed submission | `npm:@midnight-ntwrk/midnight-js-contracts/dist/index.js` | `rejected the transaction` |
-| The one-DUST-spend time-to-dismiss defect is closed; its fix (midnight-ledger#845) is the rc in the next row | `issue:midnightntwrk/midnight-ledger#838` | `closed` |
+| The one-DUST-spend time-to-dismiss defect is closed; its fix (midnight-ledger#845) shipped in `ledger-v9` 1.0.2 | `issue:midnightntwrk/midnight-ledger#838` | `closed` |
 | A top-level `kernel.caller()` read with the user's unshielded tokens is rejected (104), still open | `issue:midnightntwrk/midnight-js#1541` | `open` |
 | `removeVerifierKey`'s 138 is closed, not reproducible on node 2.1.101 with the newer ledger | `issue:midnightntwrk/midnight-node#2375` | `closed` |
 | midnight-js 5.0.0 pins `ledger-v9` 1.0.0 | `npm:@midnight-ntwrk/midnight-js-protocol@5.0.0/package.json` | `"@midnightntwrk/ledger-v9": "1.0.0"` |
 | midnight-js 5.0.1-rc.1 pins `ledger-v9` 1.0.2-rc.0 | `npm:@midnight-ntwrk/midnight-js-protocol@5.0.1-rc.1/package.json` | `"@midnightntwrk/ledger-v9": "1.0.2-rc.0"` |
-| The fix ships in `ledger-v9` 1.0.2-rc.0, which adds `TransactionShape` with it | `npm:@midnightntwrk/ledger-v9@1.0.2-rc.0/ledger-v9.d.ts` | `export class TransactionShape` |
-| No stable `ledger-v9` has the fix yet: `latest` is 1.0.1 | `npm:@midnightntwrk/ledger-v9/package.json` | `"version": "1.0.1"` |
+| The fix ships in stable `ledger-v9` 1.0.2, which adds `TransactionShape` with it | `npm:@midnightntwrk/ledger-v9@1.0.2/ledger-v9.d.ts` | `export class TransactionShape` |
+| The latest stable midnight-js still pins `ledger-v9` 1.0.0, so Remediation 5's override is still needed | `npm:@midnight-ntwrk/midnight-js-protocol/package.json` | `"@midnightntwrk/ledger-v9": "1.0.0"` |
 | The #839 fix rehearses with the widest commitment indices | `github:midnightntwrk/midnight-ledger/ledger/src/construct.rs` | `fn with_widest_commitment_indices(&self) -> Self {` |
 
 ## Reference material

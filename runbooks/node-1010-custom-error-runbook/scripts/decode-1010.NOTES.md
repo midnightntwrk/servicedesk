@@ -208,3 +208,7 @@ From the Preview ledger 9 tests (Nov 8, node 2.1.101, midnight-js 5.0.0, Compact
 - **138, `BalanceCheckOverspend`, on `removeVerifierKey`.** 6 of 6 removals failed with 138, with the right key and a wrong one; inserts passed. midnightntwrk/midnight-node#2375 is closed (2026-11-12): a maintainer found node 2.1.101 is built on `ledger-v9` 1.0.1, which "prices `VerifierKeyRemove` about 2.25× higher than 1.0.0-rc.7", and it's "Not reproducible on 2.1.101" with the newer ledger. midnight-js 5.0.0's `midnight-js-protocol` pins `@midnightntwrk/ledger-v9` 1.0.0; 5.0.1-rc.1 pins 1.0.2-rc.0 (npm, 2026-11-16). The override fix is **not tested** here.
 
 The decoder's 2.x hint for 104 also said midnight-ledger#839 was open with no workaround; #839 closed on 2026-11-13 and the page already pointed at the 1.0.2-rc.0 fix, so the hint now matches the page.
+
+## ledger-v9 1.0.2 is stable (2026-11-17)
+
+The daily fact check (servicedesk#327) found `@midnightntwrk/ledger-v9`'s `latest` moved from 1.0.1 to 1.0.2 (both npm scopes; `rc` stays 1.0.2-rc.0). 1.0.2 is ledger 9.1.0.2, published 2026-11-16; its release notes list #838 and #839 as fixed, and its `ledger-v9.d.ts` has `export class TransactionShape`. Wallet SDK 2.0.1 pins it. midnight-js `latest` is still 5.0.0, pinning 1.0.0, so the page and the decoder's 104, 138 and 231 hints now force 1.0.2 instead of the release candidate. The override is still **not tested** here.
