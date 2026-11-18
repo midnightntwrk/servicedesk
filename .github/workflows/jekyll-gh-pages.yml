@@ -1,10 +1,17 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
+# Builds the ServiceDesk site with Jekyll and deploys it to GitHub Pages.
+# The build job writes sla.json from the open issues before Jekyll runs, so the
+# SLA cards on the landing page read current counts. Nothing is committed to main.
+# At-risk and breached counts come from the labels that sla-clock.yml maintains.
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+
+  # Rebuilds every 15 minutes so the counts in sla.json stay current
+  schedule:
+    - cron: '*/15 * * * *'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,13 +28,59 @@ concurrency:
 jobs:
   # Build job
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pages: read # configure-pages reads the Pages site settings
+      issues: read # the sla.json step lists the open issues
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Write sla.json from open issues
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+
+            const sla = {
+              generated_at: new Date().toISOString(),
+              priorities: {
+                p1: { open: 0, paged: 0, target_display: '30 min (PagerDuty)' },
+                p2: { open: 0, at_risk: 0, breached: 0, target_display: '4 business hours' },
+                p3: { open: 0, at_risk: 0, breached: 0, target_display: '1 business day' },
+                p4: { open: 0, at_risk: 0, breached: 0, target_display: '3 business days' },
+              },
+            };
+
+            // Canonical priority label -> key in sla.json.
+            const PRIORITY_KEYS = { 'priority:p2-high': 'p2', 'priority:p3-medium': 'p3', 'priority:p4-low': 'p4' };
+
+            for (const issue of openIssues) {
+              if (issue.pull_request) continue;
+              const labels = issue.labels.map(l => l.name);
+
+              if (labels.includes('priority:p1-critical')) {
+                sla.priorities.p1.open += 1;
+                if (labels.includes('pd:paged')) sla.priorities.p1.paged += 1;
+              }
+
+              // At-risk and breached come from the labels that sla-clock.yml sets and removes,
+              // so the cards and the SLA clock use one rule.
+              for (const [prio, key] of Object.entries(PRIORITY_KEYS)) {
+                if (!labels.includes(prio)) continue;
+                sla.priorities[key].open += 1;
+                if (labels.includes('sla:response-breached')) sla.priorities[key].breached += 1;
+                else if (labels.includes('sla:response-at-risk')) sla.priorities[key].at_risk += 1;
+              }
+            }
+
+            // Overwrites the placeholder sla.json in the checkout. Jekyll copies it into the site.
+            const fs = require('fs');
+            fs.writeFileSync('sla.json', JSON.stringify(sla, null, 2) + '\n');
       - name: Setup Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Build with Jekyll
@@ -43,7 +96,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     permissions:
       pages: write # deploy to GitHub Pages

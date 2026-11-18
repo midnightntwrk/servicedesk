@@ -489,7 +489,7 @@ async function ghFetch(url) {
 }
 
 async function loadSLA() {
-  // Counts are precomputed by the "Data refresh" workflow (.github/workflows/data-refresh.yml)
+  // Counts are precomputed by the Pages deploy workflow (.github/workflows/jekyll-gh-pages.yml)
   // into sla.json, served alongside this page. This avoids the unauthenticated GitHub
   // Search API (10 req/min) that previously rate-limited the cards to '?'.
   try {
@@ -504,7 +504,7 @@ async function loadSLA() {
     setText('p3-open', p.p3?.open ?? '?', false);
     setText('p4-open', p.p4?.open ?? '?', false);
 
-    // At-risk / breached — now computed per-priority by the workflow
+    // At-risk / breached — counted per priority from the sla:response-* labels
     setText('p2-risk',   p.p2?.at_risk  ?? '—', true);
     setText('p3-risk',   p.p3?.at_risk  ?? '—', true);
     setText('p4-risk',   p.p4?.at_risk  ?? '—', true);
