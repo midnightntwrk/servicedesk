@@ -14,7 +14,7 @@ import { watchSync } from './watch-sync.ts';
 const TICK = 40;
 const STALL = 200;
 
-// A sub-wallet's progress, as wallet SDK 1.2.0 exposes it.
+// A sub-wallet's progress, as wallet SDK 2.x exposes it.
 const progress = (applied, target, synced) => ({
   appliedIndex: applied,
   highestRelevantWalletIndex: target,
@@ -44,7 +44,8 @@ function fakeWallet(initial) {
     }),
   };
 }
-const facadeState = ({ dust, shielded, unshielded = unshieldedProgress(0n, 0n, true) }) => ({
+const facadeState = ({ dust, shielded, unshielded = unshieldedProgress(0n, 0n, true), protocol = { _tag: 'Settled', version: 2001100n } }) => ({
+  protocol,
   isSynced: dust.isStrictlyComplete() && shielded.isStrictlyComplete() && unshielded.isStrictlyComplete(),
   dust: { progress: dust },
   shielded: { progress: shielded },
@@ -201,6 +202,24 @@ results.push(
     (lines) => [
       ...expectSome(lines, /^INFO sync: this process was paused/),
       ...expectSome(lines, /^WARN sync: dust has not moved for \d+ min \(at 45693 of 1650046\)/),
+    ],
+  ),
+);
+
+// Complete, but the facade never settles: the eventless DUST sync on wallet SDK 2.0.0 reported protocol 0.
+results.push(
+  await run(
+    'complete but still crossing',
+    async (logger) => {
+      const crossing = { _tag: 'Crossing', from: 0n, to: 2001100n, behind: ['dust'] };
+      const wallet = fakeWallet(facadeState({ dust: progress(3_410_026n, 3_410_026n, true), shielded: progress(1_651_659n, 1_651_659n, true), protocol: crossing }));
+      const stop = watchSync(wallet, { everyMs: TICK, stallMs: STALL, logger });
+      await sleep(TICK * 4);
+      stop();
+    },
+    (lines) => [
+      ...expectSome(lines, /^WARN sync: all three sub-wallets are complete, but the facade is still crossing from protocol 0 to 2001100 \(behind: dust\)/),
+      ...expectNone(lines, /^INFO sync: complete/, 'a "complete" line'),
     ],
   ),
 );

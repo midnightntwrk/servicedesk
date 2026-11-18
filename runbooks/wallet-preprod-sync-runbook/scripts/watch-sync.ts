@@ -13,10 +13,14 @@
  * new block while DUST can be stuck far behind. Time the process spends suspended (a laptop asleep)
  * isn't counted: after a wake-up it says so, and only awake time adds up towards the 10 minutes.
  *
- * It only reads `progress`, which every sub-wallet state exposes in wallet SDK 1.2.0. Nothing is
+ * When all three are complete but the facade's `protocol` is still `Crossing` (the wallets disagree on
+ * the protocol version), it warns instead of reporting the sync complete: nothing can be built until
+ * the facade settles, and a DUST wallet that never reports a version keeps it crossing for good.
+ *
+ * It only reads `progress` and `protocol`, which the wallet SDK 2.x facade state exposes. Nothing is
  * sent, signed or stored. Plain `console`; pass your own logger if you have one.
  */
-import type { WalletFacade } from '@midnight-ntwrk/wallet-sdk';
+import type { WalletFacade } from '@midnightntwrk/wallet-sdk';
 
 type FacadeState = Awaited<ReturnType<WalletFacade['waitForSyncedState']>>;
 type Logger = { info: (msg: string) => void; warn: (msg: string) => void };
@@ -82,6 +86,12 @@ export function watchSync(
 
     if (paused) {
       logger.info(`sync: this process was paused for ${Math.round(seconds / 60)} min (asleep?); watching again from here`);
+    } else if (latest.isSynced && latest.protocol?._tag === 'Crossing') {
+      const p = latest.protocol;
+      logger.warn(
+        `sync: all three sub-wallets are complete, but the facade is still crossing from protocol ${p.from} to ${p.to} ` +
+          `(behind: ${p.behind.join(', ')}). Nothing can be built until it settles; if it stays, see the runbook (eventless DUST sync).`,
+      );
     } else if (latest.isSynced) {
       logger.info('sync: complete (all three sub-wallets strictly complete)');
     } else if (stuck.length > 0) {
