@@ -81,9 +81,9 @@ Go where the Symptom table sent you. With no clear symptom, run both steps.
 
    *Trade-off:* the app is down for a long first sync.
 
-2. **Cut fast-sync and preseed bundles again, from genesis, against the indexer you use now.** By Root cause 1, a bundle's cursors are valid only on the indexer that produced them. Bootstrapping the cutter from an old bundle fails the same way (measured). Record the indexer host, not the URL, in the manifest, so Diagnose 2 works next time. The `midnight-examples` cutter does, and its `FAST-SYNC.md` is the reference.
+2. **Cut any fast-sync or preseed bundles again, from genesis, against the indexer you use now.** By Root cause 1, a bundle's cursors are valid only on the indexer that produced them. Bootstrapping a cutter from an old bundle fails the same way (measured). Record the indexer host, not the URL, so Diagnose 2 works next time. `midnight-examples` dropped its bundles on 2026-11-18 and instead saves the indexer host and a tip block with wallet state, checked before restoring (`packages/fast-sync/src/chain-identity.ts`).
 
-   *Trade-off:* that cutter seeds only wallets whose birthday is at or after the bundle's height. An older wallet needs Remediation 1 instead. Do not abandon a funded wallet for a new one.
+   *Trade-off:* either covers only the indexer and chain it came from. Do not abandon a funded wallet for a new one.
 
 3. **Replace a funding wait you cannot configure.** The docs say what to wait for, but not that `waitForFunds` in testkit-js takes no timeout. Check your version:
 
@@ -136,8 +136,8 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | Progress messages back off on an idle subscription | `github:midnightntwrk/midnight-indexer/indexer-api/src/infra/api/v4/subscription/polling.rs` | `IDLE_BACKOFF_MAX_MULTIPLE` |
 | The indexer's config sets the progress interval | `github:midnightntwrk/midnight-indexer/indexer-api/config.yaml` | `progress_update_interval` |
 | `waitForFunds` takes no timeout and uses the `syncWallet` default of 90 s | `npm:@midnight-ntwrk/testkit-js@4.1.1/dist/index.mjs` | `const waitForFunds = async (wallet, env, fundFromFaucet = false, unshieldedKeystore) =>` `await syncWallet(wallet);` `timeout = 90_000)` |
-| The `midnight-examples` cutter writes the indexer host into the manifest | `github:midnightntwrk/midnight-examples/packages/fast-sync/scripts/cut-preseed.ts` | `const indexer = new URL(config.indexer).host;` |
-| That cutter seeds only wallets whose birthday is at or after the bundle height | `github:midnightntwrk/midnight-examples/FAST-SYNC.md` | `seeds a wallet whose birthday is at or after the reference height` |
+| `midnight-examples` removed its pre-seed bundles and their cutter | `github:midnightntwrk/midnight-examples/CHANGELOG.md` | `Pre-seed fast sync is removed` |
+| It records the indexer host and a tip block with saved state, and checks that block before a restore | `github:midnightntwrk/midnight-examples/packages/fast-sync/src/chain-identity.ts` | `indexer: new URL(indexerHttpUrl).host` `export async function checkChainStamp(` |
 | `midnight-examples` has a funding helper that waits for spendable DUST | `github:midnightntwrk/midnight-examples/packages/fast-sync/src/funding.ts` | `registerNightUtxosForDustGeneration` `availableCoins.length >= minCoins` |
 | Spendable DUST is `availableCoins` on the dust wallet, whose state is saved with `serializeState` and read with `restore` | `npm:@midnight-ntwrk/wallet-sdk-dust-wallet@4.2.0/dist/DustWallet.d.ts` | `get availableCoins()` `serializeState(): Promise<TSerialized>` `restore(serializedState: TSerialized)` |
 | A wallet cursor that survives renumbering has not shipped | `issue:midnightntwrk/midnight-wallet#781` | `open` |
