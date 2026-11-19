@@ -2,14 +2,14 @@
 
 A contract compiles, and then fails before anything reaches the network: on import, while
 `deployContract` builds the deploy, or at the proof server. Some part of the stack isn't the set
-the network runs. Since 9 November 2026 every network runs the ledger 9 set: compiler 0.36.0,
-midnight-js 5.0.0. npm `latest` and a plain
+the network runs. Since 9 November 2026 every network runs the ledger 9 set: compiler 0.36.1,
+midnight-js 5.0.1. npm `latest` and a plain
 `compact update` give that set. A project built before the fork still has the ledger 8 set
 (compiler 0.31.1, midnight-js 4.1.1), which can no longer deploy to any network, and a partial
 upgrade mixes the two. Use this runbook to match the error to the cause, confirm it with one
 read-only script, and pin the project to the matrix set.
 
-_Compiled 2026-10-05 from local reproductions; re-checked 2026-11-04 for toolchain 0.36.0;
+_Compiled 2026-10-05 from local reproductions; re-checked 2026-11-04 for toolchain 0.36.0 and 2026-11-18 for the 0.36.1 patch set;
 reworked 2026-11-07 for the ledger 9 fork, with the `EraMismatchError`s reproduced against the live
 Preview and Preprod indexers using providers that throw if touched, so nothing was proved or sent
 (method and results in [`scripts/check-versions.NOTES.md`](scripts/check-versions.NOTES.md));
@@ -136,16 +136,16 @@ ledger 8 set:
 
 | Component | Every network (ledger 9) | Ledger 8 set (pre-fork projects) |
 |---|---|---|
-| Compact compiler (`compact list`, not npm) | 0.36.0 | 0.31.1 |
+| Compact compiler (`compact list`, not npm) | 0.36.1 | 0.31.1 |
 | `@midnight-ntwrk/compact-runtime` | 0.21.0 | 0.16.0 |
-| `@midnight-ntwrk/compact-js` | 3.0.0 | 2.5.1 |
-| On-chain runtime | `@midnightntwrk/onchain-runtime-v4` 4.0.0 | `@midnight-ntwrk/onchain-runtime-v3` 3.0.0 |
+| `@midnight-ntwrk/compact-js` | 3.0.2 | 2.5.1 |
+| On-chain runtime | `@midnightntwrk/onchain-runtime-v4` 4.0.2 | `@midnight-ntwrk/onchain-runtime-v3` 3.0.0 |
 | `@midnight-ntwrk/platform-js` | 3.0.0 | 2.2.4 |
-| `@midnight-ntwrk/midnight-js-*` | 5.0.0 | 4.1.1 |
-| `@midnight-ntwrk/testkit-js` | 5.0.0 | 4.1.1 |
-| Wallet SDK | `@midnightntwrk/wallet-sdk` 2.0.0 | `@midnight-ntwrk/wallet-sdk` 1.2.0 |
+| `@midnight-ntwrk/midnight-js-*` | 5.0.1 | 4.1.1 |
+| `@midnight-ntwrk/testkit-js` | 5.0.1 | 4.1.1 |
+| Wallet SDK | `@midnightntwrk/wallet-sdk` 2.0.1 | `@midnight-ntwrk/wallet-sdk` 1.2.0 |
 | DApp Connector API | 4.1.0 | 4.0.1 |
-| Proof server (`midnightntwrk/proof-server`) | 9.0.0 | 8.1.3 |
+| Proof server (`midnightntwrk/proof-server`) | 9.0.2 | 8.1.3 |
 
 npm `latest` and a plain `compact update` give the left column, now right for every network. A
 pre-fork project can't deploy anywhere until it moves to the left column; a partial move (a new
@@ -190,7 +190,7 @@ source disagrees with a row, the source is right.
 
 | Fact this runbook relies on | Source of truth | Must contain |
 |---|---|---|
-| Every network's compiler (ledger 9), read from each entry's `version` field | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact toolchain"` `"version": "0.36.0"` |
+| Every network's compiler (ledger 9), read from each entry's `version` field | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact toolchain"` `"version": "0.36.1"` |
 | Every network's Compact runtime | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact runtime"` `"version": "0.21.0"` |
 | Preprod is on ledger 9, like Mainnet and Preview (upgraded in place on 9 November 2026) | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `Preprod network node (ledger 9)` |
 | midnight-js 5 places runtime 0.16 on ledger 8 and 0.21 on ledger 9, and no other | `github:midnightntwrk/midnight-js/packages/contracts/src/internal/era.ts` | `'0.16': 'v8'` `'0.21': 'v9'` |
@@ -285,7 +285,7 @@ source disagrees with a row, the source is right.
 
 1. **Pin the matrix set exactly.** Every network lists the same set (the left column of the table
    under Root cause at the last check): `@midnight-ntwrk/compact-runtime` 0.21.0, every
-   `@midnight-ntwrk/midnight-js-*` 5.0.0, `@midnightntwrk/wallet-sdk` 2.0.0, testkit-js 5.0.0.
+   `@midnight-ntwrk/midnight-js-*` 5.0.1, `@midnightntwrk/wallet-sdk` 2.0.1, testkit-js 5.0.1. 5.0.1 fixes node rejections 5.0.0 gets (1010 runbook).
    Coming from 4.1.1 (the ledger 8 set, which Preprod ran until 9 November 2026), follow
    midnight-js's v5.0.0 migration guide.
 
@@ -295,12 +295,13 @@ source disagrees with a row, the source is right.
    with step 2, or the `coinPublicKey` error comes back as `Version mismatch`.
 
    *Trade-off:* upgrades become deliberate; re-run the check whenever the matrix moves.
-2. **Recompile with 0.36.0.** `compact compile +0.36.0 <src> <out>`, for every network. A bare
-   `compact update` makes the newest release your default (0.36.0 at the last check); to keep
+2. **Recompile with 0.36.1.** `compact update 0.36`, then `compact compile +0.36.1 <src> <out>`, for every
+   network. 0.36.1 patches two 0.36.0 compiler crashes (compact#616, #856). A bare
+   `compact update` makes the newest release your default (0.36.1 at the last check); to keep
    0.31.1 for calling a pre-fork contract (step 6), install it side by side with
    `compact update 0.31.1 --no-set-default`. Rebuild every artefact: old builds keep the runtime
    they were built for. Builds from 0.31.1 and from 0.33 to 0.35 can't be deployed to any network:
-   rebuild them with 0.36.0.
+   rebuild them with 0.36.1.
 
    *Trade-off:* 0.36.0 output only runs on ledger 9, and a contract already deployed from a 0.31.1
    build keeps its ledger 8 keys until a maintenance update (step 6).
@@ -320,7 +321,7 @@ source disagrees with a row, the source is right.
 
 5. **Match the proof server to the ZKIR the compiler writes.** With `--proof-server`, the check
    reports ZKIR v3 circuits with a proof server before 9.0.0 as `MISMATCH`. On every network, 0.36.0
-   writes ZKIR v3 only and rejects `--feature-zkir-v3`; run `midnightntwrk/proof-server:9.0.0`. A
+   writes ZKIR v3 only and rejects `--feature-zkir-v3`; run `midnightntwrk/proof-server:9.0.2`. A
    proof server still on 8.1.x (the ledger 8 set's) rejects every 0.36.0 circuit: upgrade it, and
    drop the flag from build scripts.
 6. **A ledger 8 contract on a ledger 9 network.** A contract deployed before its network moved to
@@ -346,8 +347,8 @@ source disagrees with a row, the source is right.
 - [midnight-docs#1494](https://github.com/midnightntwrk/midnight-docs/issues/1494): support-matrix
   `tag`, `github` and `container` fields that don't resolve.
 - [midnight-wallet#791](https://github.com/midnightntwrk/midnight-wallet/issues/791): `latest` on
-  the wallet SDK packages isn't the matrix version (now 2.0.0, which the matrix lists on every
-  network since Preprod's upgrade).
+  the wallet SDK packages isn't the matrix version (now 2.0.1, which the matrix lists on every
+  network; on 2026-11-18 `latest` was 2.0.1 too).
 
 ## Reference material
 
