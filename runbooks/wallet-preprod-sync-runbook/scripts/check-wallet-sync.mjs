@@ -1,25 +1,32 @@
 #!/usr/bin/env node
 /**
- * check-wallet-sync.mjs: read-only diagnostic for a wallet that syncs slowly, starts over on every
- * restart, or seems stuck. No wallet keys are needed and nothing is sent but indexer queries.
+ * check-wallet-sync.mjs: read-only diagnostic for a wallet SDK 2.x wallet that syncs slowly, starts
+ * over on every restart, or seems stuck. No wallet keys are needed and nothing is sent but indexer
+ * queries.
  *
- * It asks the indexer for the chain tip and for the newest DUST and shielded (zswap) ledger event,
- * which is how many events a fresh wallet has to replay. It times how fast the indexer streams
- * DUST events, which tells an indexer problem apart from a wallet that is slow to apply them. Given
- * the files a wallet saved with `serializeState()` or `state.serialize()`, it reads the position
- * each one was saved at and compares it with the indexer's newest event: how far behind it is, or
- * whether it was saved against a different indexer and will stall when restored.
+ * It asks the indexer for the chain tip and for the newest DUST and shielded (zswap) ledger event.
+ * On a chain that crossed into ledger 9 (Preprod and Mainnet; Preview restarted on ledger 9), it
+ * finds where the ledger 9 DUST events start, by the same binary search wallet SDK 2.x runs for
+ * `skipLedgerV8DustHistory`, but on a fresh socket per lookup with retries. That gives the
+ * `dustTimelineStartProbe` answer a fresh wallet can start from (runbook, Remediation 1), and how
+ * many DUST events a fresh wallet replays with and without it. Given the files a wallet saved with
+ * `serializeState()`, it reads the position each one was saved at and compares it with the indexer:
+ * how far behind it is, whether it was saved against another indexer, and whether a DUST state is
+ * still replaying ledger 8.
  *
  * Requirements: Node >= 22 (it uses the built-in WebSocket). No npm install.
  *
  * Usage:
- *   node check-wallet-sync.mjs [--network preprod] [--state <file> ...] [--sample <seconds>]
+ *   node check-wallet-sync.mjs [--network preprod] [--state <file> ...] [--no-search]
  *                              [--indexer <http url> --indexer-ws <ws url>]
  *
  *   --network     preview | preprod | mainnet (default preprod). Preprod and mainnet go through
  *                 Blockfrost and read the project id from BLOCKFROST_PROJECT_ID; it is never printed.
- *   --state       a saved sub-wallet state file (shielded, unshielded or DUST). Repeat for each.
- *   --sample      seconds to time the DUST stream for (default 10, 0 to skip)
+ *   --state       a saved sub-wallet state file (shielded, unshielded or DUST), the string
+ *                 serializeState() returned. Repeat for each.
+ *   --no-search   skip the ledger 9 DUST start search (about 25 lookups, 20 to 40 s)
+ *   --fork-v9     the wallet configuration's forks.v9, if it isn't the default 2000000; the
+ *                 search and the ledger 8 check use it as the boundary
  *   --indexer, --indexer-ws
  *                 your own indexer instead (for example a local one), HTTP and WebSocket URLs of its
  *                 GraphQL API
@@ -31,7 +38,7 @@
 import fs from 'node:fs';
 
 const USAGE =
-  'usage: node check-wallet-sync.mjs [--network <preview|preprod|mainnet>] [--state <file> ...] [--sample <seconds>] [--indexer <http url> --indexer-ws <ws url>]';
+  'usage: node check-wallet-sync.mjs [--network <preview|preprod|mainnet>] [--state <file> ...] [--no-search] [--fork-v9 <version>] [--indexer <http url> --indexer-ws <ws url>]';
 // Where each network's indexer is, at compile date (2026-10-13). Preprod and mainnet moved to
 // Blockfrost on 2026-10-09; see the indexer migration runbook.
 const ENDPOINTS = {
@@ -42,15 +49,23 @@ const ENDPOINTS = {
   preprod: { http: 'https://midnight-preprod.blockfrost.io/api/v0', ws: 'wss://midnight-preprod.blockfrost.io/api/v0/ws', blockfrost: true },
   mainnet: { http: 'https://midnight-mainnet.blockfrost.io/api/v0', ws: 'wss://midnight-mainnet.blockfrost.io/api/v0/ws', blockfrost: true },
 };
-// DUST events a wallet applies per second on preprod, measured with wallet SDK 1.2.x (see the NOTES):
-// moth-wallet 293/s, midnight-examples 338-378/s, both on desktop-class machines. Slower machines,
-// or one busy with other work, apply fewer. The rate falls as the chain-wide DUST tree grows, so it
-// does not carry over to other networks: preview's smaller tree applies far faster.
-const APPLY_RATE = { low: 290, high: 380 };
-// Measured fresh-wallet syncs for the networks where the preprod rate does not apply.
-const MEASURED_FRESH = {
-  preview: 'moth-wallet measured a fresh preview wallet at 103 s (August 2026)',
-  mainnet: 'not measured; mainnet has the longest DUST history, so expect it to be the slowest',
+// The first ledger 9 protocol version: wallet SDK 2.x's DefaultForkSchedule `forks.v9`, unless --fork-v9 names the
+// wallet's own. DUST events from here on are what a wallet started at the ledger 9 boundary replays.
+let V9 = 2000000n;
+// DUST events a fresh wallet SDK 2.x wallet applied per minute on preprod through Blockfrost (servicedesk#319). Default
+// start with the default batches of 10: about 300 to 400 (2.0.0, 2026-11-13, a poor connection) and about 3,400 (2.0.1,
+// 2026-11-18, the first 3 minutes). Ledger 9 start with batchUpdates.size 500: about 530 (2.0.0, 2026-11-14, a
+// connection that dropped several times) and about 35,000 (2.0.1, 2026-11-18: 130,000 events in 3.7 min). Each batch
+// waits on indexer round trips, so the connection sets the rate more than the machine does (inferred).
+const REPLAY_RATE = { default: { low: 300, high: 3400 }, batched: { low: 530, high: 35000 } };
+const duration = (events, perMinute) => {
+  const min = events / perMinute;
+  return min < 90 ? `${Math.max(1, Math.round(min))} min` : min < 48 * 60 ? `${Math.round(min / 60)} h` : `${Math.round(min / 60 / 24)} days`;
+};
+const span = (events, r) => {
+  const slow = duration(events, r.low);
+  const fast = duration(events, r.high);
+  return slow === fast ? `about ${slow}` : `about ${fast} to ${slow}`;
 };
 
 const fail = (msg) => {
@@ -59,7 +74,7 @@ const fail = (msg) => {
 };
 
 // ---------- arguments ----------
-const opts = { network: 'preprod', states: [], sample: 10, http: undefined, ws: undefined };
+const opts = { network: 'preprod', states: [], search: true, http: undefined, ws: undefined };
 {
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {
@@ -70,14 +85,18 @@ const opts = { network: 'preprod', states: [], sample: 10, http: undefined, ws: 
       process.exit(0);
     } else if (a === '--network') opts.network = next();
     else if (a === '--state') opts.states.push(next());
-    else if (a === '--sample') opts.sample = Number(next());
+    else if (a === '--no-search') opts.search = false;
+    else if (a === '--fork-v9') {
+      const v = next();
+      if (!/^\d+$/.test(v)) fail(`--fork-v9 must be a protocol version number\n${USAGE}`);
+      V9 = BigInt(v);
+    }
     else if (a === '--indexer') opts.http = next();
     else if (a === '--indexer-ws') opts.ws = next();
     else fail(`unknown argument ${a}\n${USAGE}`);
   }
   if (!ENDPOINTS[opts.network]) fail(`--network must be preview, preprod or mainnet\n${USAGE}`);
   if (Boolean(opts.http) !== Boolean(opts.ws)) fail(`--indexer and --indexer-ws go together\n${USAGE}`);
-  if (!Number.isFinite(opts.sample) || opts.sample < 0) fail(`--sample must be a number of seconds\n${USAGE}`);
 }
 if (typeof WebSocket !== 'function') fail(`This needs Node 22 or later (built-in WebSocket); this is Node ${process.versions.node}.`);
 
@@ -98,7 +117,6 @@ const shown = (u) => u.replace(/\?.*$/, '');
 const rows = [];
 const add = (check, found, status, note = '') => rows.push({ check, found: redact(found), status, note: redact(note) });
 const fmt = (n) => Number(n).toLocaleString('en-US');
-const minutes = (events, rate) => Math.max(1, Math.round(events / rate / 60));
 
 // ---------- indexer queries ----------
 async function httpQuery(query) {
@@ -157,6 +175,53 @@ async function newestEvent(field) {
   return BigInt(found.maxId);
 }
 
+// The first DUST event at or after `id` (null: the first one), on its own socket, 15 s, three tries. The SDK's own
+// search waits 10 s per lookup on one shared connection; on Blockfrost preprod that timed out every time (runbook).
+async function dustEventAt(id) {
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+    let found;
+    try {
+      await subscribe('subscription($id: Int) { dustLedgerEvents(id: $id) { id maxId protocolVersion } }', { id }, (e) => {
+        found = e;
+        return true;
+      }, 15);
+      if (found?.protocolVersion === undefined || found?.protocolVersion === null) {
+        if (found) throw Object.assign(new Error(`the DUST event at ${id ?? 'the start'} has no protocolVersion`), { final: true });
+      } else return { id: Number(found.id), maxId: Number(found.maxId), version: BigInt(found.protocolVersion) };
+      lastError = new Error(`no DUST event at ${id ?? 'the start'} within 15 s`);
+    } catch (e) {
+      if (e.final || /^\[\{|"message"/.test(e.message)) throw e; // a GraphQL error answers the same every time
+      lastError = e;
+    }
+  }
+  throw lastError;
+}
+
+// Where the DUST timeline reaches V9: the id of the last event below it (the cursor a start at the boundary resumes
+// from) and the version of the first event at or above it. The same search as wallet-sdk-dust-wallet's
+// findDustTimelineStart. undefined when the chain never crossed (all one side of the boundary).
+async function findV9Start() {
+  const first = await dustEventAt(null);
+  const last = await dustEventAt(first.maxId);
+  if (first.version >= V9 || last.version < V9) return undefined;
+  let low = first.id + 1;
+  let high = last.id;
+  let atHigh = last;
+  let lookups = 2;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const probed = await dustEventAt(mid);
+    lookups++;
+    if (probed.version >= V9) {
+      high = mid;
+      atHigh = probed;
+    } else low = probed.id + 1;
+  }
+  return { cursor: low - 1, version: atHigh.version, newest: last.maxId, lookups };
+}
+
 // ---------- checks ----------
 let tips = {};
 {
@@ -190,59 +255,58 @@ if (!rows.some((r) => r.status === 'FAIL')) {
   ]) {
     try {
       tips[field] = await newestEvent(field);
-      add(name, `newest id ${fmt(tips[field])}`, 'INFO', name === 'DUST events' ? 'a fresh wallet replays all of these, from every owner' : '');
+      add(name, `newest id ${fmt(tips[field])}`, 'INFO', name === 'DUST events' ? 'a fresh wallet with the default start replays all of these, from every owner' : '');
     } catch (e) {
       add(name, e.message, 'FAIL', 'the WebSocket API did not answer');
     }
   }
 }
 
-if (tips.dustLedgerEvents !== undefined && opts.sample > 0) {
-  let n = 0;
+let v9;
+if (tips.dustLedgerEvents !== undefined && opts.search) {
   const t0 = Date.now();
   try {
-    await subscribe('subscription($id: Int) { dustLedgerEvents(id: $id) { id } }', { id: 1 }, () => {
-      n++;
-      return false;
-    }, opts.sample);
-    const rate = Math.round(n / ((Date.now() - t0) / 1000));
-    const found = `${fmt(rate)} events/s over ${opts.sample} s`;
-    if (n === 0) add('DUST delivery', found, 'WARN', `no event arrived in ${opts.sample} s: the indexer or the connection is the bottleneck`);
-    else if (opts.network === 'preprod' && !opts.http) {
-      // The apply rate was measured on preprod only; elsewhere the comparison would mislead.
+    v9 = await findV9Start();
+    const secs = Math.round((Date.now() - t0) / 1000);
+    if (v9) {
       add(
-        'DUST delivery',
-        found,
-        rate >= APPLY_RATE.high ? 'OK' : 'WARN',
-        rate >= APPLY_RATE.high
-          ? 'faster than a wallet applies them: a slow sync here is the wallet, not the indexer'
-          : 'slower than a wallet can apply them: the indexer or the connection is the bottleneck',
+        'Ledger 9 DUST start',
+        `cursor ${v9.cursor}, version ${v9.version} (${v9.lookups} lookups, ${secs} s)`,
+        'INFO',
+        `a fresh wallet can start here: dustTimelineStartProbe: async () => Option.some({ cursor: ${v9.cursor}n, version: ProtocolVersion.ProtocolVersion(${v9.version}n) }) (runbook, Remediation 1)`,
       );
     } else {
-      add('DUST delivery', found, 'INFO', `streaming all ${fmt(tips.dustLedgerEvents)} events at this rate takes about ${minutes(Number(tips.dustLedgerEvents), rate)} min`);
+      add('Ledger 9 DUST start', `none (${secs} s)`, 'INFO', 'every DUST event on this chain is on one side of ledger 9, so there is no ledger 8 history to skip');
     }
   } catch (e) {
-    add('DUST delivery', e.message, 'WARN', 'could not time the stream');
+    add('Ledger 9 DUST start', e.message, 'WARN', 'the search did not finish; run again, or from another connection');
   }
 }
 
 if (tips.dustLedgerEvents !== undefined) {
   const events = Number(tips.dustLedgerEvents);
-  const snapshot = 'A brand-new wallet can start from a pre-built snapshot instead (runbook, Remediation 3)';
-  if (opts.network === 'preprod' && !opts.http) {
+  if (v9) {
+    const since = Math.max(0, events - v9.cursor);
     add(
-      'Fresh-wallet sync',
-      `about ${minutes(events, APPLY_RATE.high)}-${minutes(events, APPLY_RATE.low)} min of DUST replay`,
+      'Fresh wallet, default start',
+      `replays ${fmt(events)} DUST event ids, ledger 8 included`,
+      opts.network === 'preprod' && !opts.http && opts.states.length === 0 ? 'WARN' : 'INFO',
+      `${span(events, REPLAY_RATE.default)} at the rates measured on preprod with the default batches of 10, depending on the connection; skipLedgerV8DustHistory: true did not change this on Blockfrost (runbook, Root cause 2)`,
+    );
+    add(
+      'Fresh wallet, ledger 9 start',
+      `replays ${fmt(since)} DUST event ids`,
       'INFO',
-      `at the ${APPLY_RATE.low}-${APPLY_RATE.high} events/s measured on fast machines; slower or busy machines take longer. ${snapshot}`,
+      `${span(since, REPLAY_RATE.batched)} with batchUpdates.size 500, depending on the connection; ${span(since, REPLAY_RATE.default)} with the default batches (runbook, Remediation 1)`,
     );
   } else {
-    add('Fresh-wallet sync', `${fmt(events)} DUST events to replay`, 'INFO', `${MEASURED_FRESH[opts.network] ?? 'not measured'}. ${snapshot}`);
+    add('Fresh wallet', `replays ${fmt(events)} DUST event ids`, 'INFO', `${span(events, REPLAY_RATE.default)} at the rates measured on preprod; a short history goes much faster`);
   }
 }
 
-// Saved state files: JSON written by serializeState(). Shielded and DUST record `offset` (their
-// appliedIndex); unshielded records `appliedId`. BigInts are written as strings.
+// Saved state files: the JSON string serializeState() returns, in wallet SDK 2.x. Shielded and DUST record
+// `offset`; unshielded records `appliedId`. A DUST state also records `syncKind`: `events` (offset is the last DUST
+// event id applied) or `projections` (the eventless sync: offset is a block height). BigInts are written as strings.
 for (const file of opts.states) {
   let snap;
   let bytes;
@@ -250,13 +314,21 @@ for (const file of opts.states) {
     const text = fs.readFileSync(file, 'utf8');
     bytes = Buffer.byteLength(text);
     snap = JSON.parse(text);
+    if (typeof snap === 'string') {
+      bytes = Buffer.byteLength(snap);
+      snap = JSON.parse(snap);
+    }
   } catch (e) {
     add(`State ${file}`, e.message, 'FAIL', 'not a readable serializeState() file');
     continue;
   }
+  if (snap === null || typeof snap !== 'object' || Array.isArray(snap)) {
+    add(`State ${file}`, 'not a JSON object', 'WARN', "expected one sub-wallet's serializeState() output (shielded, unshielded or DUST)");
+    continue;
+  }
   const kind = snap.publicKeys ? 'shielded' : 'appliedId' in snap || snap.state?.availableUtxos ? 'unshielded' : snap.publicKey ? 'dust' : undefined;
   if (!kind) {
-    add(`State ${file}`, 'unrecognised shape', 'WARN', 'expected the JSON written by serializeState() in wallet SDK 1.2.0');
+    add(`State ${file}`, 'unrecognised shape', 'WARN', 'expected one sub-wallet\'s serializeState() output (shielded, unshielded or DUST)');
     continue;
   }
   const label = `State ${kind} (${file.split('/').pop()})`;
@@ -270,12 +342,21 @@ for (const file of opts.states) {
     continue;
   }
   const offset = BigInt(snap.offset ?? 0);
+  if (kind === 'dust' && snap.syncKind === 'projections') {
+    add(
+      label,
+      `eventless (projections) state at block ${fmt(offset)}, ${size}`,
+      'WARN',
+      'saved by the eventless DUST sync: on wallet SDK 2.0.0 that wallet never settles its protocol version and cannot build transactions (runbook, Root cause 3)',
+    );
+    continue;
+  }
   const tip = tips[kind === 'dust' ? 'dustLedgerEvents' : 'zswapLedgerEvents'];
-  const sizeNote = kind === 'dust' ? `; restoring it rebuilds a ${size} tree before syncing resumes (about 72 s for 11 MB on a fast machine, more as it grows)` : '';
+  const version = snap.protocolVersion !== undefined ? BigInt(snap.protocolVersion) : undefined;
   if (offset === 0n) {
     add(label, `offset 0, ${size}`, 'WARN', 'saved before any event was applied: restoring it is the same as a fresh sync (0 means "stream from the start")');
   } else if (tip === undefined) {
-    add(label, `offset ${fmt(offset)}, ${size}`, 'INFO', `indexer tip unknown, so how far behind it is can't be told${sizeNote}`);
+    add(label, `offset ${fmt(offset)}, ${size}`, 'INFO', "indexer tip unknown, so how far behind it is can't be told");
   } else if (offset > tip) {
     add(
       label,
@@ -283,16 +364,24 @@ for (const file of opts.states) {
       'FAIL',
       'saved against a different indexer, whose event ids differ: restoring it stalls with "values inserted non-linearly". Discard it and sync from the start (cursor runbook)',
     );
+  } else if (kind === 'dust' && version !== undefined && version < V9 && (!v9 || Number(offset) < v9.cursor)) {
+    const behind = Number(tip - offset);
+    const fresh = v9 ? ` Starting fresh at the ledger 9 start replays ${fmt(Number(tip) - v9.cursor)}` : '';
+    add(
+      label,
+      `offset ${fmt(offset)}, still on ledger 8 (version ${version}), ${size}`,
+      'WARN',
+      `restoring it replays the rest of the ledger 8 DUST history first, ${fmt(behind)} events in all.${fresh} (runbook, Remediation 4). Move the file aside rather than delete it: a fresh start for a wallet that held DUST before ledger 9 is not tested`,
+    );
   } else {
     const behind = Number(tip - offset);
-    const eta = kind === 'dust' && opts.network === 'preprod' && !opts.http ? `, about ${minutes(behind, APPLY_RATE.high)}-${minutes(behind, APPLY_RATE.low)} min to catch up` : '';
     // Within range is only plausible: state saved against another indexer whose ids differ by a little (the official
-    // preprod indexer and Blockfrost are 22 apart) passes too, and stalls on restore all the same.
+    // preprod indexer and Blockfrost were 22 apart) passes too, and stalls on restore all the same.
     add(
       label,
       `offset ${fmt(offset)}, ${fmt(behind)} events behind, ${size}`,
       'OK',
-      `plausible: within this indexer's range, but a state saved against another indexer can be too (runbook, Remediation 2)${eta}${sizeNote}`,
+      "plausible: within this indexer's range, but a state saved against another indexer can be too (runbook, Remediation 2)",
     );
   }
 }
@@ -309,8 +398,8 @@ console.log(
     failed
       ? 'at least one FAIL above: fix it before waiting on a sync.'
       : warned
-        ? 'nothing here stops a sync, but the WARN rows above will slow it or cost a full replay (runbook, Diagnose step 1). If it still looks stuck, log its progress with scripts/watch-sync.ts (Diagnose step 2).'
-        : 'nothing here stops a sync. If it still looks stuck, log its progress with scripts/watch-sync.ts (runbook, Diagnose step 2).'
+        ? 'nothing here stops a sync, but the WARN rows above will slow it or cost a full replay (runbook, Diagnose 1). If it still looks stuck, log its progress with scripts/watch-sync.ts (runbook, Diagnose 2).'
+        : 'nothing here stops a sync. If it still looks stuck, log its progress with scripts/watch-sync.ts (runbook, Diagnose 2).'
   }`,
 );
 process.exit(failed ? 2 : 0);
