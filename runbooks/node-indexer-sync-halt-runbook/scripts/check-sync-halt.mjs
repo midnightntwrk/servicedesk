@@ -434,7 +434,7 @@ async function releaseStatus(kind) {
 
 function printReleases(kind, s) {
   const repo = FIXES[kind].repo.split('/')[1];
-  if (s.error) { console.log(`  ${repo}: could not check (${redact(s.error)}). The runbook's Key identifiers list them as of its date.`); return; }
+  if (s.error) { console.log(`  ${repo}: could not check (${redact(s.error)}). Check the release notes of the version you run.`); return; }
   console.log(`  ${repo} tags with the fix: ${s.fixed.length ? s.fixed.join(', ') : 'none yet'}`);
   for (const [image, i] of Object.entries(s.images)) {
     if (i.error) { console.log(`    ${image}: could not check (${i.error})`); continue; }
@@ -550,7 +550,7 @@ async function main() {
     console.log(`  your ${sw} checked it at ${at}`);
     console.log(`  valid at the block's own time: ${v.validAtBlock ? 'yes' : 'no'}; valid at parent + ${BUMP_S} s: ${v.validAtBump ? 'yes' : 'no'}`);
     if (v.pattern === 'none') {
-      console.log('Not a known pattern: the transaction is invalid at both times a block author could have used. File an issue with this output (runbook, Remediation 5).');
+      console.log('Not a known pattern: the transaction is invalid at both times a block author could have used. File an issue with this output (runbook, Stop and escalate).');
     } else {
       console.log(patternText(v, sw, runtime));
       console.log(FIX_TEXT[halt.software]);
