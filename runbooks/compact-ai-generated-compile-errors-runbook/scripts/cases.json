@@ -1,10 +1,11 @@
 {
  "compilers": {
   "0.31.1": "compactc-v0.31.1 (0da5b0452eb0c1053d42418bf34b12cc29c7d63e), language 0.23.0",
-  "0.35.0": "compactc-v0.35.0 (debb05f9414b9d1e176741c2be289bb32233f0fc), language 0.27.0"
+  "0.35.0": "compactc-v0.35.0 (debb05f9414b9d1e176741c2be289bb32233f0fc), language 0.27.0",
+  "0.36.1": "compactc-v0.36.1 (7fa3a117c5e7efe9d2c51da04263e5f0b3509144), language 0.28.0"
  },
  "runtime": "@midnight-ntwrk/compact-runtime 0.16.0",
- "built": "2026-10-08",
+ "built": "2026-10-08; 0.36.1 results and the contract-type cases added 2026-11-23",
  "cases": [
   {
    "slug": "adt-direct-assignment",
@@ -30,6 +31,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation = undefined for ledger field type Counter"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation = undefined for ledger field type Counter"
       }
      }
     },
@@ -43,6 +48,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -54,6 +63,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -99,6 +112,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"<\" looking for an expression"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"<\" looking for an expression"
       }
      }
     },
@@ -110,6 +127,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -149,6 +170,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected second argument of insert to have type Uint<64> but received Uint<0..36893488147419103231>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected second argument of insert to have type Uint<64> but received Uint<0..36893488147419103231>"
       }
      }
     },
@@ -160,6 +185,10 @@
        "message": "mismatch between actual type Uint<0..511> and declared type Uint<8> of const binding"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "mismatch between actual type Uint<0..511> and declared type Uint<8> of const binding"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "mismatch between actual type Uint<0..511> and declared type Uint<8> of const binding"
       }
@@ -175,6 +204,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -186,6 +219,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -213,6 +250,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \")\" looking for \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \")\" looking for \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
       }
      }
     },
@@ -224,6 +265,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -251,6 +296,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected right-hand side of = to have type Uint<64> but received Uint<0..36893488147419103231>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected right-hand side of = to have type Uint<64> but received Uint<0..36893488147419103231>"
       }
      }
     },
@@ -262,6 +311,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -291,6 +344,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unexpected character ' '"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unexpected character ' '"
       }
      }
     },
@@ -302,6 +359,10 @@
        "message": "unexpected character ' '"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unexpected character ' '"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unexpected character ' '"
       }
@@ -317,6 +378,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unexpected character '^'"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unexpected character '^'"
       }
      }
     },
@@ -328,6 +393,10 @@
        "message": "parse error: found \"<\" looking for an expression4, a generic argument, or \">\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found \"<\" looking for an expression4, a generic argument, or \">\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found \"<\" looking for an expression4, a generic argument, or \">\""
       }
@@ -343,6 +412,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \">\" looking for an expression4"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \">\" looking for an expression4"
       }
      }
     },
@@ -354,6 +427,10 @@
        "message": "unexpected character '~'"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unexpected character '~'"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unexpected character '~'"
       }
@@ -369,6 +446,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -382,6 +463,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -393,6 +478,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -469,6 +558,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier now"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier now"
       }
      }
     },
@@ -480,6 +573,10 @@
        "message": "unbound identifier blockHeight"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier blockHeight"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier blockHeight"
       }
@@ -495,6 +592,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier blockTimestamp"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier blockTimestamp"
       }
      }
     },
@@ -506,6 +607,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -533,6 +638,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier blockTime"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier blockTime"
       }
      }
     },
@@ -544,6 +653,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -579,6 +692,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -592,6 +709,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -603,6 +724,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -631,6 +756,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"break\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"break\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -644,6 +773,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"continue\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"continue\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -655,6 +788,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -684,6 +821,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"<\" looking for \"[\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"<\" looking for \"[\""
       }
      }
     },
@@ -695,6 +836,10 @@
        "message": "parse error: found \"<\" looking for \"[\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found \"<\" looking for \"[\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found \"<\" looking for \"[\""
       }
@@ -710,6 +855,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -723,6 +872,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -734,6 +887,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -761,6 +918,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "structure MerkleTreePathEntry has no field named goesLeft"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "structure MerkleTreePathEntry has no field named goesLeft"
       }
      }
     },
@@ -772,6 +933,10 @@
        "message": "structure Maybe has no field named isSome"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "structure Maybe has no field named isSome"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "structure Maybe has no field named isSome"
       }
@@ -787,6 +952,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "structure Either has no field named isLeft"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "structure Either has no field named isLeft"
       }
      }
     },
@@ -800,6 +969,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "structure QualifiedShieldedCoinInfo has no field named mtIndex"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "structure QualifiedShieldedCoinInfo has no field named mtIndex"
       }
      }
     },
@@ -811,6 +984,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -844,6 +1021,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Cell"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Cell"
       }
      }
     },
@@ -855,6 +1036,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -882,6 +1067,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -893,6 +1082,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -957,6 +1150,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier CoinInfo"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier CoinInfo"
       }
      }
     },
@@ -968,6 +1165,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -997,6 +1198,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected left-hand side of = to have an ADT type, received Uint<64>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected left-hand side of = to have an ADT type, received Uint<64>"
       }
      }
     },
@@ -1008,6 +1213,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1050,6 +1259,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation value undefined for ledger field type Counter"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation value undefined for ledger field type Counter"
       }
      }
     },
@@ -1061,6 +1274,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1089,6 +1306,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1100,6 +1321,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1156,6 +1381,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier CurvePoint"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier CurvePoint"
       }
      }
     },
@@ -1169,6 +1398,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier NativePoint"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier NativePoint"
       }
      }
     },
@@ -1180,6 +1413,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1209,6 +1446,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"(\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", or \">\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"(\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", or \">\""
       }
      }
     },
@@ -1220,6 +1461,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1253,6 +1498,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1264,6 +1513,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1324,6 +1577,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1335,6 +1592,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1350,6 +1611,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1361,6 +1626,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1427,6 +1696,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness get_secret at line 4 char 1 nature of the disclosure: returning this value from exported circuit check might disclose the boolean value of the result of a comparison involving the witness value via this path through the program: the binding of secret at line 6 char 9 the comparison at line 7 char 7 the conditional branch at line 7 char 3"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness get_secret at line 4 char 1 nature of the disclosure: returning this value from exported circuit check might disclose the boolean value of the result of a comparison involving the witness value via this path through the program: the binding of secret at line 6 char 9 the comparison at line 7 char 7 the conditional branch at line 7 char 3"
       }
      }
     },
@@ -1438,6 +1711,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1482,6 +1759,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter reward of exported circuit create_quest at line 6 char 29 nature of the disclosure: the call to standard-library circuit receiveUnshielded might disclose the amount of the unshielded token being received given by the witness value via this path through the program: the second argument to receiveUnshielded at line 7 char 3"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter reward of exported circuit create_quest at line 6 char 29 nature of the disclosure: the call to standard-library circuit receiveUnshielded might disclose the amount of the unshielded token being received given by the witness value via this path through the program: the second argument to receiveUnshielded at line 7 char 3"
       }
      }
     },
@@ -1493,6 +1774,10 @@
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter reward of exported circuit create_quest at line 6 char 29 nature of the disclosure: ledger operation might disclose the result of an addition involving the witness value via this path through the program: the computation at line 7 char 15 the right-hand side of = at line 7 char 12"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter reward of exported circuit create_quest at line 6 char 29 nature of the disclosure: ledger operation might disclose the result of an addition involving the witness value via this path through the program: the computation at line 7 char 15 the right-hand side of = at line 7 char 12"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter reward of exported circuit create_quest at line 6 char 29 nature of the disclosure: ledger operation might disclose the result of an addition involving the witness value via this path through the program: the computation at line 7 char 15 the right-hand side of = at line 7 char 12"
       }
@@ -1508,6 +1793,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1519,6 +1808,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1576,6 +1869,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getBalance at line 4 char 1 nature of the disclosure: the value returned from exported circuit balanceExceeds might disclose the result of a comparison involving the witness value via this path through the program: the comparison at line 6 char 10"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getBalance at line 4 char 1 nature of the disclosure: the value returned from exported circuit balanceExceeds might disclose the result of a comparison involving the witness value via this path through the program: the comparison at line 6 char 10"
       }
      }
     },
@@ -1587,6 +1884,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1642,6 +1943,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness local_secret_key at line 4 char 1 nature of the disclosure: ledger operation might disclose a hash of the witness value via this path through the program: the argument to persistentHash at line 7 char 11 the right-hand side of = at line 7 char 9"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness local_secret_key at line 4 char 1 nature of the disclosure: ledger operation might disclose a hash of the witness value via this path through the program: the argument to persistentHash at line 7 char 11 the right-hand side of = at line 7 char 9"
       }
      }
     },
@@ -1653,6 +1958,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1697,6 +2006,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness local_secret_key at line 4 char 1 nature of the disclosure: ledger operation might disclose a hash of the witness value via this path through the program: the binding of sk at line 6 char 9 the argument to persistentHash at line 7 char 10 the binding of pk at line 11 char 9 the right-hand side of = at line 12 char 13"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness local_secret_key at line 4 char 1 nature of the disclosure: ledger operation might disclose a hash of the witness value via this path through the program: the binding of sk at line 6 char 9 the argument to persistentHash at line 7 char 10 the binding of pk at line 11 char 9 the right-hand side of = at line 12 char 13"
       }
      }
     },
@@ -1708,6 +2021,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1760,6 +2077,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter param of exported circuit store at line 5 char 22 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the first argument to insert at line 7 char 12"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter param of exported circuit store at line 5 char 22 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the first argument to insert at line 7 char 12"
       }
      }
     },
@@ -1771,6 +2092,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1832,6 +2157,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness get_owner at line 4 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the binding of owner_pk at line 7 char 9 the right-hand side of = at line 8 char 13"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness get_owner at line 4 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the binding of owner_pk at line 7 char 9 the right-hand side of = at line 8 char 13"
       }
      }
     },
@@ -1843,6 +2172,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1887,6 +2220,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter color of exported circuit pay at line 4 char 20 nature of the disclosure: the call to standard-library circuit sendUnshielded might disclose the type of the unshielded token being spent given by the witness value via this path through the program: the first argument to sendUnshielded at line 6 char 3 nature of the disclosure: the call to standard-library circuit sendUnshielded might disclose the type of the unshielded token being transferred given by the witness value via this path through the program: the first argument to sendUnshielded at line 6 char 3"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter color of exported circuit pay at line 4 char 20 nature of the disclosure: the call to standard-library circuit sendUnshielded might disclose the type of the unshielded token being spent given by the witness value via this path through the program: the first argument to sendUnshielded at line 6 char 3 nature of the disclosure: the call to standard-library circuit sendUnshielded might disclose the type of the unshielded token being transferred given by the witness value via this path through the program: the first argument to sendUnshielded at line 6 char 3"
       }
      }
     },
@@ -1898,6 +2235,10 @@
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter coin of exported circuit recv at line 4 char 21 nature of the disclosure: the call to standard-library circuit receiveShielded might disclose a link between a coin receive and the coin with the commitment given by a hash of the witness value via this path through the program: the argument to receiveShielded at line 5 char 3"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter coin of exported circuit recv at line 4 char 21 nature of the disclosure: the call to standard-library circuit receiveShielded might disclose a link between a coin receive and the coin with the commitment given by a hash of the witness value via this path through the program: the argument to receiveShielded at line 5 char 3"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter coin of exported circuit recv at line 4 char 21 nature of the disclosure: the call to standard-library circuit receiveShielded might disclose a link between a coin receive and the coin with the commitment given by a hash of the witness value via this path through the program: the argument to receiveShielded at line 5 char 3"
       }
@@ -1913,6 +2254,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter time of exported circuit f at line 4 char 18 nature of the disclosure: the call to standard-library circuit blockTimeGte might disclose the lower bound of the time being checked the witness value via this path through the program: the argument to blockTimeGte at line 5 char 14"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter time of exported circuit f at line 4 char 18 nature of the disclosure: the call to standard-library circuit blockTimeGte might disclose the lower bound of the time being checked the witness value via this path through the program: the argument to blockTimeGte at line 5 char 14"
       }
      }
     },
@@ -1924,6 +2269,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -1939,6 +2288,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -1950,6 +2303,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2014,6 +2371,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getThreshold at line 5 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the right-hand side of = at line 8 char 16"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getThreshold at line 5 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the right-hand side of = at line 8 char 16"
       }
      }
     },
@@ -2025,6 +2386,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2067,6 +2432,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getSecret at line 4 char 1 nature of the disclosure: ledger operation might disclose the result of an addition involving the witness value via this path through the program: the computation at line 7 char 13 the binding of x at line 7 char 9 the right-hand side of = at line 8 char 10"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getSecret at line 4 char 1 nature of the disclosure: ledger operation might disclose the result of an addition involving the witness value via this path through the program: the computation at line 7 char 13 the binding of x at line 7 char 9 the right-hand side of = at line 8 char 10"
       }
      }
     },
@@ -2078,6 +2447,10 @@
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getSecret at line 4 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the binding of x at line 7 char 9 the right-hand side of = at line 8 char 10"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getSecret at line 4 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the binding of x at line 7 char 9 the right-hand side of = at line 8 char 10"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the return value of witness getSecret at line 4 char 1 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the binding of x at line 7 char 9 the right-hand side of = at line 8 char 10"
       }
@@ -2093,6 +2466,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2104,6 +2481,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2154,6 +2535,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter nul of exported circuit spend at line 6 char 22 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the argument to member at line 7 char 30"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter nul of exported circuit spend at line 6 char 22 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the argument to member at line 7 char 30"
       }
      }
     },
@@ -2165,6 +2550,10 @@
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter addr of exported circuit getBalance at line 6 char 27 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the argument to lookup at line 7 char 27"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter addr of exported circuit getBalance at line 6 char 27 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the argument to lookup at line 7 char 27"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter addr of exported circuit getBalance at line 6 char 27 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the argument to lookup at line 7 char 27"
       }
@@ -2180,6 +2569,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2191,6 +2584,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2256,6 +2653,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"/\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"/\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
       }
      }
     },
@@ -2269,6 +2670,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unexpected character '%'"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unexpected character '%'"
       }
      }
     },
@@ -2280,6 +2685,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2364,6 +2773,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "found multiple bindings for answer in the same block"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "found multiple bindings for answer in the same block"
       }
      }
     },
@@ -2375,6 +2788,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2403,6 +2820,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "multiple top-level exports for f"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "multiple top-level exports for f"
       }
      }
     },
@@ -2416,6 +2837,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "multiple top-level exports for f"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "multiple top-level exports for f"
       }
      }
     },
@@ -2427,6 +2852,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2456,6 +2885,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier EllipticCurvePoint"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier EllipticCurvePoint"
       }
      }
     },
@@ -2467,6 +2900,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2495,6 +2932,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2506,6 +2947,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2535,6 +2980,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"Misc\" looking for \"(\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"Misc\" looking for \"(\""
       }
      }
     },
@@ -2546,6 +2995,10 @@
        "message": "unbound identifier emit"
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2561,6 +3014,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "struct Logged<name: Bytes<32>, payload: Bytes<256>> is not a declared event type"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "struct Logged<name: Bytes<32>, payload: Bytes<256>> is not a declared event type"
       }
      }
     },
@@ -2572,6 +3029,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2624,6 +3085,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier encrypt"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier encrypt"
       }
      }
     },
@@ -2637,6 +3102,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier decrypt"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier decrypt"
       }
      }
     },
@@ -2648,6 +3117,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2709,6 +3182,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "incompatible types Enum<State, waiting, Active, done> and Uint<1> for equality operator"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "incompatible types Enum<State, waiting, Active, done> and Uint<1> for equality operator"
       }
      }
     },
@@ -2722,6 +3199,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "incompatible types Enum<State, waiting, Active, done> and Bytes<6> for equality operator"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "incompatible types Enum<State, waiting, Active, done> and Bytes<6> for equality operator"
       }
      }
     },
@@ -2733,6 +3214,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2762,6 +3247,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2773,6 +3262,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2800,6 +3293,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"event\" (which is reserved for future use) looking for a program element or end of file"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"event\" (which is reserved for future use) looking for a program element or end of file"
       }
      }
     },
@@ -2811,6 +3308,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2840,6 +3341,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2853,6 +3358,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named evolveNonce is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>, Uint<64>) declared argument types for function at <standard library>: (Uint<128>, Bytes<32>)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named evolveNonce is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>, Uint<64>) declared argument types for function at <standard library>: (Uint<128>, Bytes<32>)"
       }
      }
     },
@@ -2864,6 +3373,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2895,6 +3408,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "incompatible combination of types Field and Field for relational operator"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "incompatible combination of types Field and Field for relational operator"
       }
      }
     },
@@ -2906,6 +3423,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2939,6 +3460,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -2950,6 +3475,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -2981,6 +3510,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "incompatible types Field and Uint<64> for equality operator"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "incompatible types Field and Uint<64> for equality operator"
       }
      }
     },
@@ -2992,6 +3525,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3019,6 +3556,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier public_key"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier public_key"
       }
      }
     },
@@ -3030,6 +3571,10 @@
        "message": "unbound identifier Address"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier Address"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier Address"
       }
@@ -3045,6 +3590,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier public_key"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier public_key"
       }
      }
     },
@@ -3056,6 +3605,10 @@
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter x of exported circuit setA at line 5 char 21 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the right-hand side of = at line 6 char 5"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter x of exported circuit setA at line 5 char 21 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the right-hand side of = at line 6 char 5"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter x of exported circuit setA at line 5 char 21 nature of the disclosure: ledger operation might disclose the witness value via this path through the program: the right-hand side of = at line 6 char 5"
       }
@@ -3071,6 +3624,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Address"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Address"
       }
      }
     },
@@ -3082,6 +3639,10 @@
        "message": "unbound identifier public_key"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier public_key"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier public_key"
       }
@@ -3097,6 +3658,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "mismatch between actual return type Uint<1> and declared return type Boolean of circuit isReady"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "mismatch between actual return type Uint<1> and declared return type Boolean of circuit isReady"
       }
      }
     },
@@ -3110,6 +3675,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier hash"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier hash"
       }
      }
     },
@@ -3121,6 +3690,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3149,6 +3722,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"i\" looking for \"(\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"i\" looking for \"(\""
       }
      }
     },
@@ -3160,6 +3737,10 @@
        "message": "parse error: found keyword \"in\" (which is reserved for future use) looking for \"of\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found keyword \"in\" (which is reserved for future use) looking for \"of\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found keyword \"in\" (which is reserved for future use) looking for \"of\""
       }
@@ -3175,6 +3756,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"i\" looking for \"const\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"i\" looking for \"const\""
       }
      }
     },
@@ -3186,6 +3771,10 @@
        "message": "parse error: found \"=\" looking for \"of\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found \"=\" looking for \"of\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found \"=\" looking for \"of\""
       }
@@ -3201,6 +3790,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier range"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier range"
       }
      }
     },
@@ -3212,6 +3805,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3241,6 +3838,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"from\" looking for a const binding"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"from\" looking for a const binding"
       }
      }
     },
@@ -3252,6 +3853,10 @@
        "message": "parse error: found keyword \"from\" looking for a typed pattern or \")\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found keyword \"from\" looking for a typed pattern or \")\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found keyword \"from\" looking for a typed pattern or \")\""
       }
@@ -3267,6 +3872,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -3278,6 +3887,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3306,6 +3919,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "cannot export type-parameterized function (f) from the top level"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "cannot export type-parameterized function (f) from the top level"
       }
      }
     },
@@ -3317,6 +3934,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3349,6 +3970,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier hash"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier hash"
       }
      }
     },
@@ -3360,6 +3985,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3387,6 +4016,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"condition\" looking for \"(\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"condition\" looking for \"(\""
       }
      }
     },
@@ -3398,6 +4031,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3428,6 +4065,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "failed to locate file \"../security/Initializable.compact\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "failed to locate file \"../security/Initializable.compact\""
       }
      }
     },
@@ -3441,6 +4082,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "failed to locate file \"../security/Initializable.compact\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "failed to locate file \"../security/Initializable.compact\""
       }
      }
     },
@@ -3452,6 +4097,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3482,6 +4131,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "failed to locate file \"std.compact\": possibly replace include with import CompactStandardLibrary"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "failed to locate file \"std.compact\": possibly replace include with import CompactStandardLibrary"
       }
      }
     },
@@ -3493,6 +4146,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3520,6 +4177,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "failed to locate file \"std.compact\": possibly replace include with import CompactStandardLibrary"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "failed to locate file \"std.compact\": possibly replace include with import CompactStandardLibrary"
       }
      }
     },
@@ -3531,6 +4192,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3558,6 +4223,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "failed to locate file \"lib.compact.compact\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "failed to locate file \"lib.compact.compact\""
       }
      }
     },
@@ -3569,6 +4238,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3599,6 +4272,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected structure type, received JubjubPoint"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected structure type, received JubjubPoint"
       }
      }
     },
@@ -3610,6 +4287,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3637,6 +4318,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -3648,6 +4333,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3676,6 +4365,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -3687,6 +4380,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3745,6 +4442,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "another binding found for kernel in the same scope at line 2 char 1"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "another binding found for kernel in the same scope at line 2 char 1"
       }
      }
     },
@@ -3756,6 +4457,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3783,6 +4488,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \";\" looking for \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \";\" looking for \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
       }
      }
     },
@@ -3796,6 +4505,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \";\" looking for \"(\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \";\" looking for \"(\""
       }
      }
     },
@@ -3807,6 +4520,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3844,6 +4561,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"{\" looking for an identifier"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"{\" looking for an identifier"
       }
      }
     },
@@ -3855,6 +4576,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3882,6 +4607,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected equality-operator left operand type to be an ordinary Compact type but received ADT type Counter"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected equality-operator left operand type to be an ordinary Compact type but received ADT type Counter"
       }
      }
     },
@@ -3893,6 +4622,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3925,6 +4658,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"let\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"let\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -3938,6 +4675,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"var\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"var\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -3949,6 +4690,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -3976,6 +4721,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "invalid context for reference to ledger field name options"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "invalid context for reference to ledger field name options"
       }
      }
     },
@@ -3989,6 +4738,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "invalid context for reference to variable name n"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "invalid context for reference to variable name n"
       }
      }
     },
@@ -4000,6 +4753,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4027,6 +4784,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"delete\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"delete\" (which is reserved for future use) looking for an identifier"
       }
      }
     },
@@ -4038,6 +4799,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4069,6 +4834,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation get undefined for ledger field type Map<Bytes<32>, Uint<64>>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation get undefined for ledger field type Map<Bytes<32>, Uint<64>>"
       }
      }
     },
@@ -4080,6 +4849,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4111,6 +4884,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation has undefined for ledger field type Map<Bytes<32>, Uint<64>>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation has undefined for ledger field type Map<Bytes<32>, Uint<64>>"
       }
      }
     },
@@ -4122,6 +4899,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4154,6 +4935,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4165,6 +4950,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4228,6 +5017,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "mismatch between actual number 1 and declared number 2 of ADT parameters for Map"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "mismatch between actual number 1 and declared number 2 of ADT parameters for Map"
       }
      }
     },
@@ -4241,6 +5034,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4252,6 +5049,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4279,6 +5080,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation set undefined for ledger field type Map<Field, Field>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation set undefined for ledger field type Map<Field, Field>"
       }
      }
     },
@@ -4290,6 +5095,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4317,6 +5126,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4328,6 +5141,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4343,6 +5160,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4354,6 +5175,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4382,6 +5207,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4393,6 +5222,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4464,6 +5297,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "MerkleTree depth 1 does not fall in 2 <= depth <= 32"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "MerkleTree depth 1 does not fall in 2 <= depth <= 32"
       }
      }
     },
@@ -4475,6 +5312,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4504,6 +5345,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "mismatch between actual number 1 and declared number 2 of ADT parameters for MerkleTree"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "mismatch between actual number 1 and declared number 2 of ADT parameters for MerkleTree"
       }
      }
     },
@@ -4515,6 +5360,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4543,6 +5392,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named rootOf is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <size 10> declared generics for function at line 3 char 1: <type>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named rootOf is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <size 10> declared generics for function at line 3 char 1: <type>"
       }
      }
     },
@@ -4556,6 +5409,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "mismatch between actual number 1 and declared number 2 of generic parameters for MerkleTreePath"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "mismatch between actual number 1 and declared number 2 of generic parameters for MerkleTreePath"
       }
      }
     },
@@ -4567,6 +5424,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4594,6 +5455,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4605,6 +5470,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4657,6 +5526,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier sign"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier sign"
       }
      }
     },
@@ -4668,6 +5541,10 @@
        "message": "unbound identifier sort"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier sort"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier sort"
       }
@@ -4683,6 +5560,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier reverse"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier reverse"
       }
      }
     },
@@ -4694,6 +5575,10 @@
        "message": "unbound identifier contains"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier contains"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier contains"
       }
@@ -4709,6 +5594,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier indexOf"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier indexOf"
       }
      }
     },
@@ -4720,6 +5609,10 @@
        "message": "unbound identifier to_string"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier to_string"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier to_string"
       }
@@ -4735,6 +5628,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier from_string"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier from_string"
       }
      }
     },
@@ -4746,6 +5643,10 @@
        "message": "unbound identifier toString"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier toString"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier toString"
       }
@@ -4761,6 +5662,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier concat"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier concat"
       }
      }
     },
@@ -4772,6 +5677,10 @@
        "message": "unbound identifier push"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier push"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier push"
       }
@@ -4787,6 +5696,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier pop"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier pop"
       }
      }
     },
@@ -4798,6 +5711,10 @@
        "message": "unbound identifier filter"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "unbound identifier filter"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "unbound identifier filter"
       }
@@ -4813,6 +5730,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier reduce"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier reduce"
       }
      }
     },
@@ -4824,6 +5745,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4852,6 +5777,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "circuit broken is declared to return a value of type Boolean, but its body can return without supplying a value"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "circuit broken is declared to return a value of type Boolean, but its body can return without supplying a value"
       }
      }
     },
@@ -4863,6 +5792,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4894,6 +5827,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named persistentHash is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named persistentHash is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       }
      }
     },
@@ -4905,6 +5842,10 @@
        "message": "no compatible function named persistentCommit is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "no compatible function named persistentCommit is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "no compatible function named persistentCommit is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       }
@@ -4920,6 +5861,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -4931,6 +5876,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -4961,6 +5910,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named some is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named some is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       }
      }
     },
@@ -4972,6 +5925,10 @@
        "message": "no compatible function named none is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "no compatible function named none is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "no compatible function named none is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type>"
       }
@@ -4987,6 +5944,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named left is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type, type>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named left is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <type, type>"
       }
      }
     },
@@ -4998,6 +5959,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5013,6 +5978,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5024,6 +5993,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5051,6 +6024,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named merkleTreePathRoot is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <size, type>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named merkleTreePathRoot is in scope at this call one function is incompatible with the supplied generic values supplied generic values: <> declared generics for function at <standard library>: <size, type>"
       }
      }
     },
@@ -5062,6 +6039,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5092,6 +6073,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5103,6 +6088,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5148,6 +6137,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Counter"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Counter"
       }
      }
     },
@@ -5159,6 +6152,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5187,6 +6184,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "badmod.compact does not contain a (single) module defintion"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "badmod.compact does not contain a (single) module defintion"
       }
      }
     },
@@ -5198,6 +6199,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5227,6 +6232,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier caller"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier caller"
       }
      }
     },
@@ -5240,6 +6249,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier msg"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier msg"
       }
      }
     },
@@ -5251,6 +6264,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5304,6 +6321,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "found other ledger constructors in program: line 4 char 1"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "found other ledger constructors in program: line 4 char 1"
       }
      }
     },
@@ -5315,6 +6336,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5342,6 +6367,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name nativePointX: the new name is jubjubPointX"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name nativePointX: the new name is jubjubPointX"
       }
      }
     },
@@ -5353,6 +6382,10 @@
        "message": "apparent use of an old standard-library / ledger operator name nativePointY: the new name is jubjubPointY"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name nativePointY: the new name is jubjubPointY"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name nativePointY: the new name is jubjubPointY"
       }
@@ -5368,6 +6401,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name constructNativePoint: the new name is constructJubjubPoint"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name constructNativePoint: the new name is constructJubjubPoint"
       }
      }
     },
@@ -5379,6 +6416,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5407,6 +6448,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected non-ADT type but received ledger ADT type for generic parameter value_type declared at <standard library>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected non-ADT type but received ledger ADT type for generic parameter value_type declared at <standard library>"
       }
      }
     },
@@ -5420,6 +6465,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected non-ADT type but received ledger ADT type for generic parameter value_type declared at <standard library>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected non-ADT type but received ledger ADT type for generic parameter value_type declared at <standard library>"
       }
      }
     },
@@ -5431,6 +6480,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5458,6 +6511,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "operation get undefined for ledger field type Map<Bytes<32>, Uint<64>>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "operation get undefined for ledger field type Map<Bytes<32>, Uint<64>>"
       }
      }
     },
@@ -5469,6 +6526,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5496,6 +6557,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5507,6 +6572,10 @@
        "message": "unbound identifier JubjubSchnorrSignature"
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5522,6 +6591,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5533,6 +6606,10 @@
        "message": "unbound identifier ecNeg"
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5548,6 +6625,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5559,6 +6640,10 @@
        "message": "operation caller undefined for ledger field type Kernel"
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5574,6 +6659,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5585,6 +6674,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5600,6 +6693,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named ecMulGenerator is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field) declared argument types for function at <standard library>: (JubjubScalar)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named ecMulGenerator is in scope at this call four functions are incompatible with the supplied argument types supplied argument types: (Field) declared argument types for function at <standard library>: (JubjubScalar) declared argument types for function at <standard library>: (Secp256k1Scalar) declared argument types for function at <standard library>: (Secp256r1Scalar) declared argument types for function at <standard library>: (Curve25519Scalar)"
       }
      }
     },
@@ -5611,6 +6708,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5626,6 +6727,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5637,6 +6742,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5652,6 +6761,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -5665,6 +6778,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named ecMulGenerator is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field) declared argument types for function at <standard library>: (JubjubScalar)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named ecMulGenerator is in scope at this call four functions are incompatible with the supplied argument types supplied argument types: (Field) declared argument types for function at <standard library>: (JubjubScalar) declared argument types for function at <standard library>: (Secp256k1Scalar) declared argument types for function at <standard library>: (Secp256r1Scalar) declared argument types for function at <standard library>: (Curve25519Scalar)"
       }
      }
     }
@@ -5710,6 +6827,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "expected test to have type Boolean, received Uint<64>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected test to have type Boolean, received Uint<64>"
       }
      }
     },
@@ -5721,6 +6842,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5749,6 +6874,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name receive: the new name is receiveShielded"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name receive: the new name is receiveShielded"
       }
      }
     },
@@ -5760,6 +6889,10 @@
        "message": "apparent use of an old standard-library / ledger operator name send: the new name is sendShielded"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name send: the new name is sendShielded"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name send: the new name is sendShielded"
       }
@@ -5775,6 +6908,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name mintToken: the new name is mintShieldedToken"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name mintToken: the new name is mintShieldedToken"
       }
      }
     },
@@ -5786,6 +6923,10 @@
        "message": "apparent use of an old standard-library / ledger operator name burnAddress: the new name is shieldedBurnAddress"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name burnAddress: the new name is shieldedBurnAddress"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name burnAddress: the new name is shieldedBurnAddress"
       }
@@ -5801,6 +6942,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name persistent_hash: the new name is persistentHash"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name persistent_hash: the new name is persistentHash"
       }
      }
     },
@@ -5812,6 +6957,10 @@
        "message": "apparent use of an old standard-library / ledger operator name own_public_key: the new name is ownPublicKey"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name own_public_key: the new name is ownPublicKey"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name own_public_key: the new name is ownPublicKey"
       }
@@ -5827,6 +6976,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "apparent use of an old standard-library / ledger operator name is_empty: the new name is isEmpty"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "apparent use of an old standard-library / ledger operator name is_empty: the new name is isEmpty"
       }
      }
     },
@@ -5838,6 +6991,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5865,6 +7022,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"Integer\" looking for \",\", \")\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"Integer\" looking for \",\", \")\", or a generic argument list"
       }
      }
     },
@@ -5876,6 +7037,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5905,6 +7070,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \")\" looking for \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"(\", \"<\", \"<=\", \">=\", \">\", \"?\", \"=\", \"+=\", or \"-=\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \")\" looking for \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"(\", \"<\", \"<=\", \">=\", \">\", \"?\", \"=\", \"+=\", or \"-=\""
       }
      }
     },
@@ -5916,6 +7085,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -5943,6 +7116,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "persistentHash cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "persistentHash cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
       }
      }
     },
@@ -5954,6 +7131,10 @@
        "message": "persistentCommit cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "persistentCommit cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "persistentCommit cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
       }
@@ -5969,6 +7150,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "MerkleTree insert cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "MerkleTree insert cannot be applied to a first argument containing opaque JavaScript values, received Opaque<\"string\">"
       }
      }
     },
@@ -5980,6 +7165,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6037,6 +7226,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "opaque type number is not supported"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "opaque type number is not supported"
       }
      }
     },
@@ -6048,6 +7241,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6078,6 +7275,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -6089,6 +7290,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6171,6 +7376,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"n\" looking for a non-negative numeric constant"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"n\" looking for a non-negative numeric constant"
       }
      }
     },
@@ -6184,6 +7393,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"someVariable\" looking for a string"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"someVariable\" looking for a string"
       }
      }
     },
@@ -6195,6 +7408,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6222,6 +7439,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named persistentCommit is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>) declared argument types for function at <standard library>: (Bytes<32>, Bytes<32>)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named persistentCommit is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>) declared argument types for function at <standard library>: (Bytes<32>, Bytes<32>)"
       }
      }
     },
@@ -6233,6 +7454,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6296,6 +7521,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "language version 0.27.0 mismatch"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     },
@@ -6309,6 +7538,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unrecognized pragma setting potato"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unrecognized pragma setting potato"
       }
      }
     },
@@ -6320,6 +7553,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6348,6 +7585,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "language version 0.27.0 mismatch"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     },
@@ -6361,6 +7602,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     },
@@ -6372,6 +7617,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6405,6 +7654,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -6418,6 +7671,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "language version 0.27.0 mismatch"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     }
@@ -6446,6 +7703,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -6459,6 +7720,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "language version 0.27.0 mismatch"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     }
@@ -6485,6 +7750,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"<=\" looking for \";\", \"||\", or \"&&\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"<=\" looking for \";\", \"||\", or \"&&\""
       }
      }
     },
@@ -6498,6 +7767,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "language version 0.28.0 mismatch"
       }
      }
     }
@@ -6537,6 +7810,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier public_key"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier public_key"
       }
      }
     },
@@ -6550,6 +7827,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier publicKey"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier publicKey"
       }
      }
     },
@@ -6561,6 +7842,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6620,6 +7905,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"function\" (which is reserved for future use) looking for \"circuit\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"function\" (which is reserved for future use) looking for \"circuit\""
       }
      }
     },
@@ -6631,6 +7920,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6664,6 +7957,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier random"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier random"
       }
      }
     },
@@ -6677,6 +7974,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier randomBytes"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier randomBytes"
       }
      }
     },
@@ -6688,6 +7989,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6736,6 +8041,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier blockTime"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier blockTime"
       }
      }
     },
@@ -6747,6 +8056,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6815,6 +8128,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "recursion involving factorial"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "recursion involving factorial"
       }
      }
     },
@@ -6826,6 +8143,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6876,6 +8197,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"event\" (which is reserved for future use) looking for a const binding"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"event\" (which is reserved for future use) looking for a const binding"
       }
      }
     },
@@ -6887,6 +8212,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6902,6 +8231,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"from\" looking for a const binding"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"from\" looking for a const binding"
       }
      }
     },
@@ -6913,6 +8246,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -6940,6 +8277,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"void\" (which is reserved for future use) looking for a type"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"void\" (which is reserved for future use) looking for a type"
       }
      }
     },
@@ -6951,6 +8292,10 @@
        "message": "parse error: found keyword \"throw\" (which is reserved for future use) looking for a statement or \"}\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found keyword \"throw\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found keyword \"throw\" (which is reserved for future use) looking for a statement or \"}\""
       }
@@ -6966,6 +8311,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"null\" (which is reserved for future use) looking for an expression3"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"null\" (which is reserved for future use) looking for an expression3"
       }
      }
     },
@@ -6977,6 +8326,10 @@
        "message": "parse error: found keyword \"do\" (which is reserved for future use) looking for a statement or \"}\""
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found keyword \"do\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found keyword \"do\" (which is reserved for future use) looking for a statement or \"}\""
       }
@@ -6992,6 +8345,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"this\" (which is reserved for future use) looking for an expression sequence or \";\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"this\" (which is reserved for future use) looking for an expression sequence or \";\""
       }
      }
     },
@@ -7003,6 +8360,10 @@
        "message": "parse error: found keyword \"public\" (which is reserved for future use) looking for a program element or end of file"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "parse error: found keyword \"public\" (which is reserved for future use) looking for a program element or end of file"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "parse error: found keyword \"public\" (which is reserved for future use) looking for a program element or end of file"
       }
@@ -7018,6 +8379,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7029,6 +8394,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7044,6 +8413,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7055,6 +8428,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7070,6 +8447,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7081,6 +8462,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7110,6 +8495,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "return is not supported within for loops"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "return is not supported within for loops"
       }
      }
     },
@@ -7121,6 +8510,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7158,6 +8551,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \":\" looking for \")\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \":\" looking for \")\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
       }
      }
     },
@@ -7171,6 +8568,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \":\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \":\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", \">\", \"(\", \"{\", or a generic argument list"
       }
      }
     },
@@ -7182,6 +8583,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7209,6 +8614,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"export\" looking for an identifier"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"export\" looking for an identifier"
       }
      }
     },
@@ -7220,6 +8629,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7251,6 +8664,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "exported circuits cannot modify sealed ledger fields but updateConfig calls (directly or indirectly) updateConfig, which modifies sealed field config at line 5 char 3"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "exported circuits cannot modify sealed ledger fields but updateConfig calls (directly or indirectly) updateConfig, which modifies sealed field config at line 5 char 3"
       }
      }
     },
@@ -7262,6 +8679,10 @@
        "message": "exported circuits cannot modify sealed ledger fields but updateConfig calls (directly or indirectly) setConfig, which modifies sealed field config at line 5 char 3"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "exported circuits cannot modify sealed ledger fields but updateConfig calls (directly or indirectly) setConfig, which modifies sealed field config at line 5 char 3"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "exported circuits cannot modify sealed ledger fields but updateConfig calls (directly or indirectly) setConfig, which modifies sealed field config at line 5 char 3"
       }
@@ -7277,6 +8698,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7288,6 +8713,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7343,6 +8772,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier SendResult"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier SendResult"
       }
      }
     },
@@ -7354,6 +8787,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7381,6 +8818,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Address"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Address"
       }
      }
     },
@@ -7394,6 +8835,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Address"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Address"
       }
      }
     },
@@ -7405,6 +8850,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7433,6 +8882,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unreachable statement"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unreachable statement"
       }
      }
     },
@@ -7444,6 +8897,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7471,6 +8928,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "cannot cast from type Bytes<9> to type Bytes<32>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "cannot cast from type Bytes<9> to type Bytes<32>"
       }
      }
     },
@@ -7482,6 +8943,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7509,6 +8974,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "invalid context for reference to struct name S"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "invalid context for reference to struct name S"
       }
      }
     },
@@ -7520,6 +8989,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7548,6 +9021,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"switch\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"switch\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -7561,6 +9038,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"{\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", or \">\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"{\" looking for \";\", \",\", \"||\", \"&&\", \"==\", \"!=\", \"as\", \"+\", \"-\", \"*\", \"[\", \".\", \"?\", \"=\", \"+=\", \"-=\", \"<\", \"<=\", \">=\", or \">\""
       }
      }
     },
@@ -7572,6 +9053,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7601,6 +9086,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7612,6 +9101,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7627,6 +9120,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named mintShieldedToken is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>, Uint<128>, Bytes<32>, struct Either<is_left: Boolean, left: struct ZswapCoinPublicKey<bytes: Bytes<32>>, right: struct ContractAddress<bytes: Bytes<32>>>) declared argument types for function at <standard library>: (Bytes<32>, Uint<64>, Bytes<32>, struct Either<is_left: Boolean, left: struct ZswapCoinPublicKey<bytes: Bytes<32>>, right: struct ContractAddress<bytes: Bytes<32>>>)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named mintShieldedToken is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Bytes<32>, Uint<128>, Bytes<32>, struct Either<is_left: Boolean, left: struct ZswapCoinPublicKey<bytes: Bytes<32>>, right: struct ContractAddress<bytes: Bytes<32>>>) declared argument types for function at <standard library>: (Bytes<32>, Uint<64>, Bytes<32>, struct Either<is_left: Boolean, left: struct ZswapCoinPublicKey<bytes: Bytes<32>>, right: struct ContractAddress<bytes: Bytes<32>>>)"
       }
      }
     },
@@ -7638,6 +9135,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7653,6 +9154,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7664,6 +9169,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7692,6 +9201,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named tokenType is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (struct ContractAddress<bytes: Bytes<32>>, Bytes<32>) declared argument types for function at <standard library>: (Bytes<32>, struct ContractAddress<bytes: Bytes<32>>)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named tokenType is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (struct ContractAddress<bytes: Bytes<32>>, Bytes<32>) declared argument types for function at <standard library>: (Bytes<32>, struct ContractAddress<bytes: Bytes<32>>)"
       }
      }
     },
@@ -7703,6 +9216,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7732,6 +9249,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"const\" looking for a program element or end of file"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"const\" looking for a program element or end of file"
       }
      }
     },
@@ -7745,6 +9266,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7756,6 +9281,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7785,6 +9314,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"try\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"try\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -7796,6 +9329,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7825,6 +9362,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"0\" looking for an identifier"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"0\" looking for an identifier"
       }
      }
     },
@@ -7836,6 +9377,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7864,6 +9409,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "Uint width 256 exceeds the maximum Uint width 248"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "Uint width 256 exceeds the maximum Uint width 248"
       }
      }
     },
@@ -7875,6 +9424,10 @@
        "message": "Uint width 256 is not between 1 and the maximum Uint width 248 (inclusive)"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "Uint width 256 exceeds the maximum Uint width 248"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "Uint width 256 exceeds the maximum Uint width 248"
       }
@@ -7890,6 +9443,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7901,6 +9458,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -7956,6 +9517,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "no compatible function named publicKey is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Uint<64>, Bytes<32>) declared argument types for function at line 8 char 1: (Field, Bytes<32>)"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "no compatible function named publicKey is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Uint<64>, Bytes<32>) declared argument types for function at line 8 char 1: (Field, Bytes<32>)"
       }
      }
     },
@@ -7967,6 +9532,10 @@
        "message": "no compatible function named publicKey is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field, Bytes<32>) declared argument types for function at line 8 char 1: (Uint<64>, Bytes<32>)"
       },
       "0.35.0": {
+       "exit": 255,
+       "message": "no compatible function named publicKey is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field, Bytes<32>) declared argument types for function at line 8 char 1: (Uint<64>, Bytes<32>)"
+      },
+      "0.36.1": {
        "exit": 255,
        "message": "no compatible function named publicKey is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field, Bytes<32>) declared argument types for function at line 8 char 1: (Uint<64>, Bytes<32>)"
       }
@@ -7982,6 +9551,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -7993,6 +9566,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8020,6 +9597,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -8031,6 +9612,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8117,6 +9702,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -8128,6 +9717,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8157,6 +9750,10 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     },
@@ -8168,6 +9765,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8216,6 +9817,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "identifier x might be referenced before it is assigned"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "identifier x might be referenced before it is assigned"
       }
      }
     },
@@ -8227,6 +9832,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8258,6 +9867,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier verify"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier verify"
       }
      }
     },
@@ -8271,6 +9884,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier verify"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier verify"
       }
      }
     },
@@ -8282,6 +9899,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8333,6 +9954,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier verify_signature"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier verify_signature"
       }
      }
     },
@@ -8344,6 +9969,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8408,6 +10037,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "unbound identifier Void"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "unbound identifier Void"
       }
      }
     },
@@ -8419,6 +10052,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8448,6 +10085,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found keyword \"while\" (which is reserved for future use) looking for a statement or \"}\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"while\" (which is reserved for future use) looking for a statement or \"}\""
       }
      }
     },
@@ -8459,6 +10100,10 @@
        "message": ""
       },
       "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
        "exit": 0,
        "message": ""
       }
@@ -8493,6 +10138,10 @@
       "0.35.0": {
        "exit": 255,
        "message": "parse error: found \"{\" looking for \";\""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "parse error: found \"{\" looking for \";\""
       }
      }
     },
@@ -8506,10 +10155,413 @@
       "0.35.0": {
        "exit": 0,
        "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
       }
      }
     }
    }
+  },
+  {
+   "slug": "contract-type-pure-circuit",
+   "title": "A pure circuit in a contract type",
+   "category": "other",
+   "fix_kind": "semantic",
+   "sources": [
+    "LFDT-Minokawa/compact doc/compact-reference.mdx (contract types)"
+   ],
+   "notes": "0.34.0 and later reject a `pure` circuit in a contract type: a cross-contract call needs the called circuit to have a proof, and a pure circuit has none. right.compact drops it from the type; to reuse pure logic from another contract, import its module instead.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit addTo(n: Uint<64>): Uint<64>;\n  pure circuit double(n: Uint<64>): Uint<64>;\n}\nexport ledger adder: Adder;\nconstructor(a: Adder) { adder = disclose(a); }\nexport circuit addVia(n: Uint<64>): Uint<64> { return adder.addTo(disclose(n)); }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Adder/compiler/contract-info.json; try (re)compiling Adder.compact"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "a contract type cannot declare circuit double pure: a cross-contract call requires the called circuit to have a proof, and a pure circuit has none. To reuse pure logic from another contract, import its module"
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\nexport ledger adder: Adder;\nconstructor(a: Adder) { adder = disclose(a); }\nexport circuit addVia(n: Uint<64>): Uint<64> { return adder.addTo(disclose(n)); }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Adder/compiler/contract-info.json; try (re)compiling Adder.compact"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "cross-contract-undisclosed",
+   "title": "Cross-contract call with an undisclosed argument or reference",
+   "category": "disclosure",
+   "fix_kind": "semantic",
+   "sources": [
+    "LFDT-Minokawa/compact doc/compact-reference.mdx (cross-contract calls)"
+   ],
+   "notes": "A cross-contract call makes its arguments and the called contract public, so a circuit parameter (or witness value) passed as the argument, or a contract reference taken as a parameter, needs disclose(). wrong.compact leaves the argument undisclosed, wrong2.compact the reference; right.compact discloses both.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\nexport circuit setUp(a: Adder, n: Uint<64>): [] {\n  disclose(a).setAddAmount((n + n) as Uint<64>);\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Adder/compiler/contract-info.json; try (re)compiling Adder.compact"
+      },
+      "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter n of exported circuit setUp at line 7 char 32 nature of the disclosure: contract call argument 1 might disclose the result of an addition involving the witness value via this path through the program: the computation at line 8 char 29"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter n of exported circuit setUp at line 7 char 32 nature of the disclosure: contract call argument 1 might disclose the result of an addition involving the witness value via this path through the program: the computation at line 8 char 29"
+      }
+     }
+    },
+    "wrong2.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\nexport circuit setUp(a: Adder, n: Uint<64>): [] {\n  a.setAddAmount(disclose((n + n) as Uint<64>));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Adder/compiler/contract-info.json; try (re)compiling Adder.compact"
+      },
+      "0.35.0": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter a of exported circuit setUp at line 7 char 22 nature of the disclosure: contract call contract reference might disclose the witness value"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "potential witness-value disclosure must be declared but is not: witness value potentially disclosed: the value of parameter a of exported circuit setUp at line 7 char 22 nature of the disclosure: contract call contract reference might disclose the witness value"
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\nexport circuit setUp(a: Adder, n: Uint<64>): [] {\n  disclose(a).setAddAmount(disclose((n + n) as Uint<64>));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Adder/compiler/contract-info.json; try (re)compiling Adder.compact"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "contract-implements-declared-pure",
+   "title": "contract implements with a circuit declared pure",
+   "category": "other",
+   "fix_kind": "semantic",
+   "sources": [
+    "LFDT-Minokawa/compact doc/compact-reference.mdx (contract types)",
+    "midnightntwrk/servicedesk#298"
+   ],
+   "notes": "`contract implements Adder;` rejects an exported circuit declared `pure` that the type lists. It does not reject a circuit that is pure without the keyword, or one that calls a witness, though neither works as a callee (servicedesk#298): those compile and fail at the first call. right.compact gives addTo a proof by reading ledger state.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\ncontract implements Adder;\nexport ledger amount: Uint<64>;\nexport circuit setAddAmount(n: Uint<64>): [] { amount = disclose(n); }\nexport pure circuit addTo(n: Uint<64>): Uint<64> { return (n + 1) as Uint<64>; }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "contract implements failure: this contract exports a circuit named addTo, but it is declared pure, and a circuit declared in a contract type must have a proof"
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\ncontract implements Adder;\nexport ledger amount: Uint<64>;\nexport circuit setAddAmount(n: Uint<64>): [] { amount = disclose(n); }\nexport circuit addTo(n: Uint<64>): Uint<64> { return (disclose(n) + amount) as Uint<64>; }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "contract-address-from-reference",
+   "title": "ContractAddress from a contract-typed value",
+   "category": "type/cast",
+   "fix_kind": "semantic",
+   "sources": [
+    "LFDT-Minokawa/compact doc/compact-reference.mdx (contract types)"
+   ],
+   "notes": "There is no way to get a ContractAddress from a contract-typed value: a cast, `.bytes` and `.address` all fail. To pay a contract you also call, store its address separately (right.compact). Nothing ties the two together, so a caller could pass a reference to one contract and the address of another.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Treasury {\n  circuit deposit(n: Uint<128>): [];\n}\nexport ledger treasury: Treasury;\nconstructor(t: Treasury) { treasury = disclose(t); }\nexport circuit pay(amount: Uint<128>): [] {\n  sendUnshielded(nativeToken(), disclose(amount), left<ContractAddress, UserAddress>(treasury as ContractAddress));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Treasury/compiler/contract-info.json; try (re)compiling Treasury.compact"
+      },
+      "0.35.0": {
+       "exit": 255,
+       "message": "cannot cast from type contract Treasury<deposit(Uint<128>): []> to type struct ContractAddress<bytes: Bytes<32>>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "cannot cast from type contract Treasury<deposit(Uint<128>): []> to type struct ContractAddress<bytes: Bytes<32>>"
+      }
+     }
+    },
+    "wrong2.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Treasury {\n  circuit deposit(n: Uint<128>): [];\n}\nexport ledger treasury: Treasury;\nconstructor(t: Treasury) { treasury = disclose(t); }\nexport circuit pay(amount: Uint<128>): [] {\n  sendUnshielded(nativeToken(), disclose(amount), left<ContractAddress, UserAddress>(ContractAddress { bytes: treasury.bytes }));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Treasury/compiler/contract-info.json; try (re)compiling Treasury.compact"
+      },
+      "0.35.0": {
+       "exit": 255,
+       "message": "expected structure type, received contract Treasury<deposit(Uint<128>): []>"
+      },
+      "0.36.1": {
+       "exit": 255,
+       "message": "expected structure type, received contract Treasury<deposit(Uint<128>): []>"
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Treasury {\n  circuit deposit(n: Uint<128>): [];\n}\nexport ledger treasury: Treasury;\nexport ledger treasuryAddr: ContractAddress;\nconstructor(t: Treasury, addr: ContractAddress) { treasury = disclose(t); treasuryAddr = disclose(addr); }\nexport circuit pay(amount: Uint<128>): [] {\n  sendUnshielded(nativeToken(), disclose(amount), left<ContractAddress, UserAddress>(treasuryAddr));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "error opening /var/folders/z4/cp6r4cpn1458f0z35p1r00z00000gn/T/Treasury/compiler/contract-info.json; try (re)compiling Treasury.compact"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "deserialize-boolean-nested-if",
+   "title": "deserialize<Boolean> in a nested if crashes 0.35.0 and 0.36.0",
+   "category": "version/pragma",
+   "fix_kind": "version",
+   "sources": [
+    "LFDT-Minokawa/compact#856"
+   ],
+   "notes": "An internal compiler error (`downstream type-check failure`, pointing at the pragma) on 0.35.0 and 0.36.0, fixed in 0.36.1 (compact#856). The code is valid: compile with 0.36.1. On an older compiler, compare the byte instead: `deserialize<Uint<8>, 1>(b) == 1`.",
+   "files": {
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\nexport ledger n: Counter;\nexport circuit check(x: Boolean, b: Bytes<1>): [] {\n  if (disclose(x)) {\n    if (deserialize<Boolean, 1>(disclose(b))) {\n      n.increment(1);\n    }\n  }\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "unbound identifier deserialize"
+      },
+      "0.35.0": {
+       "exit": 254,
+       "message": "incompatible types Uint<0..256> and Uint<0..3> for relational operator"
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    },
+    "right2.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\nexport ledger n: Counter;\nexport circuit check(x: Boolean, b: Bytes<1>): [] {\n  if (disclose(x)) {\n    if (deserialize<Uint<8>, 1>(disclose(b)) == 1) {\n      n.increment(1);\n    }\n  }\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "unbound identifier deserialize"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "contract-implements-not-provable",
+   "title": "contract implements accepts a callee that can't be called",
+   "category": "other",
+   "fix_kind": "semantic",
+   "sources": [
+    "midnightntwrk/servicedesk#298",
+    "LFDT-Minokawa/compact doc/compact-reference.mdx (contract types)"
+   ],
+   "notes": "Compiles, but still wrong. 0.36.1 accepts both wrong files under `contract implements Adder;`, though neither addTo can be called from another contract: in wrong.compact it touches no ledger state, so it compiles as a pure circuit with no proof; in wrong2.compact it calls a witness, which a callee runs without. On Preview both failed at the first cross-contract call (servicedesk#298). right.compact reads the ledger and calls no witness.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\ncontract implements Adder;\nexport ledger amount: Uint<64>;\nexport circuit setAddAmount(n: Uint<64>): [] { amount = disclose(n); }\nexport circuit addTo(n: Uint<64>): Uint<64> { return (n + 1) as Uint<64>; }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    },
+    "wrong2.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\ncontract implements Adder;\nwitness secretBonus(): Uint<64>;\nexport ledger amount: Uint<64>;\nexport circuit setAddAmount(n: Uint<64>): [] { amount = disclose(n); }\nexport circuit addTo(n: Uint<64>): Uint<64> {\n  const r = (disclose(n) + amount + disclose(secretBonus())) as Uint<64>;\n  amount = r;\n  return r;\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Adder {\n  circuit setAddAmount(n: Uint<64>): [];\n  circuit addTo(n: Uint<64>): Uint<64>;\n}\ncontract implements Adder;\nexport ledger amount: Uint<64>;\nexport circuit setAddAmount(n: Uint<64>): [] { amount = disclose(n); }\nexport circuit addTo(n: Uint<64>): Uint<64> { return (disclose(n) + amount) as Uint<64>; }\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
+  },
+  {
+   "slug": "contract-implements-through-helpers",
+   "title": "contract implements: state and witnesses reached through helpers",
+   "category": "other",
+   "fix_kind": "semantic",
+   "sources": [
+    "midnightntwrk/servicedesk#298"
+   ],
+   "notes": "Regression for the implements-unprovable warning. right.compact reaches the ledger through a helper circuit and right2.compact through receiveUnshielded: both have a proof (0.36.1 contract-info.json shows \"pure\": false, \"proof\": true) and must not be warned. wrong.compact calls a witness through a helper, so another contract can't call deposit: it compiles and must be warned.",
+   "files": {
+    "wrong.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Vault {\n  circuit deposit(amount: Uint<128>): [];\n}\ncontract implements Vault;\nexport ledger total: Uint<128>;\nwitness secret(): Field;\ncircuit helper(): Field { return secret(); }\nexport circuit deposit(amount: Uint<128>): [] {\n  const s = helper();\n  total = disclose(amount);\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    },
+    "right.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Vault {\n  circuit deposit(amount: Uint<128>): [];\n}\ncontract implements Vault;\nexport ledger total: Uint<128>;\ncircuit bump(amount: Uint<128>): [] { total = (total + amount) as Uint<128>; }\nexport circuit deposit(amount: Uint<128>): [] {\n  bump(disclose(amount));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    },
+    "right2.compact": {
+     "source": "pragma language_version >= 0.20;\nimport CompactStandardLibrary;\ncontract Vault {\n  circuit deposit(amount: Uint<128>): [];\n}\ncontract implements Vault;\nexport ledger total: Uint<128>;\nexport circuit deposit(amount: Uint<128>): [] {\n  receiveUnshielded(nativeToken(), disclose(amount));\n}\n",
+     "results": {
+      "0.31.1": {
+       "exit": 255,
+       "message": "parse error: found keyword \"implements\" (which is reserved for future use) looking for an identifier"
+      },
+      "0.35.0": {
+       "exit": 0,
+       "message": ""
+      },
+      "0.36.1": {
+       "exit": 0,
+       "message": ""
+      }
+     }
+    }
+   },
+   "runtime": null
   }
  ]
 }
