@@ -113,7 +113,7 @@ submitted. Know which network you deploy to first; the right versions depend on 
 
   The body says `bad input`: ZKIR v3 circuits (0.36.0 always, older compilers with
   `--feature-zkir-v3`) sent to proof server 8.1.x, the ledger 8 set's, which can't read them;
-  9.0.0, the matrix version on every network, can.
+  9.0.2, the matrix version on every network, can.
   Reproduced on `/k` (`Unsupported ZKIR version`); the `/check` text is from source.
 - **The compiler prints only its usage line** (→ Remediation 2 and 5):
 
@@ -170,7 +170,7 @@ Five couplings turn the drift into errors:
 4. **Wallet SDK packages ship as a set.** `wallet-sdk-facade` 4.1.0 imports `Clock`, which only
    `wallet-sdk-utilities` 1.2.1 and later export, but the 1.2.0 umbrella accepts `^1.2.0`. The
    packages are published under `@midnight-ntwrk/` and `@midnightntwrk/`; both scopes' `latest` is
-   2.0.0, the matrix version on every network. testkit-js 4.1.1 pins wallet-sdk 1.1.0.
+   2.0.1, the matrix version on every network. testkit-js 4.1.1 pins wallet-sdk 1.1.0.
 5. **midnight-js 5 checks the contract against the network before proving.** It reads the
    network's protocol version from the indexer (`queryLatestProtocolVersion`). It refuses a
    ledger 9 contract on a ledger 8 network, and a new deploy or maintenance update of a ledger 8
@@ -241,15 +241,15 @@ source disagrees with a row, the source is right.
    Exit code: 0 = no mismatch found, 2 = at least one `MISMATCH`, 1 = it could not run.
    `MISMATCH` marks a combination shown to break or one that can't load; `DIFFERS` means "not the
    tested version" without evidence that it breaks. Each `MISMATCH` comes with a fix under
-   "What to do". Example, a contract still built by 0.31.1 in a midnight-js 5.0.0 project, checked
+   "What to do". Example, a contract still built by 0.31.1 in a midnight-js 5.0.1 project, checked
    for Mainnet (real output, trimmed):
 
    ```text
    component                                            installed                 matrix         status
    Compact runtime                                      2 copies: 0.21.0, 0.16.0  0.21.0         OK        0.16.0 is midnight-js 5's ledger 8 copy
-   On-chain runtime (v4)                                4.0.0                     4.0.0          OK
+   On-chain runtime (v4)                                4.0.2                     4.0.2          OK
    …
-   Midnight.js                                          5.0.0                     5.0.0          OK
+   Midnight.js                                          5.0.1                     5.0.1          OK
    …
    Compiled contract wants runtime                      0.16.0                    0.21.0         WARN      ledger 8 build: calls to pre-fork contracts only
    Runtime the contract loads                           0.21.0                    0.16.0         MISMATCH
@@ -258,7 +258,7 @@ source disagrees with a row, the source is right.
    RESULT: 1 mismatch(es). See the runbook for the matching error text.
    ```
 
-   Its fix names `ledger8-deploy-on-ledger9-network` and says to recompile with 0.36.0.
+   Its fix names `ledger8-deploy-on-ledger9-network` and says to recompile with 0.36.1.
 
    In the "Runtime the contract loads" row, the matrix column shows the runtime the contract
    wants. With `--rpc`, the script also warns when the node runs a different ledger era from the
@@ -285,7 +285,7 @@ source disagrees with a row, the source is right.
 
 1. **Pin the matrix set exactly.** Every network lists the same set (the left column of the table
    under Root cause at the last check): `@midnight-ntwrk/compact-runtime` 0.21.0, every
-   `@midnight-ntwrk/midnight-js-*` 5.0.1, `@midnightntwrk/wallet-sdk` 2.0.1, testkit-js 5.0.1. 5.0.1 fixes node rejections 5.0.0 gets (1010 runbook).
+   `@midnight-ntwrk/midnight-js-*` 5.0.1, `@midnightntwrk/wallet-sdk` 2.0.1, testkit-js 5.0.1. 5.0.1 fixes node rejections 5.0.0 gets ([1010 runbook](../node-1010-custom-error-runbook/node-1010-custom-error-runbook.md)).
    Coming from 4.1.1 (the ledger 8 set, which Preprod ran until 9 November 2026), follow
    midnight-js's v5.0.0 migration guide.
 
@@ -296,7 +296,7 @@ source disagrees with a row, the source is right.
 
    *Trade-off:* upgrades become deliberate; re-run the check whenever the matrix moves.
 2. **Recompile with 0.36.1.** `compact update 0.36`, then `compact compile +0.36.1 <src> <out>`, for every
-   network. 0.36.1 patches two 0.36.0 compiler crashes (compact#616, #856). A bare
+   network. 0.36.1 patches two 0.36.0 compiler crashes ([compact#616](https://github.com/LFDT-Minokawa/compact/issues/616), [compact#856](https://github.com/LFDT-Minokawa/compact/issues/856)). A bare
    `compact update` makes the newest release your default (0.36.1 at the last check); to keep
    0.31.1 for calling a pre-fork contract (step 6), install it side by side with
    `compact update 0.31.1 --no-set-default`. Rebuild every artefact: old builds keep the runtime
@@ -326,7 +326,7 @@ source disagrees with a row, the source is right.
    drop the flag from build scripts.
 6. **A ledger 8 contract on a ledger 9 network.** A contract deployed before its network moved to
    ledger 9 (Mainnet before 6 November 2026, Preprod before 9 November)
-   can still be called with its 0.31.1 build; a new deploy or a maintenance update needs a 0.36.0
+   can still be called with its 0.31.1 build; a new deploy or a maintenance update needs a 0.36.1
    build. Calling it from midnight-js 5 needs `NodeZkConfigProvider(dir, { verify:
    'require-if-present' })`, since 0.31.1 writes no `contract-manifest.json` (reproduced), and
    runtime 0.16.0 for the 0.31.1 module, on the same `onchain-runtime-v3` copy as midnight-js 5's
@@ -337,7 +337,7 @@ source disagrees with a row, the source is right.
    Pass `new Contract(witnesses)`, not a `CompiledContract`. With that the check reports the build
    as `WARN` (calls only) and exits 0. A pre-fork call wasn't reproduced.
 
-   *Trade-off:* the contract keeps its ledger 8 keys until a 0.36.0 build and a maintenance update.
+   *Trade-off:* the contract keeps its ledger 8 keys until a 0.36.1 build and a maintenance update.
 
 ## Upstream follow-ups
 
