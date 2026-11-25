@@ -448,17 +448,27 @@ function scan(file, src) {
         const open = h.index + h[0].length - 1, end = matchClose(code, open, '{', '}');
         if (end > 0) own.set(h[1], { at: h.index, body: code.slice(open, end) });
       }
-      const calls = (body, n) => new RegExp(`(?<![\\w$.])${n}\\s*(?:<[^;(){}]*>)?\\s*\\(`).test(body);
+      // Names a body calls, and names it mentions, collected once with literal patterns.
+      const memo = new Map();
+      const scan = (body) => {
+        if (!memo.has(body)) memo.set(body, {
+          called: new Set([...body.matchAll(/(?<![\w$.])(\w+)\s*(?:<[^;(){}]*>)?\s*\(/g)].map((c) => c[1])),
+          named: new Set([...body.matchAll(/(?<![\w$.])(\w+)(?![\w$])/g)].map((c) => c[1])),
+        });
+        return memo.get(body);
+      };
+      const calls = (body, n) => scan(body).called.has(n);
       const reaches = (name, direct, seen = new Set()) => {
         if (seen.has(name) || !own.has(name)) return false;
         seen.add(name);
         const { body } = own.get(name);
         return direct(body) || [...own.keys()].some((n) => n !== name && calls(body, n) && reaches(n, direct, seen));
       };
-      const stateDirect = (body) => /\bkernel\s*\./.test(body) || fields.some((f) => new RegExp(`(?<![\\w$.])${f}(?![\\w$])`).test(body)) || STATE_STDLIB.some((n) => calls(body, n));
+      const stateDirect = (body) => /\bkernel\s*\./.test(body) || fields.some((f) => scan(body).named.has(f)) || STATE_STDLIB.some((n) => calls(body, n));
       const witnessDirect = (body) => witnesses.some((w) => calls(body, w));
+      const exported = new Map([...code.matchAll(/\bexport\s+circuit\s+(\w+)\b[^{;]*\{/g)].map((e) => [e[1], e]));
       for (const name of types.get(impl[1])) {
-        const h = new RegExp(`\\bexport\\s+circuit\\s+${name}\\b[^{;]*\\{`).exec(code);
+        const h = exported.get(name);
         if (!h || !own.has(name)) continue;
         const callsWitness = reaches(name, witnessDirect);
         const touchesState = reaches(name, stateDirect);
