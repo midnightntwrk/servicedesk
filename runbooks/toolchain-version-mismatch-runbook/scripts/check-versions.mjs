@@ -66,6 +66,8 @@ const eraOfRuntime = (v) => RUNTIME_ERA[String(v ?? '').split('.').slice(0, 2).j
 const nodeLedgerVersion = (s) => String(s ?? '').match(/crate-ledger-(\d+\.\d+\.\d+)/)?.[1] ?? fullVer(s);
 const COMPACT_JS = '@midnight-ntwrk/compact-js';
 const PROTOCOL = '@midnight-ntwrk/midnight-js-protocol';
+// midnight-js 5.0.1 and later are also published under this scope.
+const PROTOCOL_NEW_SCOPE = '@midnightntwrk/midnight-js-protocol';
 
 // Blockfrost: the key comes from the environment, never from an argument, and is redacted
 // from every line printed.
@@ -414,12 +416,13 @@ async function main() {
   }
   const pkgs = !pnpRoot ? scanNodeModules(projectDir) : new Map();
   const copies = (name) => pkgs.get(name) ?? [];
+  const protocolCopies = [...copies(PROTOCOL), ...copies(PROTOCOL_NEW_SCOPE)];
   const checkPackages = !pnpRoot;
 
   // The copies midnight-js actually loads: the compact-runtime (and the on-chain runtime it
   // brings) reached from each midnight-js-protocol copy and from the compact-js each of those uses.
   const sdkRuntimes = [];
-  const sdkSources = copies(PROTOCOL).length ? copies(PROTOCOL) : copies(COMPACT_JS);
+  const sdkSources = protocolCopies.length ? protocolCopies : copies(COMPACT_JS);
   for (const p of sdkSources) {
     for (const from of [p.dir, resolveFrom(p.dir, COMPACT_JS)?.dir].filter(Boolean)) {
       const cr = resolveFrom(from, RUNTIME);
@@ -430,7 +433,7 @@ async function main() {
   // midnight-js 5's own ledger 8 runtime: resolved under its alias from each protocol copy, so the
   // real directory is known whatever the linker (pnpm and Yarn store it under another name).
   const sdkL8Runtimes = [];
-  for (const p of copies(PROTOCOL)) {
+  for (const p of protocolCopies) {
     const cr = resolveFrom(p.dir, RUNTIME_L8_ALIAS);
     if (cr && !cr.unreadable && !sdkL8Runtimes.some((x) => x.dir === cr.dir)) sdkL8Runtimes.push(cr);
   }
@@ -508,7 +511,7 @@ async function main() {
     for (const [component, names, note] of [
       ['Compact JS', [COMPACT_JS]],
       ['Platform JS', ['@midnight-ntwrk/platform-js']],
-      ['Midnight.js', ['@midnight-ntwrk/midnight-js-contracts', PROTOCOL]],
+      ['Midnight.js', ['@midnight-ntwrk/midnight-js-contracts', PROTOCOL, '@midnightntwrk/midnight-js-contracts', PROTOCOL_NEW_SCOPE]],
       ['testkit-js', ['@midnight-ntwrk/testkit-js']],
       ['DApp Connector API', ['@midnight-ntwrk/dapp-connector-api']],
       ['Wallet SDK', ['@midnight-ntwrk/wallet-sdk', '@midnightntwrk/wallet-sdk']],
@@ -657,6 +660,7 @@ async function main() {
     const expZkir = era === 9 ? 'v3' : 'v2';
     if (zkirReadable && !bz.length) add('ZKIR format', 'no .bzkir', expZkir, 'SKIP', 'built with --skip-zk?');
     let v3 = 0;
+    let v3Plain = 0;
     let unread = 0;
     for (const f of bz) {
       try {
@@ -664,7 +668,10 @@ async function main() {
         const head = Buffer.alloc(40);
         const n = fs.readSync(fd, head, 0, 40, 0);
         fs.closeSync(fd);
-        if (head.subarray(0, n).toString('latin1').includes('ir-source[v3')) v3++;
+        const text = head.subarray(0, n).toString('latin1');
+        if (text.includes('ir-source[v3')) v3++;
+        // 0.31.1 with --feature-zkir-v3 writes [v3]; 0.34 and later write [v3-generic].
+        if (text.includes('ir-source[v3]')) v3Plain++;
       } catch {
         unread++;
       }
@@ -673,7 +680,10 @@ async function main() {
     if (era === 9) {
       // Ledger 9: compiler 0.36 writes v3 only. v2 means an older compiler, which the runtime rows
       // above already report.
-      if (v3 && v3 === bz.length - unread) add('ZKIR format', `v3 (${v3} circuits)`, 'v3', 'OK');
+      if (v3Plain) {
+        add('ZKIR format', `v3 from 0.31.1 (${v3Plain} circuits)`, 'v3', 'MISMATCH', 'ir-source[v3]: 0.31.1 with --feature-zkir-v3');
+        fix(`The circuits are ir-source[v3], which compiler 0.31.1 writes with --feature-zkir-v3. Proof server ${expectedFor('Proof server') ?? '9'} rejects them (Unsupported ZKIR tag). Recompile with \`compact compile +${expToolchain} …\`, or, for a build that only calls a pre-fork contract, with 0.31.1 and without --feature-zkir-v3.`);
+      } else if (v3 && v3 === bz.length - unread) add('ZKIR format', `v3 (${v3} circuits)`, 'v3', 'OK');
       else if (bz.length > unread) add('ZKIR format', v3 ? `mixed (${v3} of ${bz.length - unread} v3)` : 'v2', 'v3', 'DIFFERS', 'built by a compiler before 0.36');
     } else if (v3) {
       const ps = expectedFor('Proof server');

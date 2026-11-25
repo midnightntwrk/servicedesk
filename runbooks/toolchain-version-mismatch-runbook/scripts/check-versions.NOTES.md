@@ -294,3 +294,21 @@ deployed before the fork (needs one on Mainnet, or a network that forks).
 - Preprod through Blockfrost: `system_version` `2.1.101-913ec011`, `midnight_ledgerVersion` `8.1.3`,
   `specVersion` 1000300.
 - Every earlier case gives the same exit code, including the pnpm install.
+
+## Second npm scope and `ir-source[v3]` (2026-11-25)
+
+- **midnight-js under `@midnightntwrk/`.** midnight-js 5.0.1 and later are also published as
+  `@midnightntwrk/midnight-js-*`. Before this change the script looked only under
+  `@midnight-ntwrk/`, so a project on the new scope showed Midnight.js as `not installed` and
+  midnight-js's own `compact-runtime-ledger8` copy as an unused copy to remove. Tested on a
+  scratch install of `@midnightntwrk/midnight-js-protocol` and `-contracts` 5.0.1 with
+  `@midnight-ntwrk/compact-runtime` 0.21.0 and a compiled directory inside the project: the old
+  script exits 0 but shows Midnight.js as `not installed` and the 0.16.0 copy as a `WARN`; the
+  new one reports Midnight.js 5.0.1 OK and the 0.16.0 copy as midnight-js 5's. Not tested: the
+  pre-fork layout on the new scope, where the review expected the old script to report a
+  `MISMATCH`.
+- **`ir-source[v3]` on a ledger 9 network.** The ZKIR row counted any `ir-source[v3` header as
+  v3, so a 0.31.1 build made with `--feature-zkir-v3` (`ir-source[v3]`, which proof server 9
+  rejects with `Unsupported ZKIR tag`, per the proof server runbook) passed as OK. It is now a
+  `MISMATCH` with a fix to recompile. Same scratch project: `[v3-generic]` exits 0, `[v3]`
+  exits 2.
