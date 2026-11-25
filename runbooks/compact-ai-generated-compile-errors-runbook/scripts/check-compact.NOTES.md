@@ -4,6 +4,50 @@ How the [Compact compile errors runbook](../compact-ai-generated-compile-errors-
 reproduced, what the checker does, and how it was tested and reviewed. **The user runs it** on their
 own contracts; it never edits them.
 
+## Moving to 0.36.1 (2026-11-23)
+
+Every network moved to ledger 9, and since 2026-11-17 the support matrix lists compiler 0.36.1
+(language 0.28.0) for all of them, so the checker and the runbook now target 0.36.1 instead of 0.31.1.
+
+- **The corpus on 0.36.1.** All 413 files were compiled with `compact compile +0.36.1 --skip-zk`
+  (compactc-v0.36.1, `7fa3a117c5e7efe9d2c51da04263e5f0b3509144`) and the results added to
+  `cases.json` next to 0.31.1's and 0.35.0's. 0.36.1 gives the same result as 0.35.0 for all but 12
+  files: pragmas now report `language version 0.28.0 mismatch`, and `ecMulGenerator` given a Field
+  lists four candidate functions instead of one. Three include and import cases looked different until
+  their helper files (`extra_files`) were written next to them; with the helpers they match 0.35.0.
+- **Verdicts that flipped from 0.31.1.** 10 files that 0.31.1 rejected compile on 0.36.1 (`keccak256`,
+  `jubjubSchnorrVerify`, `ecNeg`, `PublicAddress`, `JubjubScalar`, `kernel.caller()`, `emit` of a
+  standard event, a cross-contract call), and 8 that compiled on 0.31.1 fail (a Field compared with a
+  Uint, a Uint passed as a Field, `ecMulGenerator` with a Field, `event` as a name, and three pragmas
+  pinned below 0.28). The checker no longer flags the first group, and the runbook treats the second
+  as code written for older Compact.
+- **New cases from the ledger 9 tests (Preview, 2026-11-07 and 08).** Six cases, 15 files, compiled
+  with 0.31.1, 0.35.0 and 0.36.1 (and 0.36.0 for the first five): a pure circuit in a contract type,
+  an undisclosed cross-contract argument or reference, `contract implements` with a circuit declared
+  pure, no `ContractAddress` from a contract-typed value, the `deserialize<Boolean>` crash in a nested
+  `if` (0.35.0 and 0.36.0; fixed in 0.36.1, compact#856), and `contract implements` accepting callees
+  that can't be called (servicedesk#298; compiles, so the checker warns). The first and third compile
+  on 0.35.0: those checks are new in 0.36.
+- **The standard library on 0.36.1.** The checker's name tables were rebuilt from compactc-v0.36.1:
+  `standard-library.compact` and `midnight-natives.ss` as before, plus `zkir-v3-library.compact` and
+  `zkir-v3-natives.ss`, which hold the ECDSA, Ed25519 and Ethereum-address checks, `sha512` and the
+  secp256k1, secp256r1 and Curve25519 types. The same extraction on compactc-v0.31.1 reproduces the
+  old tables exactly. `sha512` and `JubjubScalar` need `import CompactStandardLibrary;` (both are
+  `unbound identifier` without it). On `main` the signature checks have since moved into
+  `standard-library.compact`.
+- **Settled by compiling on 0.36.1:** `pragma language_version 0.28;`, `>= 0.28;` and
+  `>= 0.28 && <= 0.28;` all accept 0.36.1 and reject 0.35.0; `ecMulGenerator(x as JubjubScalar)`
+  compiles; an exported circuit can take a contract-typed parameter; `emit Transfer(1)` is a parse
+  error (`found "Transfer" looking for "("`).
+- **Test run.** `node test-check-compact.mjs`, judged by 0.36.1: 146 cases, 431 files; 138 rejected
+  files flagged before compiling, 76 left to the compiler, 0 false positives on files that compile; 8
+  of 8 "compiles, but still wrong" contracts get their warning; 35 of 35 look-alike messages get the
+  expected fix. The contract-type rules were also run on the Preview contracts they came from, and a
+  review added `contract-implements-through-helpers` (state and witnesses reached through helper
+  circuits and standard-library calls) as a regression case.
+
+The sections below describe the original work on 0.31.1 and 0.35.0 (2026-10-08 to 10).
+
 ## Where the cases came from
 
 - **midnight-expert's catalogue.** These are 97 distinct mistake patterns from the Compact references
@@ -329,12 +373,13 @@ in one pass, so 440 KB of unclosed `if (` still takes 0.3 s. A 1.5 MB file of `c
   - as warnings, code that compiles but is still wrong: `ownPublicKey()` compared with a key,
     `unshieldedBalance()` in a comparison, an `if` on `checkRoot` with no `else`, a Merkle path not
     bound with `.leaf`, and `receiveUnshielded` of a token minted to the contract itself
-- **`--compile`.** It compiles each contract with 0.31.1 into a temporary directory. Each compile is
+- **`--compile`.** It compiles each contract with 0.36.1 into a temporary directory. Each compile is
   stopped after `--timeout` seconds (300 by default). It explains the first error using the source
   line it points at, or lists every disclosure error with the point where the value becomes public.
-  If 0.31.1 fails and 0.35.0 is installed, it also tries 0.35.0.
+  If a contract fails on 0.36.1 and 0.31.1 is installed, it also tries 0.31.1, and says when the
+  contract compiles there, so it was written for older Compact.
 - **`--explain`.** It explains a pasted message.
-- **Names.** All names come from the compiler source at `compactc-v0.31.1` and `compactc-v0.35.0`.
+- **Names.** All names come from the compiler source at `compactc-v0.31.1` and `compactc-v0.36.1`.
 
 ## Script test runs
 

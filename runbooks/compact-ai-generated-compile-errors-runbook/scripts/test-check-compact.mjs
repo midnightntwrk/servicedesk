@@ -4,10 +4,11 @@
  * optionally, against the compilers you have installed.
  *
  * Static (default): writes every case's contracts into a temporary directory and runs the static
- * scan on each. A `right*` file with an error-level finding is a false positive; a `wrong*` file that
- * the compiler rejects and the scan doesn't flag is left to --compile (reported, not a failure). The
- * contracts that compile but are still wrong (EXPECT_WARNING) must each get their warning, and no other
- * `right*` file may get one.
+ * scan on each. Files are judged by the target compiler (TARGET, the one every network needs): a
+ * file it compiles must get no error-level finding (a false positive otherwise, whatever the file is
+ * called); a file it rejects and the scan doesn't flag is left to --compile (reported, not a failure).
+ * The contracts that compile but are still wrong (EXPECT_WARNING) must each get their warning, and no
+ * other `right*` file may get one.
  *
  * --compile: also compiles every contract with each compiler recorded in the corpus that is installed
  * (`compact compile +<v> --skip-zk`) and reports any result that differs from the recorded one
@@ -51,6 +52,8 @@ if (unknown.length || (only && !only.size)) {
   process.exit(1);
 }
 
+// The compiler every network needs. cases.json records 0.31.1 and 0.35.0 results too.
+const TARGET = '0.36.1';
 const corpus = JSON.parse(fs.readFileSync(path.join(HERE, 'cases.json'), 'utf8'));
 if (only) {
   const missing = [...only].filter((s) => !corpus.cases.some((c) => c.slug === s));
@@ -93,7 +96,7 @@ const EXPLAIN_EXPECT = [
   ['no compatible function named ecMulGenerator is in scope at this call one function is incompatible with the supplied argument types supplied argument types: (Field) declared argument types for function at <standard library>: (JubjubScalar)', 'JubjubScalar'],
   ['parse error: found keyword "void" (which is reserved for future use) looking for a type', '`: []`'],
   ['parse error: found keyword "throw" (which is reserved for future use) looking for a statement or "}"', 'assert('],
-  ['parse error: found keyword "event" (which is reserved for future use) looking for a program element or end of file', 'Event declarations'],
+  ['parse error: found keyword "event" (which is reserved for future use) looking for a program element or end of file', 'can\'t declare its own event types'],
   ['parse error: found keyword "event" (which is reserved for future use) looking for a const binding', 'rename it'],
   ['parse error: found keyword "export" looking for "ledger"', 'export sealed ledger'],
   ['expected first argument of persistentHash to have type Bytes<32> but received Field', 'must be Bytes<32>'],
@@ -105,6 +108,16 @@ const EXPLAIN_EXPECT = [
   ['parse error: found "Integer" looking for ",", ")", or a generic argument list', 'Uint<N>'],
   ['Uint width 0 is not between 1 and the maximum Uint width 248 (inclusive)', 'Uint<0>'],
   ['another binding found for send in the same scope at line 2 char 1', 'prefix'],
+  ['a contract type cannot declare circuit double pure: a cross-contract call requires the called circuit to have a proof, and a pure circuit has none. To reuse pure logic from another contract, import its module', 'import its module'],
+  ['contract implements failure: this contract exports a circuit named addTo, but it is declared pure, and a circuit declared in a contract type must have a proof', 'servicedesk#298'],
+  ['cannot cast from type contract Treasury<deposit(Uint<128>): []> to type struct ContractAddress<bytes: Bytes<32>>', 'its own ledger field'],
+  ['expected structure type, received contract Treasury<deposit(Uint<128>): []>', 'its own ledger field'],
+  ['incompatible types Uint<0..256> and Uint<0..3> for relational operator', 'compact#856'],
+  ['operation caller undefined for ledger field type Kernel', 'reads none'],
+  ['unbound identifier keccak256', 'compact update 0.36'],
+  ['language version 0.27.0 mismatch', '>= 0.28'],
+  ['unbound identifier sha512', 'import CompactStandardLibrary'],
+  ['error opening /tmp/x/Adder/compiler/contract-info.json; try (re)compiling Adder.compact', '0.36.1'],
 ];
 // Contracts that compile but are still wrong, and the warning each must get. The self-mint case's
 // right.compact is the catalogue's fix, which the runtime check showed counts the receipt twice (NOTES).
@@ -114,6 +127,9 @@ const EXPECT_WARNING = {
   'checkroot-result-branched/wrong.compact': 'checkroot-branch',
   'merkle-path-not-bound/wrong.compact': 'merkle-path-unbound',
   'mint-unshielded-to-self-without-receive/right.compact': 'self-mint-received',
+  'contract-implements-not-provable/wrong.compact': 'implements-unprovable',
+  'contract-implements-not-provable/wrong2.compact': 'implements-unprovable',
+  'contract-implements-through-helpers/wrong.compact': 'implements-unprovable',
 };
 
 let wrongExplanations = 0;
@@ -144,7 +160,7 @@ try {
       if (r.status === 1) throw new Error(`check-compact could not run on ${c.slug}/${name}: ${r.stderr}`);
       const findings = JSON.parse(r.stdout).files[0].findings;
       const errors = findings.filter((x) => x.severity === 'error');
-      const rejected = f.results['0.31.1']?.exit !== 0;
+      const rejected = f.results[TARGET]?.exit !== 0;
       const expected = EXPECT_WARNING[`${c.slug}/${name}`];
       if (expected) {
         if (findings.some((x) => x.rule === expected)) warned++;
@@ -153,10 +169,10 @@ try {
         falseWarnings++;
         console.log(`FALSE WARNING ${c.slug}/${name}: ${findings.filter((x) => x.severity === 'warning').map((x) => `${x.rule} at ${x.line}:${x.col}`).join(', ')}`);
       }
-      if (name.startsWith('right') && errors.length) {
+      if (!rejected && errors.length) {
         falsePositives++;
-        console.log(`FALSE POSITIVE ${c.slug}/${name}: ${errors.map((e) => `${e.rule} at ${e.line}:${e.col}`).join(', ')}`);
-      } else if (name.startsWith('wrong') && rejected) {
+        console.log(`FALSE POSITIVE ${c.slug}/${name} (compiles with ${TARGET}): ${errors.map((e) => `${e.rule} at ${e.line}:${e.col}`).join(', ')}`);
+      } else if (rejected) {
         if (errors.length) caught++; else leftToCompile++;
       }
       if (!compile) continue;
@@ -184,7 +200,7 @@ try {
 
 const files = corpus.cases.reduce((n, c) => n + Object.keys(c.files).length, 0);
 console.log(`\n${corpus.cases.length} cases, ${files} files.`);
-console.log(`Static scan: ${caught} rejected wrong files flagged, ${leftToCompile} left to --compile, ${falsePositives} false positive(s) on right files.`);
+console.log(`Static scan (judged by ${TARGET}): ${caught} rejected files flagged, ${leftToCompile} left to --compile, ${falsePositives} false positive(s) on files that compile.`);
 console.log(`Warnings: ${warned} of ${warned + missedWarnings} contracts that compile but are wrong get theirs, ${falseWarnings} on other right files.`);
 console.log(`Explanations: ${EXPLAIN_EXPECT.length - wrongExplanations} of ${EXPLAIN_EXPECT.length} look-alike messages get the expected fix.`);
 if (compile) console.log(`Compilers: ${drift} result(s) differ from the corpus, ${unexplained} message(s) without an explanation.`);

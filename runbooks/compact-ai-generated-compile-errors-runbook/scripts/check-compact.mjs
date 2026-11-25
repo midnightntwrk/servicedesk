@@ -4,18 +4,18 @@
  * make, and an explainer for the compiler's error messages.
  *
  * Static scan (always): flags known mistake patterns line by line, with the fix. Every pattern was
- * reproduced against the real compilers (0.31.1 and 0.35.0) before it was added.
- * --compile: also runs `compact compile +0.31.1 --skip-zk` on each contract and explains the error
- * the compiler prints. If 0.31.1 fails and 0.35.0 is installed, it tries 0.35.0 too, to spot code
- * that only works on the newer compiler. Output goes to a temporary directory; nothing in your
- * project is written.
+ * reproduced against the real compilers (0.31.1, 0.35.0 and 0.36.1) before it was added.
+ * --compile: also runs `compact compile +0.36.1 --skip-zk` on each contract (0.36.1 is the compiler
+ * every network needs) and explains the error the compiler prints. If 0.36.1 fails and 0.31.1 is
+ * installed, it tries 0.31.1 too, to spot code written for older Compact. Output goes to a
+ * temporary directory; nothing in your project is written.
  *
  * Requirements: Node >= 20, no npm install. --compile needs the `compact` CLI.
  *
  * Usage:
  *   node check-compact.mjs contracts/                 # static scan of every .compact file
  *   node check-compact.mjs --compile contracts/counter.compact
- *   node check-compact.mjs --compile --compiler 0.31.1 src/   # 0.31.1 is the default
+ *   node check-compact.mjs --compile --compiler 0.36.1 src/   # 0.36.1 is the default
  *   node check-compact.mjs --compile --timeout 900 big.compact  # seconds per compile (default 300)
  *   node check-compact.mjs --explain 'operation get undefined for ledger field type Map<Field, Field>'
  *   node check-compact.mjs --json contracts/
@@ -37,13 +37,15 @@ if (Number(process.versions.node.split('.')[0]) < 20) {
 const USAGE = 'usage: node check-compact.mjs [--compile] [--compiler <version>] [--timeout <seconds>] [--json] <file|dir> …\n       node check-compact.mjs --explain "<compiler message>"';
 
 // ---------- data, from the compiler source (LFDT-Minokawa/compact, tags compactc-v0.31.1 and
-// compactc-v0.35.0: compiler/standard-library.compact, midnight-natives.ss, midnight-ledger.ss,
-// standard-library-aliases.ss) ----------
-const NETWORK_COMPILER = '0.31.1';
-const LANGUAGE = { '0.31.1': '0.23.0', '0.35.0': '0.27.0' };
+// compactc-v0.36.1: compiler/standard-library.compact, zkir-v3-library.compact, midnight-natives.ss,
+// zkir-v3-natives.ss, midnight-ledger.ss, standard-library-aliases.ss) ----------
+const NETWORK_COMPILER = '0.36.1';
+// The compiler most older code was written for; --compile tries it when the network compiler fails.
+const OLD_COMPILER = '0.31.1';
+const LANGUAGE = { '0.31.1': '0.23.0', '0.34.0': '0.26.0', '0.35.0': '0.27.0', '0.36.0': '0.28.0', '0.36.1': '0.28.0' };
 
-// Old name → new name. 0.31.1 recognises all of these and names the replacement; 0.35.0 still
-// recognises the circuit and ledger-operation names but not the two type names.
+// Old name → new name. 0.31.1 recognises all of these and names the replacement; 0.35.0 and 0.36.1
+// still recognise the circuit and ledger-operation names but not the two type names.
 const RENAMED = {
   transient_hash: 'transientHash', transient_commit: 'transientCommit', persistent_hash: 'persistentHash',
   persistent_commit: 'persistentCommit', degrade_to_transient: 'degradeToTransient',
@@ -67,10 +69,10 @@ const RENAMED_OPS = {
   less_than: 'lessThan', pop_front: 'popFront', push_front: 'pushFront', push_front_coin: 'pushFrontCoin',
   reset_history: 'resetHistory', reset_to_default: 'resetToDefault', write_coin: 'writeCoin',
 };
-// Methods each ledger type has in circuits on 0.31.1 (0.35.0 adds Kernel.caller): every
+// Methods each ledger type has in circuits on 0.36.1 (0.31.1 has all but Kernel.caller): every
 // `(function <kind> <name>` in midnight-ledger.ss, where <kind> may be a parenthesised form, except js-only.
 const ADT_METHODS = {
-  Kernel: ['balance', 'balanceGreaterThan', 'balanceLessThan', 'blockTimeGreaterThan', 'blockTimeLessThan', 'checkpoint', 'claimContractCall', 'claimUnshieldedCoinSpend', 'claimZswapCoinReceive', 'claimZswapCoinSpend', 'claimZswapNullifier', 'incUnshieldedInputs', 'incUnshieldedOutputs', 'mintShielded', 'mintUnshielded', 'self'],
+  Kernel: ['balance', 'balanceGreaterThan', 'balanceLessThan', 'blockTimeGreaterThan', 'blockTimeLessThan', 'checkpoint', 'claimContractCall', 'claimUnshieldedCoinSpend', 'claimZswapCoinReceive', 'claimZswapCoinSpend', 'claimZswapNullifier', 'incUnshieldedInputs', 'incUnshieldedOutputs', 'mintShielded', 'mintUnshielded', 'self', 'caller'],
   Counter: ['decrement', 'increment', 'lessThan', 'read', 'resetToDefault'],
   Set: ['insert', 'insertCoin', 'isEmpty', 'member', 'remove', 'resetToDefault', 'size'],
   Map: ['insert', 'insertCoin', 'insertDefault', 'isEmpty', 'lookup', 'member', 'remove', 'resetToDefault', 'size'],
@@ -84,7 +86,7 @@ const METHOD_HINTS = {
   delete: 'remove', value: 'read', get_value: 'read', add: 'insert', push: 'pushFront', pop: 'popFront',
   len: 'size', length: 'size', count: 'size', clear: 'resetToDefault',
 };
-// Standard library names on 0.31.1 (exports plus native circuits).
+// Standard library names on 0.36.1 (exports plus native circuits and types; all need the import).
 const STDLIB = [
   'ContractAddress', 'Either', 'Maybe', 'MerkleTreeDigest', 'MerkleTreePath', 'MerkleTreePathEntry',
   'QualifiedShieldedCoinInfo', 'ShieldedCoinInfo', 'ShieldedSendResult', 'UserAddress', 'ZswapCoinPublicKey',
@@ -95,21 +97,37 @@ const STDLIB = [
   'persistentCommit', 'persistentHash', 'receiveShielded', 'receiveUnshielded', 'right', 'sendImmediateShielded',
   'sendShielded', 'sendUnshielded', 'shieldedBurnAddress', 'some', 'tokenType', 'transientCommit', 'transientHash',
   'unshieldedBalance', 'unshieldedBalanceGt', 'unshieldedBalanceGte', 'unshieldedBalanceLt', 'unshieldedBalanceLte',
-  'upgradeFromTransient', 'JubjubPoint',
+  'upgradeFromTransient', 'JubjubPoint', 'JubjubScalar',
+  // added since 0.31.1: in 0.36.1's standard-library.compact and midnight-natives.ss
+  'keccak256', 'jubjubSchnorrVerify', 'JubjubSchnorrSignature', 'ecNeg', 'PublicAddress',
+  // the ZKIR v3 library and natives (zkir-v3-library.compact, zkir-v3-natives.ss)
+  'sha512', 'secp256k1EcdsaVerify', 'secp256k1EthereumAddress', 'Secp256k1EcdsaSignature', 'secp256r1EcdsaVerify',
+  'Secp256r1EcdsaSignature', 'ed25519Verify', 'Ed25519Signature', 'Secp256k1Base', 'Secp256k1Scalar', 'Secp256k1Point',
+  'secp256k1PointX', 'secp256k1PointY', 'Secp256r1Base', 'Secp256r1Scalar', 'Secp256r1Point', 'secp256r1PointX',
+  'secp256r1PointY', 'Curve25519Base', 'Curve25519Scalar', 'Curve25519Point', 'curve25519PointX', 'curve25519PointY',
 ];
-// Newer than Compact 0.31.1, the compiler the networks need (all are in 0.35.0).
-const ONLY_0350 = {
+// Standard-library circuits that read or write the ledger through the kernel (0.36.1's standard-library.compact):
+// a circuit that calls one has a proof, so it isn't pure.
+const STATE_STDLIB = ['blockTimeGt', 'blockTimeGte', 'blockTimeLt', 'blockTimeLte', 'mergeCoin', 'mergeCoinImmediate',
+  'mintShieldedToken', 'mintUnshieldedToken', 'receiveShielded', 'receiveUnshielded', 'sendImmediateShielded', 'sendShielded',
+  'sendUnshielded', 'unshieldedBalance', 'unshieldedBalanceGt', 'unshieldedBalanceGte', 'unshieldedBalanceLt', 'unshieldedBalanceLte'];
+// Not in Compact 0.31.1, but in 0.36.1. An older compiler reports them as unbound.
+const NEWER_THAN_0311 = {
   keccak256: 'a hash function', jubjubSchnorrVerify: 'Schnorr signature verification',
   JubjubSchnorrSignature: 'the Schnorr signature type', ecNeg: 'point negation', PublicAddress: 'an address type',
-  JubjubScalar: 'the scalar type',
+  JubjubScalar: 'the scalar type', sha512: 'a hash function', secp256k1EcdsaVerify: 'ECDSA verification',
+  secp256r1EcdsaVerify: 'ECDSA verification', ed25519Verify: 'Ed25519 verification', secp256k1EthereumAddress: 'an address helper',
+  Secp256k1EcdsaSignature: 'a signature type', Secp256r1EcdsaSignature: 'a signature type', Ed25519Signature: 'a signature type',
+  serialize: 'a built-in', deserialize: 'a built-in', emit: 'events',
 };
+const NEWER = (n) => `\`${n}\` (${NEWER_THAN_0311[n]}) is in Compact 0.36.1 but not in the compiler you ran, which is older. Every network needs 0.36.1: \`compact update 0.36\`, then \`compact compile +0.36.1\` (Remediation 8).`;
 // Names models invent or remember from older Compact. Each one is `unbound identifier <name>` on 0.31.1 (reproduced).
-const SECRET_IDENTITY = 'There is no built-in caller identity. Keep a secret in private state, return it from a witness, and compare persistentHash<…>(secret) with a public key stored in the ledger (see "Invented functions" in the runbook).';
+const SECRET_IDENTITY = 'There is no built-in user identity: kernel.caller() names a calling contract, but reads none for a user\'s own call. Keep a secret in private state, return it from a witness, and compare persistentHash<…>(secret) with a public key stored in the ledger (see "Invented functions" in the runbook).';
 const INVENTED = {
   public_key: SECRET_IDENTITY, publicKey: SECRET_IDENTITY, get_public_key: SECRET_IDENTITY, getPublicKey: SECRET_IDENTITY,
   msg: SECRET_IDENTITY, caller: SECRET_IDENTITY, sender: SECRET_IDENTITY,
-  verify: 'There is no verify(). There is no built-in signature check on 0.31.1 (jubjubSchnorrVerify is newer). Don\'t take the result from a witness: the prover can return true. To authorize a caller, use the hashed-secret pattern (Remediation 2 in the runbook).',
-  verify_signature: 'There is no verify_signature(). There is no built-in signature check on 0.31.1 (jubjubSchnorrVerify is newer). Don\'t take the result from a witness: the prover can return true. To authorize a caller, use the hashed-secret pattern (Remediation 2 in the runbook).',
+  verify: 'There is no verify(). Use the named check for the scheme: jubjubSchnorrVerify, secp256k1EcdsaVerify, secp256r1EcdsaVerify or ed25519Verify, each with its own signature and key types. Don\'t take a verification result from a witness: the prover can return true.',
+  verify_signature: 'There is no verify_signature(). Use the named check for the scheme: jubjubSchnorrVerify, secp256k1EcdsaVerify, secp256r1EcdsaVerify or ed25519Verify, each with its own signature and key types. Don\'t take a verification result from a witness: the prover can return true.',
   sign: 'Circuits cannot sign. Sign off-chain, or prove knowledge of a secret with persistentHash.',
   hash: 'There is no hash(). Use persistentHash<T>(value) (stable, for the ledger) or transientHash<T>(value) (in-circuit only).',
   encrypt: 'Circuits cannot encrypt. To hide a value but bind to it, store persistentCommit<T>(value, rand) with rand from a witness.',
@@ -158,9 +176,9 @@ const KEYWORD_FIX = {
   in: 'The loop form is `for (const i of 0..N)`: `of`, not `in`.',
   from: '`from` is a keyword: rename the identifier (e.g. `sender`).',
 };
-// `event` as a declaration, as opposed to `event` used as a name (reserved on newer compilers).
-const EVENT_DECL = 'Event declarations don\'t exist on 0.31.1: remove it and record the event as public ledger fields. On 0.35.0, `emit` only takes the standard library\'s event types.';
-const EMIT = '`emit` doesn\'t exist on 0.31.1: record the event as public ledger fields. On 0.35.0 it only takes the standard library\'s event types.';
+// `event` as a declaration, as opposed to `event` used as a name (reserved since 0.34.0).
+const EVENT_DECL = 'A contract can\'t declare its own event types: emit one of the standard library\'s (`emit(Misc { … })` and the like), or record the event as public ledger fields.';
+const EMIT = '`emit` takes only the standard library\'s event types, written `emit(Event { … })`. Compilers before 0.34.0 (such as 0.31.1) have no emit at all: compile with 0.36.1.';
 const MATCH = 'Compact has no match or switch: use if / else if / else.';
 // Type-argument forms of the standard-library generics, for "no compatible function" messages.
 const GENERIC_FORM = {
@@ -207,7 +225,7 @@ for (let i = 0; i < args.length; i++) {
   else inputs.push(a);
 }
 if (!opts.explain && !inputs.length) fail(USAGE);
-if (!/^\d+\.\d+\.\d+$/.test(opts.compiler)) fail(`--compiler must be a version like 0.31.1`);
+if (!/^\d+\.\d+\.\d+$/.test(opts.compiler)) fail(`--compiler must be a version like 0.36.1`);
 if (!(opts.timeout > 0)) fail('--timeout must be a number of seconds');
 
 function fail(msg) {
@@ -404,8 +422,60 @@ function scan(file, src) {
     const lang = LANGUAGE[opts.compiler];
     if (lang) {
       const ok = pragmaAccepts(expr, lang);
-      if (ok === false) add(pragma.index, 'pragma-mismatch', `\`pragma language_version ${expr}\` rejects compiler ${opts.compiler} (language ${lang}).`, opts.compiler === NETWORK_COMPILER ? `Compiler ${opts.compiler} is language ${lang}. Use \`pragma language_version >= 0.22 && <= 0.23;\`, which accepts only 0.31.1, so a newer compiler fails straight away; \`>= 0.22\` if the code should also build on newer compilers.` : `Compiler ${opts.compiler} is language ${lang}: use a pragma that accepts it, e.g. \`>= 0.22\`. The networks need 0.31.1 (language 0.23.0).`);
-      if (ok === undefined) add(pragma.index, 'pragma-syntax', `\`pragma language_version ${expr}\` isn't a form the compiler accepts.`, 'Combine bounds with && (e.g. `>= 0.22 && <= 0.23`).');
+      if (ok === false) add(pragma.index, 'pragma-mismatch', `\`pragma language_version ${expr}\` rejects compiler ${opts.compiler} (language ${lang}).`, opts.compiler === NETWORK_COMPILER ? `Compiler ${opts.compiler} is language ${lang}. Use \`pragma language_version >= 0.28;\`: an older compiler then fails straight away instead of building code the networks can't run.` : pragmaAccepts(expr, LANGUAGE[NETWORK_COMPILER]) ? `The pragma is right for ${NETWORK_COMPILER}, which every network needs: compile with \`compact compile +${NETWORK_COMPILER}\` instead of ${opts.compiler}.` : `Compiler ${opts.compiler} is language ${lang}: use a pragma that accepts it. Every network needs 0.36.1 (language 0.28.0): \`pragma language_version >= 0.28;\`.`);
+      if (ok === undefined) add(pragma.index, 'pragma-syntax', `\`pragma language_version ${expr}\` isn't a form the compiler accepts.`, 'Combine bounds with && (e.g. `>= 0.28 && <= 0.28`).');
+    }
+  }
+
+  // contract types (0.34.0 and later): a pure circuit can't be called across contracts, and
+  // `contract implements` accepts callees that can't be called either (servicedesk#298)
+  {
+    const types = new Map();
+    for (const t of code.matchAll(/\bcontract\s+(?!implements\b)(\w+)\s*\{/g)) {
+      const open = t.index + t[0].length - 1, end = matchClose(code, open, '{', '}');
+      if (end < 0) continue;
+      const body = code.slice(open + 1, end - 1);
+      types.set(t[1], [...body.matchAll(/\bcircuit\s+(\w+)/g)].map((c) => c[1]));
+      for (const pc of body.matchAll(/\bpure\s+circuit\s+(\w+)/g)) add(open + 1 + pc.index, 'contract-type-pure', `A contract type can't list a pure circuit (\`${pc[1]}\`).`, 'A cross-contract call needs the called circuit to have a proof, and a pure circuit has none. Drop it from the type; to reuse pure logic from another contract, import its module.');
+    }
+    const impl = code.match(/\bcontract\s+implements\s+(\w+)\s*;/);
+    if (impl && types.has(impl[1])) {
+      const witnesses = [...code.matchAll(/\bwitness\s+(\w+)/g)].map((w) => w[1]);
+      const fields = [...ledgerFields(code).keys()];
+      // The file's own circuits, by name, so state and witness use is followed through helpers.
+      const own = new Map();
+      for (const h of code.matchAll(/\bcircuit\s+(\w+)\b[^{;]*\{/g)) {
+        const open = h.index + h[0].length - 1, end = matchClose(code, open, '{', '}');
+        if (end > 0) own.set(h[1], { at: h.index, body: code.slice(open, end) });
+      }
+      // Names a body calls, and names it mentions, collected once with literal patterns.
+      const memo = new Map();
+      const scan = (body) => {
+        if (!memo.has(body)) memo.set(body, {
+          called: new Set([...body.matchAll(/(?<![\w$.])(\w+)\s*(?:<[^;(){}]*>)?\s*\(/g)].map((c) => c[1])),
+          named: new Set([...body.matchAll(/(?<![\w$.])(\w+)(?![\w$])/g)].map((c) => c[1])),
+        });
+        return memo.get(body);
+      };
+      const calls = (body, n) => scan(body).called.has(n);
+      const reaches = (name, direct, seen = new Set()) => {
+        if (seen.has(name) || !own.has(name)) return false;
+        seen.add(name);
+        const { body } = own.get(name);
+        return direct(body) || [...own.keys()].some((n) => n !== name && calls(body, n) && reaches(n, direct, seen));
+      };
+      const stateDirect = (body) => /\bkernel\s*\./.test(body) || fields.some((f) => scan(body).named.has(f)) || STATE_STDLIB.some((n) => calls(body, n));
+      const witnessDirect = (body) => witnesses.some((w) => calls(body, w));
+      const exported = new Map([...code.matchAll(/\bexport\s+circuit\s+(\w+)\b[^{;]*\{/g)].map((e) => [e[1], e]));
+      for (const name of types.get(impl[1])) {
+        const h = exported.get(name);
+        if (!h || !own.has(name)) continue;
+        const callsWitness = reaches(name, witnessDirect);
+        const touchesState = reaches(name, stateDirect);
+        const why = `The compiler accepts it under \`contract implements ${impl[1]}\`, but the first cross-contract call fails (servicedesk#298).`;
+        if (callsWitness) add(h.index, 'implements-unprovable', `\`${name}\` calls a witness, so another contract can't call it. ${why}`, 'Keep witness calls out of the circuits the type lists: a callee runs without the caller\'s witnesses.', 'warning');
+        else if (!touchesState) add(h.index, 'implements-unprovable', `\`${name}\` reads and writes no ledger state, so it compiles as a pure circuit with no proof, and another contract can't call it. ${why}`, 'Make it read or write the ledger, or take it out of the contract type.', 'warning');
+      }
     }
   }
 
@@ -441,8 +511,12 @@ function scan(file, src) {
   each(/\b[A-Za-z_]\w*\.\d+\b/g, (m) => add(m.index, 'tuple-dot-index', `\`${m[0]}\`: tuples aren't indexed with .N.`, 'Destructure: `const [a, b] = t;`, or index with `t[0]`.'));
   each(/\bif\b(?!\s*\()/g, (m) => add(m.index, 'if-parentheses', '`if` without parentheses.', 'Write `if (condition) { … }`.'));
   each(/\bassert\b(?!\s*\()/g, (m) => add(m.index, 'assert-call', '`assert` without parentheses (an old form).', 'Write `assert(condition, "message");`.'));
-  each(/(?:^|[;}])\s*(?:export\s+)?event\s+\w+\s*[({]/gm, (m) => add(m.index + m[0].indexOf('event'), 'event-declaration', 'Event declarations don\'t exist on 0.31.1.', 'Remove it and record the event as public ledger fields written by the circuit.'));
-  each(/\bemit\b/g, (m) => defined.has('emit') || add(m.index, 'emit', '`emit` doesn\'t exist on 0.31.1; on 0.35.0 only the standard library\'s event types can be emitted.', 'Record the event as a public ledger write instead.'));
+  each(/(?:^|[;}])\s*(?:export\s+)?event\s+\w+\s*[({]/gm, (m) => add(m.index + m[0].indexOf('event'), 'event-declaration', 'A contract can\'t declare its own event types.', EVENT_DECL));
+  each(/\bemit\s+(\w+)\s*\(/g, (m) => defined.has('emit') || add(m.index, 'emit-call', `\`emit ${m[1]}(…)\` isn't the form: an event is a struct value in parentheses.`, `Write \`emit (${m[1]} { field: value, … });\` with one of the standard library's event types.`));
+  {
+    const ownStructs = new Set([...code.matchAll(/\bstruct\s+(\w+)/g)].map((st) => st[1]));
+    each(/\bemit\s*\(\s*(\w+)\s*\{/g, (m) => ownStructs.has(m[1]) && add(m.index, 'emit-own-struct', `\`${m[1]}\` is declared in this file, and only the standard library's event types can be emitted.`, EVENT_DECL));
+  }
   each(/\bdefault\s*</g, (m) => {
     const end = matchClose(code, m.index + m[0].length - 1, '<', '>');
     if (end > 0 && /^\s*\(\s*\)/.test(code.slice(end))) add(m.index, 'default-parentheses', '`default<T>()` with parentheses.', 'Write `default<T>` without parentheses.');
@@ -552,8 +626,8 @@ function scan(file, src) {
     if (prev === '.') return; // a method; handled below
     if (has(RENAMED, name) && !((name === 'send' || name === 'receive') && /\b(?:circuit|witness)\s+$/.test(code.slice(Math.max(0, m.index - 40), m.index)))) {
       addName(m.index, 'renamed', `\`${name}\` is an old name.`, `Use \`${RENAMED[name]}\`. 0.31.1's fixup rewrites old names (Remediation 1 in the runbook).`);
-    } else if (has(ONLY_0350, name)) {
-      addName(m.index, 'only-0.35', `\`${name}\` (${ONLY_0350[name]}) is newer than Compact 0.31.1.`, 'The networks need 0.31.1, which doesn\'t have it. See Remediation 8 in the runbook for the 0.31.1 alternative.');
+    } else if (has(NEWER_THAN_0311, name) && cmpVer(opts.compiler, '0.34.0') < 0) {
+      addName(m.index, 'newer-than-compiler', `\`${name}\` isn't in compiler ${opts.compiler}.`, NEWER(name));
     } else if (has(INVENTED, name) && /^[a-z]/.test(name)) {
       addName(m.index, 'invented', `\`${name}()\` doesn't exist in Compact.`, INVENTED[name]);
     } else if (/^(persistentHash|transientHash|persistentCommit|transientCommit|merkleTreePathRoot|merkleTreePathRootNoLeafHash)$/.test(name) && code[m.index + m[0].length] === '(') {
@@ -562,11 +636,10 @@ function scan(file, src) {
       add(m.index, 'missing-generic', '`none()` without its type argument.', 'Write `none<T>()`.');
     }
   });
-  each(/(?<![\w$.])(Cell|Address|CoinInfo|QualifiedCoinInfo|SendResult|EllipticCurvePoint|String|NativePoint|CurvePoint|PublicAddress|JubjubSchnorrSignature|JubjubScalar)(?![\w$])/g, (m) => {
+  each(/(?<![\w$.])(Cell|Address|CoinInfo|QualifiedCoinInfo|SendResult|EllipticCurvePoint|String|NativePoint|CurvePoint)(?![\w$])/g, (m) => {
     const name = m[1];
     if (defined.has(name) || name === 'Cell') return;
     if (has(RENAMED_TYPES, name)) addName(m.index, 'renamed', `\`${name}\` is an old type name.`, `Use \`${RENAMED_TYPES[name]}\`. 0.31.1 names the replacement; newer compilers only say "unbound identifier".`);
-    else if (has(ONLY_0350, name)) addName(m.index, 'only-0.35', `\`${name}\` is newer than Compact 0.31.1.`, 'The networks need 0.31.1, which doesn\'t have it. See Remediation 8 in the runbook.');
     else addName(m.index, 'invented', `\`${name}\` isn't a Compact type.`, INVENTED[name]);
   });
   each(/(?<![\w$.])msg\.\w+/g, (m) => defined.has('msg') || addName(m.index, 'invented', `\`${m[0]}\` doesn't exist.`, SECRET_IDENTITY));
@@ -581,8 +654,8 @@ function scan(file, src) {
     const [obj, method] = [m[1], m[2]];
     const type = obj === 'kernel' ? 'Kernel' : fields.get(obj);
     const methods = type && has(ADT_METHODS, type) ? ADT_METHODS[type] : undefined;
+    if (type === 'Kernel' && method === 'caller' && cmpVer(opts.compiler, '0.35.0') < 0) return add(m.index, 'newer-than-compiler', `\`kernel.caller()\` isn't in compiler ${opts.compiler} (0.35.0 and later).`, 'Every network needs 0.36.1: compile with `compact compile +0.36.1`.');
     if (!methods || methods.includes(method)) return;
-    if (type === 'Kernel' && method === 'caller') return add(m.index, 'only-0.35', '`kernel.caller()` is newer than Compact 0.31.1 (0.35.0 only).', SECRET_IDENTITY);
     if (has(RENAMED_OPS, method)) return add(m.index, 'renamed', `\`${obj}.${method}()\` is an old name.`, `Use \`${obj}.${RENAMED_OPS[method]}()\`. 0.31.1's fixup rewrites old names (Remediation 1 in the runbook).`);
     const hint = has(METHOD_HINTS, method) ? METHOD_HINTS[method] : undefined;
     const real = hint && methods.includes(hint) ? hint : type === 'Counter' && method === 'add' ? 'increment' : undefined;
@@ -721,28 +794,30 @@ function closest(name, list) {
 const ONE_ERROR = 'The compiler reports one error per run (all disclosure errors at once): a parse error first, then unknown names, then type errors in file order. Fix this one and re-run; the next one may be earlier in the file.';
 
 // `line` is the source line the error points at, when known (--compile); it disambiguates parse errors.
-function explain(message, line = '') {
+// `compiler` is the version that printed the message, when known (--compile); --explain doesn't know it.
+function explain(message, line = '', compiler) {
   const msg = String(message).trim();
   const m = (re) => msg.match(re);
   const on = (re) => re.test(line);
   let r;
   if ((r = m(/unbound identifier ([\w$]+)/))) {
     const n = r[1];
-    if (has(ONLY_0350, n)) return `\`${n}\` is newer than Compact 0.31.1, which the networks need. See Remediation 8 in the runbook for the 0.31.1 alternative.`;
+    const onCurrent = compiler !== undefined && cmpVer(compiler, '0.36.0') >= 0;
+    if (has(NEWER_THAN_0311, n) && !STDLIB.includes(n)) return NEWER(n);
+    if (has(NEWER_THAN_0311, n)) return onCurrent ? `\`${n}\` comes from the standard library: add \`import CompactStandardLibrary;\` after the pragma.` : `\`${n}\` comes from the 0.36.1 standard library. If \`import CompactStandardLibrary;\` is missing, add it after the pragma; if it's there, the compiler that printed this is older than 0.36.1: ${NEWER(n).split(': ').slice(1).join(': ')}`;
     if (has(RENAMED_TYPES, n)) return `\`${n}\` is an old type name: use \`${RENAMED_TYPES[n]}\` (0.31.1 says so; newer compilers dropped the hint).`;
     if (has(INVENTED, n)) return INVENTED[n];
     if (n === 'range') return 'There is no range(): loop with `for (const i of 0..N) { … }`.';
     if (STDLIB.includes(n) || has(ADT_METHODS, n)) return `\`${n}\` comes from the standard library: add \`import CompactStandardLibrary;\` after the pragma.`;
-    if (n === 'emit') return '`emit` is 0.35.0-only, and only for the standard library\'s event types. On 0.31.1, record the event as a public ledger write.';
-    const near = closest(n, [...STDLIB, ...Object.keys(ONLY_0350)]);
-    return `\`${n}\` isn't defined here or in the 0.31.1 standard library${near ? `; did you mean \`${near}\`?` : '.'} Check the spelling and that \`import CompactStandardLibrary;\` is present.`;
+    const near = closest(n, [...STDLIB, ...Object.keys(NEWER_THAN_0311)]);
+    return `\`${n}\` isn't defined here or in the 0.36.1 standard library${near ? `; did you mean \`${near}\`?` : '.'} Check the spelling and that \`import CompactStandardLibrary;\` is present.`;
   }
   if ((r = m(/apparent use of an old standard-library \/ ledger operator name (\w+):\s*the new name is (\w+)/)))
     return `Rename \`${r[1]}\` to \`${r[2]}\`. 0.31.1's fixup rewrites every old name at once (Remediation 1); it stops while a name or type error remains, so remove invented names first.`;
   if ((r = m(/operation = undefined for ledger field type (\w+)/))) return `A ${r[1]} can't be assigned with =: use its methods (${(has(ADT_METHODS, r[1]) ? ADT_METHODS[r[1]] : []).join(', ')}).`;
   if ((r = m(/operation (\w+) undefined for ledger field type (\w+)/))) {
     const [method, type] = [r[1], r[2]];
-    if (type === 'Kernel' && method === 'caller') return '`kernel.caller()` is newer than Compact 0.31.1 (0.35.0 only). ' + SECRET_IDENTITY;
+    if (type === 'Kernel' && method === 'caller') return '`kernel.caller()` needs Compact 0.35.0 or later; every network needs 0.36.1 (`compact compile +0.36.1`). It names a calling contract only: for a user calling directly it reads none, so it can\'t authorize users. ' + SECRET_IDENTITY;
     const methods = has(ADT_METHODS, type) ? ADT_METHODS[type] : [];
     const hint = has(METHOD_HINTS, method) ? METHOD_HINTS[method] : undefined;
     return `${type} has no ${method}().${hint && methods.includes(hint) ? ` Use ${hint}().` : ''} ${type} methods: ${methods.join(', ')}.`;
@@ -764,7 +839,7 @@ function explain(message, line = '') {
     if (arg) {
       const [got, at, want] = [splitTop(arg[1]), arg[2], splitTop(arg[3])];
       const where = at === '<standard library>' ? 'the standard library' : `your circuit at ${at}`;
-      if (fn === 'ecMulGenerator' && want.includes('JubjubScalar')) return 'On 0.35.0, ecMulGenerator takes a JubjubScalar, not a Field. Passing a Field is the 0.31.1 form; compile with 0.31.1, which the networks need.';
+      if (fn === 'ecMulGenerator' && want.includes('JubjubScalar')) return 'Since 0.34.0, ecMulGenerator takes a JubjubScalar, not a Field (the Field form is 0.31.1\'s): write `ecMulGenerator(x as JubjubScalar)`.';
       if (got.length !== want.length) return `\`${fn}\` (${where}) takes ${want.length} argument(s), (${want.join(', ')}), but got ${got.length}.${/Commit$/.test(fn) ? ' The second argument is the randomness: supply it from a witness.' : ''}`;
       if ([...got].sort().join('|') === [...want].sort().join('|')) return `The arguments to \`${fn}\` are in the wrong order: it takes (${want.join(', ')}).`;
       const diff = got.map((g, i) => (g !== want[i] ? `argument ${i + 1} is ${g}, expected ${want[i]}` : '')).filter(Boolean).join('; ');
@@ -774,7 +849,7 @@ function explain(message, line = '') {
     return `The arguments to \`${fn}\` don't match its declaration (in the standard library, or your own circuit): check the type arguments, and the argument types, count and order.`;
   }
   if ((r = m(/language version (\S+) mismatch/)))
-    return `The pragma doesn't accept this compiler's language version (${r[1]}). Compiler 0.31.1 is language 0.23.0, 0.34.0 is 0.26.0 and 0.35.0 is 0.27.0. The networks need 0.31.1: compile with \`compact compile +0.31.1\` and use \`pragma language_version >= 0.22 && <= 0.23;\`, which makes a newer compiler fail straight away (\`>= 0.22\` if the code should also build on newer compilers).`;
+    return `The pragma doesn't accept this compiler's language version (${r[1]}). Compilers 0.36.0 and 0.36.1 are language 0.28.0, 0.35.0 is 0.27.0, 0.34.0 is 0.26.0 and 0.31.1 is 0.23.0. Every network needs 0.36.1: compile with \`compact compile +0.36.1\` and use \`pragma language_version >= 0.28;\`, which makes an older compiler fail straight away. A pragma pinned to an older language (\`<= 0.23\`, \`0.27\`) is code written for an older compiler (Remediation 8).`;
   if ((r = m(/structure (\w+) has no field named (\w+)/))) {
     const snake = r[2].replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
     return snake !== r[2] ? `Use \`${snake}\`: standard library struct fields are snake_case (camelCase names are planned, not available).` : `${r[1]} has no field ${r[2]}.`;
@@ -795,7 +870,7 @@ function explain(message, line = '') {
   if ((r = m(/expected (\w+) argument of (\w+) to have type (.+?) but received (.+)$/)))
     return /^Uint<0\.\./.test(r[4]) ? `Arithmetic widens Uint types: cast the result back, e.g. \`(a + b) as ${r[3]}\`.` : `The ${r[1]} argument of \`${r[2]}\` must be ${r[3]} but is ${r[4]}: pass a value of that type, or cast with \`as\` where the conversion exists.`;
   if (m(/resulting value might exceed largest representable Uint value/)) return 'The result could exceed the widest Uint (Uint<248>). Do the arithmetic in Field (`(a as Field) + b`) and cast back where needed; the cast fails at runtime if the value doesn\'t fit.';
-  if (m(/is not a declared event type/)) return 'Only the standard library\'s event types can be emitted (0.35.0). On 0.31.1 there is no emit: record the event as a public ledger write.';
+  if (m(/is not a declared event type/)) return 'Only the standard library\'s event types can be emitted; a contract can\'t declare its own. Use one of them (Misc carries your own data), or record the event as a public ledger write.';
   if (m(/expression4/)) return '`<<` and `>>` aren\'t operators: multiply for a left shift; for a right shift get the quotient from a witness and check it.';
   if (m(/found "<" looking for an expression$/)) return 'Angle-bracket casts don\'t exist: cast with `as` (`x as Field`).';
   if (m(/found "\(" looking for ";"/)) return 'Something is called with () that isn\'t a function. The usual cause is `default<T>()`: write `default<T>` without parentheses.';
@@ -805,7 +880,7 @@ function explain(message, line = '') {
   if (m(/found "\w+" looking for "const"/)) return 'The loop variable needs const: `for (const i of 0..N) { … }`.';
   if (m(/looking for a non-negative numeric constant/)) return 'pad() needs a literal length: `pad(32, "text")`.';
   if (m(/found "\w+" looking for a string/)) return 'pad() needs a string literal: `pad(32, "text")`. For a variable, it\'s already Bytes.';
-  if (m(/found "<=" looking for ";", "\|\|", or "&&"/) || m(/found "<" looking for ";", "\|\|", or "&&"/)) return 'Combine pragma bounds with &&: `pragma language_version >= 0.22 && <= 0.23;`.';
+  if (m(/found "<=" looking for ";", "\|\|", or "&&"/) || m(/found "<" looking for ";", "\|\|", or "&&"/)) return 'Combine pragma bounds with &&: `pragma language_version >= 0.28 && <= 0.28;`.';
   if (m(/found keyword "export" looking for (?:an identifier|"ledger")/)) return 'Modifier order: `export sealed ledger name: Type;`.';
   if (m(/found keyword "from" looking for/)) return '`from` is a keyword: rename the identifier (e.g. `sender`).';
   if (m(/found ";" looking for "\("/) || m(/found ";" looking for "\|\|", "&&"/)) return 'Circuits aren\'t values: there are no lambdas or function references. Call the circuit directly.';
@@ -822,7 +897,7 @@ function explain(message, line = '') {
     if (on(/\bemit\b/)) return EMIT;
     if (on(/\bassert\b(?!\s*\()/)) return '`assert` is called like a function: `assert(condition, "message");`.';
     const ifFor = 'Write `if (condition)` and `for (const i of 0..N)`: parentheses are required, and that\'s the only loop form.';
-    return line ? ifFor : `${ifFor} If the line is \`emit X(…)\` (0.35.0 gives this message for it too): ${EMIT}`;
+    return line ? ifFor : `${ifFor} If the line is \`emit X(…)\` (0.35.0 and 0.36.1 give this message for it too): ${EMIT}`;
   }
   if ((r = m(/unexpected character '(.)'/))) return r[1] === '%' ? '`%` isn\'t an operator: get quotient and remainder from a witness and check them.' : '`&`, `|`, `^`, `~` aren\'t operators: Boolean and/or are `&&` and `||`; there are no bitwise operators.';
   if (m(/found "\)" looking for ","/)) return '`assert` needs a message: `assert(condition, "message");`.';
@@ -843,9 +918,14 @@ function explain(message, line = '') {
   if (m(/found multiple bindings for/)) return 'Two consts with the same name in one block: rename one.';
   if (m(/expected left-hand side of = to have an ADT type/)) return 'Locals can\'t be reassigned: declare a new const (or write to a ledger field).';
   if (m(/exported circuits cannot modify sealed ledger fields/)) return 'Sealed fields can only be set in the constructor (or circuits called only from it).';
-  if (m(/cross-contract calls are not yet supported|contract-info\.json/)) return 'Calling another contract isn\'t supported on 0.31.1 (it is in 0.35.0). The contract-info.json message comes first; with the other contract compiled, 0.31.1 says cross-contract calls are not yet supported.';
+  if (m(/cross-contract calls are not yet supported|contract-info\.json/)) return 'The compiler you ran is 0.31.1 or older, which can\'t call other contracts (the contract-info.json message comes first; with the other contract compiled, it says cross-contract calls are not yet supported). Every network needs 0.36.1, which can: `compact compile +0.36.1` (Remediation 8).';
+  if ((r = m(/a contract type cannot declare circuit (\w+) pure/))) return `Remove \`pure\` circuits from the contract type: a cross-contract call needs the called circuit to have a proof, and \`${r[1]}\` has none. To reuse pure logic from another contract, import its module (Remediation 10).`;
+  if ((r = m(/contract implements failure: this contract exports a circuit named (\w+), but it is declared pure/))) return `\`${r[1]}\` is declared pure, so it can't be called from another contract. Give it a proof: drop \`pure\` and make it touch the ledger. A circuit that is pure without the keyword, or that calls a witness, passes \`contract implements\` but fails at the first call (servicedesk#298, Remediation 10).`;
+  if (m(/contract implements failure/)) return 'This contract doesn\'t export what the contract type requires, with the same parameter and return types: check every circuit the type lists (Remediation 10).';
+  if (m(/cannot cast from type contract/) || m(/expected structure type, received contract/)) return 'A contract-typed value has no address to read: there\'s no cast to ContractAddress, and no .bytes or .address. To pay a contract you also call, store its address in its own ledger field, set with the reference (Remediation 10).';
+  if (m(/incompatible types Uint<0\.\.256> and Uint<0\.\.3> for relational operator/)) return 'If the compiler says "Internal error" and points at the pragma, it\'s a 0.35.0 and 0.36.0 bug with deserialize<Boolean, …>, fixed in 0.36.1 (compact#856): compile with 0.36.1. On an older compiler, compare the byte instead: `deserialize<Uint<8>, 1>(b) == 1`. Otherwise cast one side so the types match.';
   if (m(/cannot export type-parameterized function/)) return 'Export a concrete wrapper: `export circuit f(x: Field): … { return g<Field>(x); }`.';
-  if (m(/mismatch between actual (?:return )?type/)) return 'Types don\'t match: cast with `as` (e.g. `(a + b) as Uint<64>`). On 0.35.0 a bare number literal is a Uint, not a Field: write `0 as Field`.';
+  if (m(/mismatch between actual (?:return )?type/)) return 'Types don\'t match: cast with `as` (e.g. `(a + b) as Uint<64>`). Since 0.34.0 a bare number literal is a Uint, not a Field: write `0 as Field` (code written for 0.31.1 often needs this).';
   if (m(/incompatible (?:combination of )?types/)) return 'Cast one side so the types match. Field has no < or >; compare Uint values. Compare enums with `Enum.variant`.';
   if (m(/expected test to have type Boolean/)) return 'Conditions must be Boolean: write `x != 0`, not `x`.';
   if (m(/cannot cast from type/)) return 'That cast doesn\'t exist. For a string constant use pad(N, "text").';
@@ -878,7 +958,7 @@ function explain(message, line = '') {
   if ((r = m(/found keyword "for" looking for a program element/))) return 'A for loop can only be inside a circuit or the constructor.';
   if ((r = m(/expected right-hand side of = to have type (.+?) but received (.+)$/))) return `The value is ${r[2]} but the target is ${r[1]}: make the types match (a cast with \`as\` where one exists).`;
   if ((r = m(/found "([^"]+)" looking for a program element or end of file/))) return `\`${r[1]}\` starts something that isn't a top-level declaration (pragma, import, include, struct, enum, ledger, witness, circuit, constructor, module). Check for a stray word or a missing \`}\` above it.`;
-  if (m(/looking for a version atom/)) return 'A pragma version is a plain number: `pragma language_version >= 0.22 && <= 0.23;`.';
+  if (m(/looking for a version atom/)) return 'A pragma version is a plain number: `pragma language_version >= 0.28;`.';
   if ((r = m(/found "(\w+)" looking for ",", ";"/))) return `Something is missing before \`${r[1]}\`: usually a \`,\` between two bindings or a \`;\` at the end of the statement.`;
   if ((r = m(/found keyword "(\w+)" looking for (.*)/))) return `\`${r[1]}\` is a keyword, so it can't be used here (the parser wanted ${r[2]}). Use another name, or check the syntax around it.`;
   return undefined;
@@ -1015,13 +1095,13 @@ async function main() {
       // The source line the error points at (it may be in an included file), to tell similar parse errors apart.
       let line = '';
       if (c.where) try { line = fs.readFileSync(path.resolve(path.dirname(path.resolve(f)), c.where.file), 'utf8').split('\n')[c.where.line - 1] ?? ''; } catch { /* no line: explain() falls back to the message alone */ }
-      const explanation = c.ok ? undefined : c.timedOut ? 'The compiler hung on this file. Try a longer --timeout; a compile that never finishes is a compiler bug worth reporting, with the file, to LFDT-Minokawa/compact.' : explain(c.message, line);
+      const explanation = c.ok ? undefined : c.timedOut ? 'The compiler hung on this file. Try a longer --timeout; a compile that never finishes is a compiler bug worth reporting, with the file, to LFDT-Minokawa/compact.' : explain(c.message, line, opts.compiler);
       entry.compile = { compiler: opts.compiler, ok: c.ok, timedOut: c.timedOut || undefined, where: c.where, message: c.message, explanation, disclosures: c.errors?.filter((e) => e.disclosure).map((e) => ({ where: e.where, ...e.disclosure })) };
       if (!c.ok) {
         problems++;
         if (opts.compiler === NETWORK_COMPILER && !c.timedOut) {
-          const newer = await compileFile(path.resolve(f), '0.35.0');
-          if (!newer.missing) entry.compile.on_0_35_0 = newer.ok ? 'compiles' : newer.message;
+          const older = await compileFile(path.resolve(f), OLD_COMPILER);
+          if (!older.missing) entry.compile.on_0_31_1 = older.ok ? 'compiles' : older.message;
         }
       }
     }
@@ -1046,7 +1126,7 @@ async function main() {
         } else {
           console.log(`${e.file}${c.where ? `:${c.where.line}:${c.where.col}` : ''}  compile (${c.compiler})  ${c.message}`);
           console.log(`    fix: ${c.explanation ?? 'no explanation for this message yet: see the runbook message table.'}`);
-          if (c.on_0_35_0 === 'compiles') console.log('    note: it compiles with 0.35.0, so the code uses a feature 0.31.1 (the compiler the networks need) doesn\'t have.');
+          if (c.on_0_31_1 === 'compiles') console.log(`    note: it compiles with ${OLD_COMPILER}, so it was written for older Compact. See Remediation 8 in the runbook.`);
           if (!c.timedOut) console.log(`    ${ONE_ERROR}`);
         }
       }
