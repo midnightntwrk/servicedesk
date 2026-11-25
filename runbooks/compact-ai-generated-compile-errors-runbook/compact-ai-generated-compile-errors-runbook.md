@@ -64,7 +64,7 @@ The compiler exits 255 with `Exception: <file> line N char M:` and one message (
 Models fill gaps in their Compact from:
 
 1. **Other languages:** Solidity, Rust and TypeScript syntax, and helpers that don't exist.
-2. **Older Compact:** renamed names, removed syntax, and code for 0.31.1 that 0.34.0 and later reject: a bare literal is a `Uint`, not a `Field`; a `Uint` doesn't convert to a `Field`; `ecMulGenerator` takes a `JubjubScalar`; `event` is reserved; pragmas pinned to language 0.23 (**measured**: 11 contracts that compile on 0.31.1 fail on 0.36.1).
+2. **Older Compact:** renamed names, removed syntax, and code for 0.31.1 that 0.34.0 and later reject: a bare literal is a `Uint`, not a `Field`; a `Uint` doesn't convert to a `Field`; `ecMulGenerator` takes a `JubjubScalar`; `event` is reserved; pragmas pinned to language 0.23 (**measured**: 8 contracts that compile on 0.31.1 fail on 0.36.1).
 3. **0.36's contract-type rules.**
 4. **Wrong references:** trust the compiler.
 
@@ -169,8 +169,8 @@ Each row names a public source and text it must contain: a repo file (`github:`)
 | Every network needs compiler 0.36.1 | `github:midnightntwrk/midnight-docs/docs/relnotes/support-matrix.json` | `"component": "Compact toolchain"` `"version": "0.36.1"` |
 | The rename hint's wording | `github:LFDT-Minokawa/compact/compiler/utils.ss` | `apparent use of an old standard-library / ledger operator name` |
 | The disclosure error's wording | `github:LFDT-Minokawa/compact/compiler/analysis-passes/track-witness-data.ss` | `potential witness-value disclosure must be declared but is not` |
-| Reserved words are reported as reserved for future use | `github:LFDT-Minokawa/compact/compiler/parser.ss` | `(which is reserved for future use)` |
-| Map's methods include member and lookup | `github:LFDT-Minokawa/compact/compiler/midnight-ledger.ss` | `(function read member ([key key_type]) Boolean` `(function read lookup ([key key_type]) value_type` |
+| Reserved words are reported as reserved | `github:LFDT-Minokawa/compact/compiler/parser.ss` | `(which is reserved for future use)` |
+| Map has member and lookup | `github:LFDT-Minokawa/compact/compiler/midnight-ledger.ss` | `Returns if a key is contained within this Map.` `Looks up the value of a key within this Map.` |
 | `kernel.caller()` reads none for a top-level call | `github:LFDT-Minokawa/compact/compiler/midnight-ledger.ss` | `Off-chain execution cannot yet know a top-level caller` |
 | A contract type can't list a pure circuit | `github:LFDT-Minokawa/compact/compiler/lparser-to-lsrc.ss` | `a contract type cannot declare circuit ~a pure` |
 | `contract implements` rejects a circuit declared pure | `github:LFDT-Minokawa/compact/compiler/analysis-passes/infer-types.ss` | `it is declared pure, and a circuit declared in a contract type must have a proof` |

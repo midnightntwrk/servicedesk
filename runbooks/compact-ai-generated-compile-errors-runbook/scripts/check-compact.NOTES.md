@@ -17,8 +17,8 @@ Every network moved to ledger 9, and since 2026-11-17 the support matrix lists c
   their helper files (`extra_files`) were written next to them; with the helpers they match 0.35.0.
 - **Verdicts that flipped from 0.31.1.** 10 files that 0.31.1 rejected compile on 0.36.1 (`keccak256`,
   `jubjubSchnorrVerify`, `ecNeg`, `PublicAddress`, `JubjubScalar`, `kernel.caller()`, `emit` of a
-  standard event, a cross-contract call), and 11 that compiled on 0.31.1 fail (a Field compared with a
-  Uint, a Uint passed as a Field, `ecMulGenerator` with a Field, `event` as a name, and four pragmas
+  standard event, a cross-contract call), and 8 that compiled on 0.31.1 fail (a Field compared with a
+  Uint, a Uint passed as a Field, `ecMulGenerator` with a Field, `event` as a name, and three pragmas
   pinned below 0.28). The checker no longer flags the first group, and the runbook treats the second
   as code written for older Compact.
 - **New cases from the ledger 9 tests (Preview, 2026-11-07 and 08).** Six cases, 15 files, compiled
@@ -373,12 +373,13 @@ in one pass, so 440 KB of unclosed `if (` still takes 0.3 s. A 1.5 MB file of `c
   - as warnings, code that compiles but is still wrong: `ownPublicKey()` compared with a key,
     `unshieldedBalance()` in a comparison, an `if` on `checkRoot` with no `else`, a Merkle path not
     bound with `.leaf`, and `receiveUnshielded` of a token minted to the contract itself
-- **`--compile`.** It compiles each contract with 0.31.1 into a temporary directory. Each compile is
+- **`--compile`.** It compiles each contract with 0.36.1 into a temporary directory. Each compile is
   stopped after `--timeout` seconds (300 by default). It explains the first error using the source
   line it points at, or lists every disclosure error with the point where the value becomes public.
-  If 0.31.1 fails and 0.35.0 is installed, it also tries 0.35.0.
+  If a contract fails on 0.36.1 and 0.31.1 is installed, it also tries 0.31.1, and says when the
+  contract compiles there, so it was written for older Compact.
 - **`--explain`.** It explains a pasted message.
-- **Names.** All names come from the compiler source at `compactc-v0.31.1` and `compactc-v0.35.0`.
+- **Names.** All names come from the compiler source at `compactc-v0.31.1` and `compactc-v0.36.1`.
 
 ## Script test runs
 
